@@ -64,6 +64,14 @@ public class ApiController {
         return jdbc.queryForMap("select * from taxonomy_term where id=?", id);
     }
 
+    @PutMapping("/taxonomy/{id}/defaults")
+    public Map<String, Object> updateTaskTypeDefaults(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        int updated = jdbc.update("update taxonomy_term set default_description=?, default_instructions=? where id=? and term_type='TASK_TYPE'",
+                optional(body, "defaultDescription"), optional(body, "defaultInstructions"), id);
+        if (updated == 0) throw new IllegalArgumentException("A feladattípus nem található.");
+        return jdbc.queryForMap("select * from taxonomy_term where id=?", id);
+    }
+
     @GetMapping("/worksheets")
     public Map<String, Object> worksheets(@RequestParam(defaultValue = "") String q,
                                           @RequestParam(required = false) String status,

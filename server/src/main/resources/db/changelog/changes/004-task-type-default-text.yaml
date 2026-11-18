@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-task-type-default-text
+      author: codex
+      changes:
+        - addColumn:
+            tableName: taxonomy_term
+            columns:
+              - column:
+                  name: default_description
+                  type: TEXT
+              - column:
+                  name: default_instructions
+                  type: TEXT

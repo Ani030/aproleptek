@@ -5,4 +5,6 @@ databaseChangeLog:
       file: db/changelog/changes/002-seed-taxonomy.yaml
   - include:
       file: db/changelog/changes/003-task-types-and-topic-split.yaml
+  - include:
+      file: db/changelog/changes/004-task-type-default-text.yaml
 
