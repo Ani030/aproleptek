@@ -1,0 +1,138 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-task-types-and-topic-split
+      author: codex
+      changes:
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TOPIC }
+              - column: { name: name, value: Állatok }
+              - column: { name: slug, value: allatok }
+              - column: { name: sort_order, valueNumeric: 10 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TOPIC }
+              - column: { name: name, value: Természet }
+              - column: { name: slug, value: termeszet }
+              - column: { name: sort_order, valueNumeric: 20 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Árnyékpárosító }
+              - column: { name: slug, value: arnyekparosito }
+              - column: { name: sort_order, valueNumeric: 10 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Képpárosító }
+              - column: { name: slug, value: kepparosito }
+              - column: { name: sort_order, valueNumeric: 20 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Formapárosító }
+              - column: { name: slug, value: formaparosito }
+              - column: { name: sort_order, valueNumeric: 30 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Öltöztető }
+              - column: { name: slug, value: oltozteto }
+              - column: { name: sort_order, valueNumeric: 40 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Vonalvezető }
+              - column: { name: slug, value: vonalvezeto }
+              - column: { name: sort_order, valueNumeric: 50 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Válogató }
+              - column: { name: slug, value: valogato }
+              - column: { name: sort_order, valueNumeric: 60 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Képkirakó }
+              - column: { name: slug, value: kepkirako }
+              - column: { name: sort_order, valueNumeric: 70 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Sorozatalkotó }
+              - column: { name: slug, value: sorozatalkoto }
+              - column: { name: sort_order, valueNumeric: 80 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Keresd és jelöld }
+              - column: { name: slug, value: keresd-es-jelold }
+              - column: { name: sort_order, valueNumeric: 90 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Vágás és ragasztás }
+              - column: { name: slug, value: vagas-es-ragasztas }
+              - column: { name: sort_order, valueNumeric: 100 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Színező }
+              - column: { name: slug, value: szinezo }
+              - column: { name: sort_order, valueNumeric: 110 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TASK_TYPE }
+              - column: { name: name, value: Labirintus }
+              - column: { name: slug, value: labirintus }
+              - column: { name: sort_order, valueNumeric: 120 }
+        - sql:
+            sql: |
+              insert into worksheet_term (worksheet_id, term_id)
+              select old_link.worksheet_id, split_topic.id
+              from worksheet_term old_link
+              join taxonomy_term old_topic on old_topic.id = old_link.term_id
+              join taxonomy_term split_topic on split_topic.term_type = 'TOPIC'
+                and split_topic.slug in ('allatok', 'termeszet') and split_topic.active = true
+              where old_topic.term_type = 'TOPIC' and old_topic.slug = 'allatok-es-termeszet'
+              on conflict (worksheet_id, term_id) do nothing;
+        - sql:
+            sql: |
+              insert into activity_term (activity_id, term_id)
+              select old_link.activity_id, split_topic.id
+              from activity_term old_link
+              join taxonomy_term old_topic on old_topic.id = old_link.term_id
+              join taxonomy_term split_topic on split_topic.term_type = 'TOPIC'
+                and split_topic.slug in ('allatok', 'termeszet') and split_topic.active = true
+              where old_topic.term_type = 'TOPIC' and old_topic.slug = 'allatok-es-termeszet'
+              on conflict (activity_id, term_id) do nothing;
+        - sql:
+            sql: |
+              delete from worksheet_term wt using taxonomy_term old_topic
+              where wt.term_id = old_topic.id and old_topic.term_type = 'TOPIC'
+                and old_topic.slug = 'allatok-es-termeszet';
+        - sql:
+            sql: |
+              delete from activity_term activity_link using taxonomy_term old_topic
+              where activity_link.term_id = old_topic.id and old_topic.term_type = 'TOPIC'
+                and old_topic.slug = 'allatok-es-termeszet';
+        - update:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: active, valueBoolean: false }
+            where: term_type = 'TOPIC' and slug = 'allatok-es-termeszet'

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: aproleptek-postgres
+    environment:
+      POSTGRES_DB: aproleptek
+      POSTGRES_USER: aproleptek
+      POSTGRES_PASSWORD: aproleptek_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - aproleptek_pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aproleptek -d aproleptek"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  aproleptek_pgdata:
+

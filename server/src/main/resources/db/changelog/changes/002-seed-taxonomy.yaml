@@ -1,0 +1,107 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-seed-taxonomy
+      author: codex
+      changes:
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: AGE }
+              - column: { name: name, value: "18–24 hónap" }
+              - column: { name: slug, value: "18-24-honap" }
+              - column: { name: sort_order, valueNumeric: 10 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: AGE }
+              - column: { name: name, value: "2–3 év" }
+              - column: { name: slug, value: "2-3-ev" }
+              - column: { name: sort_order, valueNumeric: 20 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: AGE }
+              - column: { name: name, value: "3–4 év" }
+              - column: { name: slug, value: "3-4-ev" }
+              - column: { name: sort_order, valueNumeric: 30 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: AGE }
+              - column: { name: name, value: "4–6 év" }
+              - column: { name: slug, value: "4-6-ev" }
+              - column: { name: sort_order, valueNumeric: 40 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TOPIC }
+              - column: { name: name, value: "Állatok és természet" }
+              - column: { name: slug, value: "allatok-es-termeszet" }
+              - column: { name: sort_order, valueNumeric: 10 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TOPIC }
+              - column: { name: name, value: "Járművek" }
+              - column: { name: slug, value: "jarmuvek" }
+              - column: { name: sort_order, valueNumeric: 20 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TOPIC }
+              - column: { name: name, value: "Évszakok" }
+              - column: { name: slug, value: "evszakok" }
+              - column: { name: sort_order, valueNumeric: 30 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: TOPIC }
+              - column: { name: name, value: "Mindennapi rutinok" }
+              - column: { name: slug, value: "mindennapi-rutinok" }
+              - column: { name: sort_order, valueNumeric: 40 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: SKILL }
+              - column: { name: name, value: "Finommotorika" }
+              - column: { name: slug, value: "finommotorika" }
+              - column: { name: sort_order, valueNumeric: 10 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: SKILL }
+              - column: { name: name, value: "Nagymozgás" }
+              - column: { name: slug, value: "nagymozgas" }
+              - column: { name: sort_order, valueNumeric: 20 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: SKILL }
+              - column: { name: name, value: "Kommunikáció" }
+              - column: { name: slug, value: "kommunikacio" }
+              - column: { name: sort_order, valueNumeric: 30 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: SKILL }
+              - column: { name: name, value: "Érzékelés és felfedezés" }
+              - column: { name: slug, value: "erzekeles-es-felfedezes" }
+              - column: { name: sort_order, valueNumeric: 40 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: SKILL }
+              - column: { name: name, value: "Gondolkodás" }
+              - column: { name: slug, value: "gondolkodas" }
+              - column: { name: sort_order, valueNumeric: 50 }
+        - insert:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: term_type, value: SKILL }
+              - column: { name: name, value: "Társas-érzelmi kapcsolódás" }
+              - column: { name: slug, value: "tarsas-erzelmi-kapcsolodas" }
+              - column: { name: sort_order, valueNumeric: 60 }
+      rollback:
+        - delete:
+            tableName: taxonomy_term
+            where: "slug in ('18-24-honap','2-3-ev','3-4-ev','4-6-ev','allatok-es-termeszet','jarmuvek','evszakok','mindennapi-rutinok','finommotorika','nagymozgas','kommunikacio','erzekeles-es-felfedezes','gondolkodas','tarsas-erzelmi-kapcsolodas')"

@@ -1,0 +1,158 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-initial-schema
+      author: codex
+      changes:
+        - createTable:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: term_type, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(120), constraints: { nullable: false } }
+              - column: { name: slug, type: VARCHAR(140), constraints: { nullable: false } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: taxonomy_term
+            columnNames: term_type, slug
+            constraintName: uq_taxonomy_type_slug
+        - createTable:
+            tableName: media_asset
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: original_name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: storage_key, type: VARCHAR(500), constraints: { nullable: false, unique: true } }
+              - column: { name: media_type, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: file_size, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createTable:
+            tableName: worksheet
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: title, type: VARCHAR(200), constraints: { nullable: false } }
+              - column: { name: slug, type: VARCHAR(220), constraints: { nullable: false, unique: true } }
+              - column: { name: summary, type: VARCHAR(500) }
+              - column: { name: description, type: TEXT }
+              - column: { name: instructions, type: TEXT }
+              - column: { name: status, type: VARCHAR(20), defaultValue: DRAFT, constraints: { nullable: false } }
+              - column: { name: paper_size, type: VARCHAR(10), defaultValue: A4, constraints: { nullable: false } }
+              - column: { name: orientation, type: VARCHAR(10), defaultValue: PORTRAIT, constraints: { nullable: false } }
+              - column: { name: color_mode, type: VARCHAR(20), defaultValue: COLOR, constraints: { nullable: false } }
+              - column: { name: usage_type, type: VARCHAR(20), defaultValue: DIGITAL, constraints: { nullable: false } }
+              - column: { name: safety_notes, type: TEXT }
+              - column: { name: preview_asset_id, type: UUID, constraints: { foreignKeyName: fk_worksheet_preview, references: media_asset(id) } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: published_at, type: TIMESTAMP WITH TIME ZONE }
+        - createTable:
+            tableName: worksheet_page
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: worksheet_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_page_worksheet, references: worksheet(id), deleteCascade: true } }
+              - column: { name: page_type, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: title, type: VARCHAR(200) }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: page_count, type: INT, defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: paper_size, type: VARCHAR(10), defaultValue: A4, constraints: { nullable: false } }
+              - column: { name: orientation, type: VARCHAR(10), defaultValue: PORTRAIT, constraints: { nullable: false } }
+              - column: { name: color_mode, type: VARCHAR(20), defaultValue: COLOR, constraints: { nullable: false } }
+              - column: { name: notes, type: TEXT }
+              - column: { name: preview_asset_id, type: UUID, constraints: { foreignKeyName: fk_page_preview, references: media_asset(id) } }
+              - column: { name: print_asset_id, type: UUID, constraints: { foreignKeyName: fk_page_print, references: media_asset(id) } }
+        - createTable:
+            tableName: activity
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: title, type: VARCHAR(200), constraints: { nullable: false } }
+              - column: { name: slug, type: VARCHAR(220), constraints: { nullable: false, unique: true } }
+              - column: { name: summary, type: VARCHAR(500) }
+              - column: { name: description, type: TEXT }
+              - column: { name: duration_minutes, type: INT }
+              - column: { name: location_type, type: VARCHAR(20), defaultValue: ANY, constraints: { nullable: false } }
+              - column: { name: materials, type: TEXT }
+              - column: { name: preparation, type: TEXT }
+              - column: { name: instructions, type: TEXT }
+              - column: { name: easy_variant, type: TEXT }
+              - column: { name: challenge_variant, type: TEXT }
+              - column: { name: safety_notes, type: TEXT }
+              - column: { name: status, type: VARCHAR(20), defaultValue: DRAFT, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createTable:
+            tableName: worksheet_term
+            columns:
+              - column: { name: worksheet_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_wt_worksheet, references: worksheet(id), deleteCascade: true } }
+              - column: { name: term_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_wt_term, references: taxonomy_term(id) } }
+        - addPrimaryKey:
+            tableName: worksheet_term
+            columnNames: worksheet_id, term_id
+            constraintName: pk_worksheet_term
+        - createTable:
+            tableName: activity_term
+            columns:
+              - column: { name: activity_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_at_activity, references: activity(id), deleteCascade: true } }
+              - column: { name: term_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_at_term, references: taxonomy_term(id) } }
+        - addPrimaryKey:
+            tableName: activity_term
+            columnNames: activity_id, term_id
+            constraintName: pk_activity_term
+        - createTable:
+            tableName: bundle_plan
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: title, type: VARCHAR(200), constraints: { nullable: false } }
+              - column: { name: slug, type: VARCHAR(220), constraints: { nullable: false, unique: true } }
+              - column: { name: description, type: TEXT }
+              - column: { name: bundle_type, type: VARCHAR(20), defaultValue: DIGITAL, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), defaultValue: DRAFT, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createTable:
+            tableName: bundle_worksheet
+            columns:
+              - column: { name: bundle_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_bw_bundle, references: bundle_plan(id), deleteCascade: true } }
+              - column: { name: worksheet_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_bw_worksheet, references: worksheet(id) } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addPrimaryKey:
+            tableName: bundle_worksheet
+            columnNames: bundle_id, worksheet_id
+            constraintName: pk_bundle_worksheet
+        - createIndex:
+            tableName: worksheet
+            indexName: ix_worksheet_status_title
+            columns:
+              - column: { name: status }
+              - column: { name: title }
+        - createIndex:
+            tableName: worksheet_page
+            indexName: ix_page_worksheet_order
+            columns:
+              - column: { name: worksheet_id }
+              - column: { name: sort_order }
+        - createIndex:
+            tableName: activity
+            indexName: ix_activity_status_title
+            columns:
+              - column: { name: status }
+              - column: { name: title }
+        - createIndex:
+            tableName: worksheet_term
+            indexName: ix_worksheet_term_term
+            columns:
+              - column: { name: term_id }
+        - createIndex:
+            tableName: activity_term
+            indexName: ix_activity_term_term
+            columns:
+              - column: { name: term_id }
+      rollback:
+        - dropTable: { tableName: bundle_worksheet }
+        - dropTable: { tableName: bundle_plan }
+        - dropTable: { tableName: activity_term }
+        - dropTable: { tableName: worksheet_term }
+        - dropTable: { tableName: activity }
+        - dropTable: { tableName: worksheet_page }
+        - dropTable: { tableName: worksheet }
+        - dropTable: { tableName: media_asset }
+        - dropTable: { tableName: taxonomy_term }
+

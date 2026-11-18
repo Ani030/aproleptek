@@ -1,0 +1,23 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: aproleptek-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:5433/aproleptek}
+    username: ${DATABASE_USERNAME:aproleptek}
+    password: ${DATABASE_PASSWORD:aproleptek_dev}
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+app:
+  admin:
+    username: ${APP_ADMIN_USERNAME:admin}
+    password: ${APP_ADMIN_PASSWORD:}
+  storage:
+    root: ${APP_STORAGE_ROOT:./uploads}
