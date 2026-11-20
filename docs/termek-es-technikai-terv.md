@@ -57,6 +57,10 @@ Adminisztráció
 │   ├── Lista és keresés
 │   └── Új / szerkesztett játékötlet
 ├── Csomagtervek
+├── Pénzügy és önköltség
+│   ├── Eladható termékek (feladatlaphoz vagy csomaghoz kapcsolva)
+│   ├── Eladások (több termék egy megállapodott végösszeggel)
+│   └── Bevétel, kiadás és népszerűség áttekintő
 ├── Kategóriák és címkék
 │   ├── Korosztályok
 │   ├── Feladattípusok
@@ -105,6 +109,18 @@ Főoldal
 2. Kiválasztja a tartalmazott feladatlapokat.
 3. Ellenőrzi, hogy minden feladatlap alaplapja és kivágható lapjai a csomag részét képezik-e.
 4. Később digitális vagy fizikai termékváltozatot, árat, készletet és teljesítési adatokat adhat meg.
+
+### Eladható termék és eladás rögzítése – saját értékesítés MVP
+
+1. Egy feladatlaphoz vagy csomagtervhez eladható termékváltozat hozható létre, például digitális vagy nyomtatott kivitelben.
+2. A termékváltozathoz egyszer megadható a listaár és az egy példányra jutó anyagköltség. Fizikai változatnál a rendszer az adminban beállított nyomtatott oldalankénti tintaköltséget is hozzáadja; termékenként választható az egy- vagy kétoldalas nyomtatás, az oldalszámból pedig automatikusan számolódik a lapköltség.
+3. Egy eladás rögzítésekor több termék kiválasztható, mennyiséggel együtt. A rendszer összesíti a listaárakat.
+4. A vevővel egyeztetett végösszeget egyszer kell megadni az egész összeállításra. Nincs automatikus darabszám alapú kedvezményszabály.
+5. A rendszer megőrzi a listaárak összegét, az elfogadott végösszeget és az eladáskori termékárakat. Az egyeztetési különbözetet arányosan szétosztja a tételek között a termékenkénti bevételi és fedezeti statisztikához.
+6. Az értékesítési csatorna (induláskor például Vinted), dátum és opcionális megjegyzés rögzíthető.
+7. Kimutatás készül az eladott darabszámról, az eladások gyakoriságáról, a bevételről és a becsült gyártási költség (anyag és nyomtatás) utáni fedezetről termékenként és időszakonként.
+
+Az első pénzügyi ütem nem vezet készletet. A fogyóanyagok beszerzési naplója mennyiséget és teljes árat tárol, az egységár pedig beszerzésekből súlyozott átlagként számolódik. Az egyszeri eszközkiadások külön kategóriában jelennek meg. Egyelőre egyik sem hoz létre készletmozgást. A termékváltozathoz anyaglista rendelhető mennyiségekkel; az anyagköltség az anyagok súlyozott egységárából automatikusan számolódik. A fizikai termékváltozat gyártási költségébe a nyomtatott oldalanként beállított tintaköltség is beleszámít. Egyoldalas módban egy papírlap egy nyomtatott felület; kétoldalas módban egy lap két nyomtatott felület, és mindkettő után felszámítódik az oldalankénti díj. Új beszerzés az érintett termékváltozatok aktuális költségét frissíti. A múltbeli eladás pillanatkép: a későbbi listaár-, anyag- és nyomtatásidíj-változtatás nem módosítja.
 
 ## 6. Tartalmi adatmodell
 
@@ -213,7 +229,8 @@ Spring Boot moduláris alkalmazás
   ├── activity
   ├── taxonomy
   ├── media
-  └── bundle planning
+  ├── bundle planning
+  └── self-sales / product costing
         │
         ├── PostgreSQL – rekordok, kapcsolatok, auditadatok
         └── fájltár – képek és nyomtatási fájlok
@@ -281,6 +298,10 @@ Vite-os adminfelületnél a SPA megfelelő. A későbbi nyilvános, keresőforga
 - önálló játékötlet rögzítése és opcionális kapcsolatai;
 - piszkozat és publikált státusz;
 - csomagterv összeállítása fizetés és rendelés nélkül;
+- eladható termékváltozat összekapcsolása feladatlaphoz vagy csomagtervhez;
+- több termékből álló saját eladás rögzítése egy egyeztetett végösszeggel, listaár-összesítéssel és termékenkénti statisztikával;
+- termékenkénti listaár és becsült anyagköltség kezelése készletvezetés nélkül;
+- fogyóanyag-beszerzések mennyiségi egységárral és egyszeri eszközkiadások naplózása;
 - React/Vite admin és Spring Boot/PostgreSQL/Liquibase backend.
 
 ### Nincs benne az első ütemben
@@ -288,7 +309,9 @@ Vite-os adminfelületnél a SPA megfelelő. A későbbi nyilvános, keresőforga
 - vásárlói regisztráció és szülői szerepkör;
 - kosár, fizetés, számlázás és szállítás;
 - védett digitális vásárlási letöltés;
-- készletkezelés és rendelésadminisztráció;
+- készletkezelés, piactéri rendelésimport és rendelésteljesítési adminisztráció;
+- automatikus darabszám alapú kedvezményszabályok;
+- automatikus piactéri rendelésimport és fizetésintegráció;
 - előfizetéses klub;
 - gyermekprofil, kedvencek és személyre szabott ajánló;
 - teljes nyilvános marketingoldal, hacsak külön induló célként nem kerül jóváhagyásra.
@@ -321,6 +344,10 @@ Vite-os adminfelületnél a SPA megfelelő. A későbbi nyilvános, keresőforga
 - Az „Állatok” és „Természet” témakörök külön címkék; egy tartalom mindkettőhöz rendelhető.
 - Játékötlet feladatlapkapcsolat nélkül is létrehozható és menthető.
 - Csomagterv több feladatlapot tud összefogni, de még nem indít rendelést.
+- Eladható termék feladatlaphoz vagy csomagtervhez köthető; egy eladás több terméket rögzít a listaárak összegével és a kézzel megadott, egyeztetett végösszeggel.
+- A vevővel kialkudott összeg eltérése arányosan oszlik meg a termékek között; termék- és áradatok pillanatképként megmaradnak.
+- Termékenként megadható anyaglista mennyiségekkel, amelynek aktuális anyagköltsége a fogyóanyagok súlyozott átlagos egységárából számolódik.
+- Eladási összesítő megmutatja a bevételt, az eladott mennyiséget és a termékenkénti népszerűséget.
 - A Liquibase migrációkból üres adatbázis felépíthető.
 - Fájlok és rekordok mentése, valamint tesztkörnyezeti visszaállítása dokumentált.
 

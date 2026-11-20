@@ -7,4 +7,20 @@ databaseChangeLog:
       file: db/changelog/changes/003-task-types-and-topic-split.yaml
   - include:
       file: db/changelog/changes/004-task-type-default-text.yaml
+  - include:
+      file: db/changelog/changes/005-sales-and-product-costing.yaml
+  - include:
+      file: db/changelog/changes/006-expense-and-material-purchases.yaml
+  - include:
+      file: db/changelog/changes/007-product-material-recipes.yaml
+  - include:
+      file: db/changelog/changes/008-product-delivery-type.yaml
+  - include:
+      file: db/changelog/changes/009-printing-costs.yaml
+  - include:
+      file: db/changelog/changes/010-print-side-cost.yaml
+  - include:
+      file: db/changelog/changes/011-sale-edit-and-packaging.yaml
+  - include:
+      file: db/changelog/changes/012-sale-print-cost-snapshot.yaml
 

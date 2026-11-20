@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-print-side-cost
+      author: codex
+      changes:
+        - sql:
+            sql: UPDATE app_setting SET setting_key='print_side_cost' WHERE setting_key='print_sheet_cost'

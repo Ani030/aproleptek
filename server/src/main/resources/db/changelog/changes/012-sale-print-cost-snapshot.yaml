@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-sale-print-cost-snapshot
+      author: codex
+      changes:
+        - addColumn:
+            tableName: sale_line
+            columns:
+              - column: { name: printing_cost, type: 'DECIMAL(12,2)', defaultValueNumeric: 0, constraints: { nullable: false } }
+        - sql:
+            comment: Recover the print-cost portion for existing snapshots using the product's current material cost.
+            sql: UPDATE sale_line sl SET printing_cost=GREATEST(sl.material_unit_cost-p.material_cost,0) FROM sale_product p WHERE p.id=sl.product_id

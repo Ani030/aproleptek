@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-sale-edit-and-packaging
+      author: codex
+      changes:
+        - addColumn:
+            tableName: sale_record
+            columns:
+              - column: { name: packaging_material_id, type: UUID, constraints: { nullable: true, foreignKeyName: fk_sale_packaging_material, references: material_item(id) } }
+              - column: { name: packaging_name, type: VARCHAR(160) }
+              - column: { name: packaging_unit, type: VARCHAR(30) }
+              - column: { name: packaging_quantity, type: 'DECIMAL(12,3)', defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: packaging_unit_cost, type: 'DECIMAL(12,2)', defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: packaging_total_cost, type: 'DECIMAL(12,2)', defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addColumn:
+            tableName: material_item
+            columns:
+              - column: { name: is_packaging, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+        - addColumn:
+            tableName: sale_line
+            columns:
+              - column: { name: packaging_cost, type: 'DECIMAL(12,2)', defaultValueNumeric: 0, constraints: { nullable: false } }

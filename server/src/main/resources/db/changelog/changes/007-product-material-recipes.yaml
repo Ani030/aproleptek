@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-product-material-recipes
+      author: codex
+      changes:
+        - createTable:
+            tableName: product_material
+            columns:
+              - column: { name: product_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_pm_product, references: sale_product(id), deleteCascade: true } }
+              - column: { name: material_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_pm_material, references: material_item(id) } }
+              - column: { name: quantity, type: 'DECIMAL(12,3)', constraints: { nullable: false } }
+        - addPrimaryKey:
+            tableName: product_material
+            columnNames: product_id, material_id
+            constraintName: pk_product_material
+        - sql:
+            sql: ALTER TABLE product_material ADD CONSTRAINT ck_product_material_quantity_positive CHECK (quantity > 0)
+        - createIndex:
+            tableName: product_material
+            indexName: ix_product_material_material
+            columns:
+              - column: { name: material_id }
+      rollback:
+        - dropTable: { tableName: product_material }

@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-sales-and-product-costing
+      author: codex
+      changes:
+        - createTable:
+            tableName: sale_product
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: worksheet_id, type: UUID, constraints: { foreignKeyName: fk_product_worksheet, references: worksheet(id) } }
+              - column: { name: bundle_id, type: UUID, constraints: { foreignKeyName: fk_product_bundle, references: bundle_plan(id) } }
+              - column: { name: variant_name, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: list_price, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+              - column: { name: material_cost, type: 'DECIMAL(12,2)', defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER TABLE sale_product ADD CONSTRAINT ck_product_one_content CHECK ((worksheet_id IS NOT NULL AND bundle_id IS NULL) OR (worksheet_id IS NULL AND bundle_id IS NOT NULL))
+        - createIndex:
+            tableName: sale_product
+            indexName: ix_product_worksheet
+            columns:
+              - column: { name: worksheet_id }
+        - createIndex:
+            tableName: sale_product
+            indexName: ix_product_bundle
+            columns:
+              - column: { name: bundle_id }
+        - createTable:
+            tableName: sale_record
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: sale_date, type: DATE, defaultValueComputed: CURRENT_DATE, constraints: { nullable: false } }
+              - column: { name: channel, type: VARCHAR(80), defaultValue: Vinted, constraints: { nullable: false } }
+              - column: { name: list_total, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+              - column: { name: agreed_total, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+              - column: { name: note, type: TEXT }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createTable:
+            tableName: sale_line
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: sale_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_sale_line_sale, references: sale_record(id), deleteCascade: true } }
+              - column: { name: product_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_sale_line_product, references: sale_product(id) } }
+              - column: { name: product_title, type: VARCHAR(360), constraints: { nullable: false } }
+              - column: { name: variant_name, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: quantity, type: INT, constraints: { nullable: false } }
+              - column: { name: list_unit_price, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+              - column: { name: material_unit_cost, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+              - column: { name: agreed_line_total, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+        - createIndex:
+            tableName: sale_record
+            indexName: ix_sale_date
+            columns:
+              - column: { name: sale_date }
+        - createIndex:
+            tableName: sale_line
+            indexName: ix_sale_line_product
+            columns:
+              - column: { name: product_id }
+      rollback:
+        - dropTable: { tableName: sale_line }
+        - dropTable: { tableName: sale_record }
+        - dropTable: { tableName: sale_product }

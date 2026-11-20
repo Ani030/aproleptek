@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-product-delivery-type
+      author: codex
+      changes:
+        - addColumn:
+            tableName: sale_product
+            columns:
+              - column: { name: delivery_type, type: VARCHAR(20), defaultValue: PHYSICAL, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER TABLE sale_product ADD CONSTRAINT ck_sale_product_delivery_type CHECK (delivery_type IN ('DIGITAL','PHYSICAL'))
+      rollback:
+        - dropColumn:
+            tableName: sale_product
+            columnName: delivery_type

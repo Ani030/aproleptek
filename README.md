@@ -62,6 +62,9 @@ VITE_API_URL=https://pelda.hu/api/v1
 - Korosztály, témakör és készségterület címkék, keresés és szűrés.
 - Önálló játékötlet CRUD.
 - Csomagterv adatmodell előkészítve; rendelés és fizetés még nincs.
+- Feladatlaphoz vagy csomagtervhez kapcsolt eladható termékváltozat listaárral és automatikus anyagköltség-számítással.
+- Többtermékes saját eladások rögzítése a vevővel egyeztetett végösszeggel.
+- Egyszeri kiadások, fogyóanyag-beszerzések és anyag-egységárak naplózása készletvezetés nélkül.
 
 ## Dokumentáció
 

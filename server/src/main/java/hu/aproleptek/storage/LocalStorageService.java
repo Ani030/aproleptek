@@ -36,8 +36,20 @@ public class LocalStorageService {
         String key = UUID.randomUUID() + extension;
         Path target = root.resolve(key).normalize();
         if (!target.startsWith(root)) throw new IllegalArgumentException("Érvénytelen fájlnév.");
-        Files.write(target, bytes);
+        try {
+            Files.write(target, bytes);
+        } catch (IOException ex) {
+            try { Files.deleteIfExists(target); }
+            catch (IOException cleanupError) { ex.addSuppressed(cleanupError); }
+            throw ex;
+        }
         return new StoredFile(key, type, file.getSize());
+    }
+
+    public void delete(String key) throws IOException {
+        Path target = root.resolve(key).normalize();
+        if (!target.startsWith(root)) throw new IllegalArgumentException("Érvénytelen fájlnév.");
+        Files.deleteIfExists(target);
     }
 
     private String detectType(byte[] bytes) {

@@ -37,12 +37,12 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 
 ## 2. Backend alapok és hozzáférés
 
-- [ ] Egységes API-hibaválasz és validációs szabályok kialakítása.
+- [x] Egységes API-hibaválasz és validációs szabályok kialakítása. *(A REST API hibái egységes `{error, status}` JSON formátumban jelennek meg; kezeli a hibás kérést, típuseltérést, fájlméretet, ütköző kapcsolatot és váratlan szerverhibát.)*
 - [x] Verziózott REST API-előtag kialakítása (`/api/v1`).
 - [x] Admin bejelentkezési folyamat megvalósítása.
 - [x] Jelszó biztonságos hash-elése.
 - [x] Szerveroldali szerepkör- és jogosultságellenőrzés az admin API-kon.
-- [ ] Adminisztrátori fiók biztonságos kezdeti létrehozásának módja dokumentálása.
+- [x] Adminisztrátori fiók biztonságos kezdeti létrehozásának módja dokumentálása. *(Első induláskor az `APP_ADMIN_USERNAME` és `APP_ADMIN_PASSWORD` környezeti változók adják a BCrypt-hash-elt admin belépést; a README leírja a helyi indítást és azt, hogy éles titkokat titokkezelőből kell megadni.)*
 - [x] CORS és HTTP Basic alapú token nélküli admin API hozzáférés konfigurálása.
 - [ ] Publikált nyilvános végpontok és védett admin végpontok elválasztása.
 - [x] Kérésméret- és fájlfeltöltési korlátok beállítása.
@@ -59,7 +59,7 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Fájlnév és tárolási kulcs szerveroldali generálása.
 - [x] Fájlfeltöltési metaadatok mentése PostgreSQL-be.
 - [x] Előnézeti kép biztonságos megjelenítése.
-- [ ] Hiba esetén részleges feltöltés és árva metaadat rendezett kezelése.
+- [x] Hiba esetén részleges feltöltés és árva metaadat rendezett kezelése. *(A többfájlos feltöltés tranzakciós kötegben fut; hiba esetén a DB-változások visszagördülnek, a már kiírt fájlok törlődnek.)*
 - [ ] Éles digitális termékfájlok későbbi védett kiszolgálásának megtervezése.
 - [ ] Fájlmentési és visszaállítási folyamat dokumentálása.
 
@@ -72,12 +72,12 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Kivágható lapok hozzáadása, módosítása és törlése.
 - [x] Kivágható lapok sorrendjének mentése.
 - [x] Összesített oldalszám számítása.
-- [ ] A4-es méret, tájolás, színesség és oldalszám adatainak validálása.
+- [x] A4-es méret, tájolás, színesség és oldalszám adatainak validálása. *(Backend: engedélyezett papírméretek/tájolások/színmódok, oldalszám 1–100 közé korlátozva.)*
 - [x] Korosztályok, témák és készségterületek hozzárendelése.
 - [x] Több feladattípus hozzárendelése egy feladatlaphoz.
 - [x] Állatok és Természet egymástól független témakörként hozzárendelhető egy vagy több feladatlaphoz.
 - [ ] Archivált feladatlap ne jelenjen meg publikus katalógusban.
-- [ ] Hibaüzenetek és érvénytelen kapcsolatok kezelése.
+- [x] Hibaüzenetek és érvénytelen kapcsolatok kezelése. *(A hibás kérés, típuseltérés, hiányzó paraméter, méretkorlát, jogosultság, duplikáció és adatkapcsolati ütközés egységes `{error, status}` választ ad.)*
 
 ## 5. Játékötlet és csomagterv API
 
@@ -91,6 +91,25 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Digitális/fizikai/kettős csomagtípus rögzítése.
 - [ ] Csomagterv ne hozzon létre fizetést, rendelést vagy készletmozgást az MVP-ben.
 
+## 5/A. Saját értékesítés, termékköltség és pénzügyi áttekintő
+
+- [x] Döntés rögzítése: az eladás több, meglévő katalógustartalomhoz kapcsolt termékből állhat, egyetlen megállapodott végösszeggel; nincs automatikus mennyiségi kedvezményszabály.
+- [x] Eladható termékváltozat kapcsolása feladatlaphoz vagy csomagtervhez, formátummal, listaárral és becsült anyagköltséggel. *(Liquibase `sale_product` tábla, termék API és admin űrlap.)*
+- [x] Több terméksor és mennyiség rögzítése egy eladásban. *(Admin eladási űrlap és tranzakciós `/sales` API.)*
+- [x] Listaár-összeg, elfogadott végösszeg és egyeztetési különbözet mentése; terméksoronkénti összeg automatikus arányosítása.
+- [x] Eladás dátuma, értékesítési csatornája (például Vinted) és megjegyzése rögzíthető.
+- [x] Múltbeli eladás termék- és áradatainak pillanatképe megmarad későbbi árváltozás után is.
+- [x] Termékenkénti darabszám, eladási gyakoriság és bevétel kimutatása. *(Adminban összesített bevétel és legnépszerűbb termékek.)*
+- [x] Pénzügyi felület külön, felül váltható Áttekintő, Egyszeri kiadások, Fogyóanyagok és Eladások nézetekkel.
+- [x] Termékenkénti fedezet és időszakválasztós statisztika. *(A termékrangsor a történeti bevételt és anyagköltség levonása utáni fedezetet mutatja; az áttekintő eladási bevétele és becsült anyagköltsége dátumtartomány szerint szűrhető.)*
+- [x] Egyszeri eszközkiadások és fogyóanyag-beszerzések naplózása készletnyilvántartás nélkül. *(A beszerzési mennyiségből és teljes árból egységár készül; az anyagok átlagos egységára súlyozottan jelenik meg.)*
+- [x] Nincs készletvezetés, automatikus készletcsökkentés vagy automatikus rendelés-/fizetésintegráció ebben az ütemben.
+- [x] Fogyóanyag-beszerzések és egységár-számítás megvalósítása készletvezetés nélkül.
+- [x] Fogyóanyagok mennyiségi összekapcsolása a termékváltozatokkal, automatikus anyagköltség-számítással. *(A termék anyaglistája a súlyozott átlagos egységárakból számol; új beszerzés frissíti az érintett termékváltozatok aktuális költségét. Az eladási sorok költségpillanatképe nem változik.)*
+- [x] Nyomtatási díj automatikus hozzáadása a fizikai termékváltozatok gyártási költségéhez, egy- és kétoldalas beállítással. *(A Pénzügy → Áttekintő nézetében állítható a nyomtatott oldalankénti díj; a rendszer a papírlapok és a nyomtatott felületek száma alapján számol, az eladás pedig a teljes gyártási költséget rögzíti pillanatképként.)*
+- [x] Termékadatlap megnyitása külön szerkesztőnézetben: felhasznált fogyóanyagok, darabonkénti mennyiség, számolt anyagköltség és tervezett eladási ár.
+- [x] Eladás szerkesztése, dátum ISO-formátumú kezelése és csomagolóanyag-választás eladásonként. *(A csomagolás súlyozott átlagos egységárból számolódik, mentéskor pillanatképként rögzül és arányosan kerül az eladási terméksorokra.)*
+
 ## 6. Kategóriák és keresés
 
 - [x] Korosztályok adminisztrálható listája.
@@ -102,12 +121,12 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Feladatlap listájának külön Feladattípus szűrője legyen.
 - [x] Témakörszűrőben az Állatok és a Természet külön választható; több témakör egyidejű kiválasztása működik.
 - [x] Keresési API fogad külön korosztály-, feladattípus-, témakör- és készségterület-szűrőket, és kombinálja azokat.
-- [ ] Kategória slugok és megjelenítési sorrend kezelése.
-- [ ] Inaktív kategória ne vesszen el olyan tartalomról, amely már használja.
+- [x] Kategória slugok és megjelenítési sorrend kezelése. *(Adminfelületről módosítható név, slug és sorrend; a backend validálja ezeket, és a taxonómia listái a sorrendet használják.)*
+- [x] Inaktív kategória ne vesszen el olyan tartalomról, amely már használja. *(Az admin lekérheti az inaktív kategóriákat; új tartalomhoz nem választhatók, a meglévő kapcsolataikat pedig a feladatlap- és játékötlet-mentés megőrzi.)*
 - [x] Szöveges keresés címben és leírásban.
 - [x] Több szűrő együttes használata API-szinten és az admin katalógusban.
 - [x] Lapozás és rendezés API-szinten.
-- [ ] Üres találati, betöltési és hibaállapotok megtervezése.
+- [x] Üres találati, betöltési és hibaállapotok megtervezése. *(A katalógus üres keresési állapota mellett a teljes admin kezdeti adatbetöltése visszajelzést és hiba esetén újrapróbálást mutat.)*
 
 ## 7. Admin frontend
 
@@ -140,8 +159,8 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [ ] Témakör- és készségterület-lista véglegesítése.
 - [x] Feladattípusok induló elnevezéseinek egységesítése, például „Árnyékpárosító” és „Képpárosító”.
 - [x] Állatok és Természet önálló témacímkékként felvéve; további alkategóriák később bővíthetők.
-- [ ] Fájlelnevezési és verziózási konvenció meghatározása.
-- [ ] Feladatlap-minőségi ellenőrző lista összeállítása.
+- [x] Fájlelnevezési és verziózási konvenció meghatározása. *(Rögzítve a `docs/fajlelnevezes-es-verziozas.md` dokumentumban; a kézi verziószámozás és az UUID-alapú tárkulcs szerepe is tisztázva.)*
+- [x] Feladatlap-minőségi ellenőrző lista összeállítása. *(A tartalmat, fájlokat, nyomtatást, hozzáférhetőséget és publikálást a `docs/feladatlap-minosegi-ellenorzo-lista.md` foglalja össze.)*
 - [ ] Első feladatlapok feltöltése és helyes A4-es nyomtatási ellenőrzése.
 - [ ] Kivágható lapos feladatlapok összes oldalának ellenőrzése.
 - [ ] Első önálló játékötletek rögzítése.

@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-printing-costs
+      author: codex
+      changes:
+        - addColumn:
+            tableName: sale_product
+            columns:
+              - column:
+                  name: print_sides
+                  type: smallint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: app_setting
+            columns:
+              - column:
+                  name: setting_key
+                  type: varchar(80)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: setting_value
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+        - insert:
+            tableName: app_setting
+            columns:
+              - column: { name: setting_key, value: print_sheet_cost }
+              - column: { name: setting_value, value: '10.00' }
+        - sql:
+            sql: ALTER TABLE sale_product ADD CONSTRAINT sale_product_print_sides_check CHECK (print_sides IN (1,2))

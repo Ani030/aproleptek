@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,12 +14,15 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class SecurityConfig {
@@ -37,6 +42,18 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain security(HttpSecurity http) throws Exception {
+        AuthenticationEntryPoint unauthorized = (request, response, exception) -> {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.getWriter().write("{\"error\":\"Bejelentkezés szükséges.\",\"status\":\"401\"}");
+        };
+        AccessDeniedHandler forbidden = (request, response, exception) -> {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.getWriter().write("{\"error\":\"Nincs jogosultságod ehhez a művelethez.\",\"status\":\"403\"}");
+        };
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
@@ -46,6 +63,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/health").permitAll()
                         .anyRequest().hasRole("ADMIN"))
                 .httpBasic(Customizer.withDefaults())
+                .exceptionHandling(errors -> errors
+                        .authenticationEntryPoint(unauthorized)
+                        .accessDeniedHandler(forbidden))
                 .build();
     }
 
