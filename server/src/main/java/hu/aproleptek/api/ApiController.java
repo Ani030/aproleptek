@@ -595,11 +595,7 @@ public class ApiController {
         Map<String, Object> row = jdbc.queryForMap("select * from worksheet where id=?", id);
         row.put("pages", jdbc.queryForList("select p.*, mp.original_name as preview_name, mp.media_type as preview_media_type, fp.original_name as print_name, fp.media_type as print_media_type from worksheet_page p left join media_asset mp on mp.id=p.preview_asset_id left join media_asset fp on fp.id=p.print_asset_id where p.worksheet_id=? order by p.sort_order", id));
         row.put("terms", termsFor("worksheet_id", id));
-        List<Map<String,Object>> saleProducts=jdbc.queryForList("select p.id,p.worksheet_id,p.delivery_type,p.print_sides,p.variant_name,p.list_price,p.material_cost,coalesce(s.units_sold,0) as units_sold,coalesce(s.revenue,0) as revenue,coalesce(s.sold_material_cost,0) as sold_material_cost " +
-                "from sale_product p left join (select product_id,sum(quantity) as units_sold,sum(agreed_line_total) as revenue,sum(quantity*material_unit_cost+packaging_cost) as sold_material_cost from sale_line group by product_id) s on s.product_id=p.id " +
-                "where p.worksheet_id=? and p.active=true order by p.variant_name",id);
-        saleProducts.forEach(this::addPrintingCost);
-        row.put("saleProducts",saleProducts);
+        row.put("saleProducts",worksheetSaleProducts(id,true));
         int total = ((List<Map<String,Object>>) row.get("pages")).stream().mapToInt(p -> intValue(p.get("page_count"),1)).sum();
         row.put("totalPages", total);
         return row;
@@ -619,6 +615,14 @@ public class ApiController {
         List<Map<String, Object>> rows = jdbc.queryForList(sql, params.toArray());
         rows.forEach(row -> row.put("terms", termsFor("worksheet_id", row.get("id"))));
         return rows;
+    }
+
+    private List<Map<String,Object>> worksheetSaleProducts(UUID worksheetId,boolean includeMaterials){
+        List<Map<String,Object>> products=jdbc.queryForList("select p.id,p.worksheet_id,p.delivery_type,p.print_sides,p.variant_name,p.list_price,p.material_cost,coalesce(s.units_sold,0) as units_sold,coalesce(s.revenue,0) as revenue,coalesce(s.sold_material_cost,0) as sold_material_cost " +
+                "from sale_product p left join (select product_id,sum(quantity) as units_sold,sum(agreed_line_total) as revenue,sum(quantity*material_unit_cost+packaging_cost) as sold_material_cost from sale_line group by product_id) s on s.product_id=p.id " +
+                "where p.worksheet_id=? and p.active=true order by p.variant_name",worksheetId);
+        products.forEach(product->{addPrintingCost(product);if(includeMaterials)product.put("materials",productMaterials((UUID)product.get("id")));});
+        return products;
     }
 
     private Long worksheetCount(String q, String status, UUID termId) {
