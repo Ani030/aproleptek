@@ -121,7 +121,7 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Közös `catalog_item` alaprekord és típus/státusz/cím index létrehozása. *(Liquibase `020-extensible-catalog-foundation`.)*
 - [x] Katalógustípusok és közös katalógustételek olvasó API-ja (`/catalog/types`, `/catalog/items`).
 - [x] Feladatlap- és csomagterv API mentés/archiválás szinkronban tartja a közös katalógusrekordot.
-- [ ] Típusonként külön részlettáblák és validált API-kialakítás; a típus-specifikus mezők ne kerüljenek a közös termék- vagy eladástáblába.
+- [x] Típusonként külön részlettáblák és API-k; a típus-specifikus mezők nem kerülnek a közös termék- vagy eladástáblába.
 - [x] A `sale_product` közös katalógustartalomhoz kapcsolása, a meglévő termékváltozatok átvezetésével; a gyártási recept, nyomtatási költség, előkészítés és készlet továbbra is a közös termékváltozatot használja. *(A termék API új rekordnál is menti a közös katalógusazonosítót.)*
 - [x] Meglévő feladatlapok, csomagtervek és eladható termékváltozatok közös katalógusazonosítóinak visszatöltése migrációban.
 - [ ] Meglévő adatbázison ellenőrizni, hogy az eladások, anyagkapcsolatok, médiafájlok, készletek és előkészítési tételek azonosítói és adatai változatlanok maradnak.
@@ -129,13 +129,13 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] A `020`–`022` migrációk lefutása a meglévő fejlesztői adatbázison ellenőrizve; Liquibase mind a 22 changesetet alkalmazottnak jelzi.
 - [ ] Teljesen üres adatbázis felépítésének ellenőrzése a teljes changeloggal.
 - [ ] Régi API-válaszok és admin folyamatok átállítása úgy, hogy a már rögzített eladások és költség-pillanatképek változatlanok maradjanak.
-- [ ] Közös katalóguslista és tartalomtípus szerinti szűrés kialakítása; a jelenlegi külön munkanézetek megmaradhatnak célzott szerkesztőként.
+- [x] Közös katalóguslista és tartalomtípus szerinti szűrés kialakítása; a célzott munkanézetek megmaradnak szerkesztőként.
 
 ### Kártyacsomag
 
 - [x] Kártyacsomag mint önálló katalógustartalom létrehozása. *(Liquibase részlettáblák, API CRUD és admin nézet.)*
 - [x] Borítókép, opcionális hátoldal, leírás/játékszabály és rendezett, képes kártyalap-lista kezelése.
-- [ ] Kártyalapok tartalmi elemekként kezelése, nem külön eladási termékként; azonos kártyalap több csomagban újrafelhasználható legyen, ha ez indokolt.
+- [x] Kártyalapok külön katalógustartalomként kezelése; ugyanaz a kártyalap több csomagban újrafelhasználható.
 - [x] Kártyák nyomtatási elrendezésének és egy oldalra férő kártyák számának rögzítése.
 - [x] Oldalszám, egy-/kétoldalas nyomtatás és nyomtatási költség számítása a kártyaelrendezésből.
 - [x] Kártyacsomag fizikai termékváltozatának anyaglistája, nyomtatási/laminálási/tépőzár előkészítése és költsége a feladatlapok közös folyamatát használja.
@@ -144,13 +144,14 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 
 ### Bővíthető játékok és elemek
 
-- [ ] Játék mint önálló katalógustartalom és játékcsalád létrehozása (első példák: öltöztetős, boltos/pénztáros játék).
-- [ ] Újrafelhasználható játékelemek kezelése kategóriával, képpel és szükség szerinti kompatibilitással (például baba, ruha, kiegészítő, zöldség, gyümölcs).
-- [ ] Bővíthető elemkategóriák kialakítása fix, típusonkénti adatbázis-oszlopok helyett.
-- [ ] Játék, játékelem és összeállított eladható csomag kapcsolatainak külön kezelése.
-- [ ] Játékelemek több játékban/csomagban történő újrafelhasználásának támogatása.
-- [ ] Játék vagy játékelem önálló értékesítése csak külön létrehozott termékváltozattal történjen.
-- [ ] A fizikai játékkészletek ugyanazokat az anyag-, nyomtatás-, laminálás-, tépőzár-, előkészítés-, készlet- és eladási szolgáltatásokat használják.
+- [x] Játék mint önálló katalógustartalom és bővíthető játékcsalád létrehozása (öltöztetős, boltos/pénztáros, egyéb).
+- [x] Újrafelhasználható játékelemek kezelése kategóriával, képpel és kompatibilitással (például baba, ruha, kiegészítő, zöldség, gyümölcs).
+- [x] Bővíthető játéktípus- és elemkategória-törzs kialakítása új adatbázis-oszlopok hozzáadása nélkül.
+- [x] Játék és játékelemek külön kapcsolata; egy játékelem több játékcsomagban is felhasználható.
+- [x] Játékelemek több játékban/csomagban történő újrafelhasználásának támogatása.
+- [x] Játék vagy játékelem önálló értékesítése külön létrehozott termékváltozattal történik.
+- [x] A fizikai játékkészletek a közös anyag-, nyomtatás-, előkészítés-, készlet- és eladási folyamatba kapcsolódnak.
+- [ ] Játékcsomag és játékelem létrehozása, termékváltozata, eladása és készletre vétele felületen végigellenőrizve.
 
 ### Bővíthetőség ellenőrzése
 
@@ -168,8 +169,8 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Előkészítési tételek létrehozása mennyiséggel, képpel, nyomtatás/laminálás/tépőzár jelölőkkel és megjegyzéssel.
 - [x] Egy termék több előkészítési tételének egy termékcsoport alatt történő összesítése, a részletek megnyithatók.
 - [x] Előkészítés alatt álló darabszám elkülönítése a késztermékkészlettől.
-- [ ] Előkészítésből késztermék bevételezésekor a bevételezett mennyiség kerüljön át a késztermékkészletbe, és ugyanennyivel csökkenjen/tűnjön el az előkészítési tételből.
-- [ ] A késztermék-bevételezés jelenleg jelzett „Váratlan hiba” esetének javítása és a maradék mennyiséggel történő részleges bevételezés ellenőrzése.
+- [x] Előkészítésből késztermék bevételezésekor a bevételezett mennyiség átkerül a késztermékkészletbe, és ugyanennyivel csökken az előkészítési tétel (teljes és részleges API-folyamat izolált adatbázis-klónon ellenőrizve).
+- [x] A korábban jelzett „Váratlan hiba” jelenlegi kóddal nem reprodukálódott a klónon; a részleges bevételezés sikerült. A szerveroldali naplózás most megőrzi a jövőbeli váratlan kivételek stack trace-ét.
 - [ ] Eladás készletcsökkentésének, eladásszerkesztéskor történő korrekciónak és törlés/sztornó utáni visszaállításnak végigellenőrzése.
 - [ ] Készletmozgás-előzmények érthető megjelenítése és kézi korrekció okának rögzítése.
 

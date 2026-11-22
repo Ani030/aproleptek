@@ -1,0 +1,75 @@
+databaseChangeLog:
+  - changeSet:
+      id: 024-reusable-card-faces
+      author: codex
+      changes:
+        - insert:
+            tableName: catalog_type
+            columns:
+              - column: { name: code, value: CARD_FACE }
+              - column: { name: name, value: Kártyalap }
+              - column: { name: sort_order, valueNumeric: 60 }
+        - createTable:
+            tableName: card_face
+            columns:
+              - column: { name: catalog_item_id, type: UUID, constraints: { primaryKey: true, nullable: false, foreignKeyName: fk_card_face_catalog, references: catalog_item(id), deleteCascade: true } }
+              - column: { name: front_asset_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_card_face_asset, references: media_asset(id) } }
+        - sql:
+            sql: >-
+              INSERT INTO catalog_item(id,type_code,slug,title,status,preview_asset_id)
+              SELECT c.id,'CARD_FACE','card-'||c.id::text,coalesce(nullif(c.title,''),m.original_name),'DRAFT',c.front_asset_id
+              FROM card_deck_card c JOIN media_asset m ON m.id=c.front_asset_id;
+              INSERT INTO card_face(catalog_item_id,front_asset_id)
+              SELECT id,front_asset_id FROM card_deck_card;
+        - createTable:
+            tableName: card_deck_card_new
+            columns:
+              - column: { name: deck_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_deck_card_deck_v2, references: card_deck(catalog_item_id), deleteCascade: true } }
+              - column: { name: card_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_deck_card_face_v2, references: card_face(catalog_item_id) } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addPrimaryKey:
+            tableName: card_deck_card_new
+            columnNames: deck_id, card_id
+            constraintName: pk_card_deck_card_v2
+        - addUniqueConstraint:
+            tableName: card_deck_card_new
+            columnNames: deck_id, sort_order
+            constraintName: uq_card_deck_card_order_v2
+        - sql:
+            sql: INSERT INTO card_deck_card_new(deck_id,card_id,sort_order) SELECT deck_id,id,sort_order FROM card_deck_card;
+        - dropTable:
+            tableName: card_deck_card
+        - renameTable:
+            oldTableName: card_deck_card_new
+            newTableName: card_deck_card
+        - createIndex:
+            tableName: card_deck_card
+            indexName: ix_card_deck_card_order
+            columns:
+              - column: { name: deck_id }
+              - column: { name: sort_order }
+        - createIndex:
+            tableName: card_deck_card
+            indexName: ix_card_deck_card_face
+            columns:
+              - column: { name: card_id }
+      rollback:
+        - dropTable: { tableName: card_deck_card }
+        - createTable:
+            tableName: card_deck_card
+            columns:
+              - column: { name: id, type: UUID, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: deck_id, type: UUID, constraints: { nullable: false } }
+              - column: { name: title, type: VARCHAR(200) }
+              - column: { name: front_asset_id, type: UUID, constraints: { nullable: false } }
+              - column: { name: sort_order, type: INT, constraints: { nullable: false } }
+        - sql:
+            sql: >-
+              INSERT INTO card_deck_card(id,deck_id,title,front_asset_id,sort_order)
+              SELECT c.card_id,c.deck_id,ci.title,cf.front_asset_id,c.sort_order
+              FROM card_deck_card c JOIN card_face cf ON cf.catalog_item_id=c.card_id
+              JOIN catalog_item ci ON ci.id=c.card_id;
+        - dropTable: { tableName: card_face }
+        - sql:
+            sql: DELETE FROM catalog_item WHERE type_code='CARD_FACE';
+        - delete: { tableName: catalog_type, where: "code='CARD_FACE'" }

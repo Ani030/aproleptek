@@ -1,5 +1,7 @@
 package hu.aproleptek.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -17,6 +19,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
     @ExceptionHandler(IllegalArgumentException.class)
     ResponseEntity<Map<String, String>> badRequest(IllegalArgumentException ex) {
         return response(HttpStatus.BAD_REQUEST, messageOr(ex.getMessage(), "Érvénytelen kérés."));
@@ -61,6 +65,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<Map<String, String>> unexpected(Exception ex) {
+        log.error("Unhandled API exception", ex);
         return response(HttpStatus.INTERNAL_SERVER_ERROR, "Váratlan hiba történt. Próbáld újra később.");
     }
 

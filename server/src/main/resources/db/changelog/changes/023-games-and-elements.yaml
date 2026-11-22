@@ -1,0 +1,139 @@
+databaseChangeLog:
+  - changeSet:
+      id: 023-games-and-elements
+      author: codex
+      changes:
+        - createTable:
+            tableName: game_family
+            columns:
+              - column: { name: code, type: VARCHAR(40), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: VARCHAR(120), constraints: { nullable: false, unique: true } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+        - insert:
+            tableName: game_family
+            columns:
+              - column: { name: code, value: DRESS_UP }
+              - column: { name: name, value: Öltöztetős játék }
+              - column: { name: sort_order, valueNumeric: 10 }
+        - insert:
+            tableName: game_family
+            columns:
+              - column: { name: code, value: SHOP_CASHIER }
+              - column: { name: name, value: Boltos és pénztáros játék }
+              - column: { name: sort_order, valueNumeric: 20 }
+        - insert:
+            tableName: game_family
+            columns:
+              - column: { name: code, value: CUSTOM }
+              - column: { name: name, value: Egyéb játék }
+              - column: { name: sort_order, valueNumeric: 100 }
+        - createTable:
+            tableName: game_element_category
+            columns:
+              - column: { name: code, type: VARCHAR(40), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: VARCHAR(120), constraints: { nullable: false, unique: true } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+        - insert:
+            tableName: game_element_category
+            columns:
+              - column: { name: code, value: DOLL }
+              - column: { name: name, value: Baba/figura }
+              - column: { name: sort_order, valueNumeric: 10 }
+        - insert:
+            tableName: game_element_category
+            columns:
+              - column: { name: code, value: CLOTHING }
+              - column: { name: name, value: Ruha }
+              - column: { name: sort_order, valueNumeric: 20 }
+        - insert:
+            tableName: game_element_category
+            columns:
+              - column: { name: code, value: ACCESSORY }
+              - column: { name: name, value: Kiegészítő }
+              - column: { name: sort_order, valueNumeric: 30 }
+        - insert:
+            tableName: game_element_category
+            columns:
+              - column: { name: code, value: FRUIT }
+              - column: { name: name, value: Gyümölcs }
+              - column: { name: sort_order, valueNumeric: 40 }
+        - insert:
+            tableName: game_element_category
+            columns:
+              - column: { name: code, value: VEGETABLE }
+              - column: { name: name, value: Zöldség }
+              - column: { name: sort_order, valueNumeric: 50 }
+        - insert:
+            tableName: game_element_category
+            columns:
+              - column: { name: code, value: MONEY }
+              - column: { name: name, value: Pénz }
+              - column: { name: sort_order, valueNumeric: 60 }
+        - insert:
+            tableName: game_element_category
+            columns:
+              - column: { name: code, value: SHOP_ITEM }
+              - column: { name: name, value: Bolti kellék }
+              - column: { name: sort_order, valueNumeric: 70 }
+        - insert:
+            tableName: game_element_category
+            columns:
+              - column: { name: code, value: OTHER }
+              - column: { name: name, value: Egyéb játékelem }
+              - column: { name: sort_order, valueNumeric: 100 }
+        - createTable:
+            tableName: game_content
+            columns:
+              - column: { name: catalog_item_id, type: UUID, constraints: { primaryKey: true, nullable: false, foreignKeyName: fk_game_catalog_item, references: catalog_item(id), deleteCascade: true } }
+              - column: { name: family_code, type: VARCHAR(40), constraints: { nullable: false, foreignKeyName: fk_game_family, references: game_family(code) } }
+              - column: { name: rules, type: TEXT }
+              - column: { name: print_pages, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER TABLE game_content ADD CONSTRAINT ck_game_print_pages CHECK (print_pages >= 0 AND print_pages <= 1000)
+        - createTable:
+            tableName: game_element
+            columns:
+              - column: { name: catalog_item_id, type: UUID, constraints: { primaryKey: true, nullable: false, foreignKeyName: fk_game_element_catalog_item, references: catalog_item(id), deleteCascade: true } }
+              - column: { name: category_code, type: VARCHAR(40), constraints: { nullable: false, foreignKeyName: fk_game_element_category, references: game_element_category(code) } }
+              - column: { name: print_pages, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: units_per_sheet, type: INT, defaultValueNumeric: 1, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER TABLE game_element ADD CONSTRAINT ck_game_element_printing CHECK (print_pages >= 0 AND print_pages <= 100 AND units_per_sheet > 0 AND units_per_sheet <= 100)
+        - createTable:
+            tableName: game_content_element
+            columns:
+              - column: { name: game_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_game_element_game, references: game_content(catalog_item_id), deleteCascade: true } }
+              - column: { name: element_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_game_element_item, references: game_element(catalog_item_id) } }
+              - column: { name: quantity, type: INT, defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addPrimaryKey:
+            tableName: game_content_element
+            columnNames: game_id, element_id
+            constraintName: pk_game_content_element
+        - sql:
+            sql: ALTER TABLE game_content_element ADD CONSTRAINT ck_game_content_element_quantity CHECK (quantity > 0 AND quantity <= 10000)
+        - createTable:
+            tableName: game_element_compatibility
+            columns:
+              - column: { name: element_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_game_compat_element, references: game_element(catalog_item_id), deleteCascade: true } }
+              - column: { name: compatible_element_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_game_compat_target, references: game_element(catalog_item_id), deleteCascade: true } }
+        - addPrimaryKey:
+            tableName: game_element_compatibility
+            columnNames: element_id, compatible_element_id
+            constraintName: pk_game_element_compatibility
+        - sql:
+            sql: ALTER TABLE game_element_compatibility ADD CONSTRAINT ck_game_element_compatibility_not_self CHECK (element_id <> compatible_element_id)
+        - createIndex:
+            tableName: game_content_element
+            indexName: ix_game_content_element_element
+            columns:
+              - column: { name: element_id }
+      rollback:
+        - dropTable: { tableName: game_element_compatibility }
+        - dropTable: { tableName: game_content_element }
+        - dropTable: { tableName: game_element }
+        - dropTable: { tableName: game_content }
+        - dropTable: { tableName: game_element_category }
+        - dropTable: { tableName: game_family }

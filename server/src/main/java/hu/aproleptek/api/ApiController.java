@@ -77,13 +77,20 @@ public class ApiController {
 
     @GetMapping("/card-decks")
     public List<Map<String,Object>> cardDecks() {
-        return jdbc.queryForList("select ci.id,ci.slug,ci.title,ci.summary,ci.description,ci.status,ci.preview_asset_id,cd.back_asset_id,cd.rules,cd.cards_per_sheet,count(c.id) as card_count " +
+        return jdbc.queryForList("select ci.id,ci.slug,ci.title,ci.summary,ci.description,ci.status,ci.preview_asset_id,cd.back_asset_id,cd.rules,cd.cards_per_sheet,count(c.card_id) as card_count " +
                 "from catalog_item ci join card_deck cd on cd.catalog_item_id=ci.id left join card_deck_card c on c.deck_id=ci.id " +
                 "group by ci.id,cd.catalog_item_id order by ci.updated_at desc");
     }
 
     @GetMapping("/card-decks/{id}")
     public Map<String,Object> cardDeck(@PathVariable UUID id) { return loadCardDeck(id); }
+
+    @GetMapping("/card-faces")
+    public List<Map<String,Object>> cardFaces() {
+        return jdbc.queryForList("select ci.id,ci.title,cf.front_asset_id,m.original_name as front_name,m.media_type as front_media_type " +
+                "from card_face cf join catalog_item ci on ci.id=cf.catalog_item_id join media_asset m on m.id=cf.front_asset_id " +
+                "where ci.status<>'ARCHIVED' order by ci.title");
+    }
 
     @PostMapping("/card-decks")
     @Transactional
@@ -106,8 +113,9 @@ public class ApiController {
     private Map<String,Object> loadCardDeck(UUID id) {
         Map<String,Object> row=jdbc.queryForMap("select ci.id,ci.slug,ci.title,ci.summary,ci.description,ci.status,ci.preview_asset_id,cd.back_asset_id,cd.rules,cd.cards_per_sheet " +
                 "from catalog_item ci join card_deck cd on cd.catalog_item_id=ci.id where ci.id=? and ci.type_code='CARD_DECK'",id);
-        row.put("cards",jdbc.queryForList("select c.id,c.title,c.front_asset_id,c.sort_order,m.original_name as front_name,m.media_type as front_media_type " +
-                "from card_deck_card c join media_asset m on m.id=c.front_asset_id where c.deck_id=? order by c.sort_order",id));
+        row.put("cards",jdbc.queryForList("select c.card_id as id,ci.title,cf.front_asset_id,c.sort_order,m.original_name as front_name,m.media_type as front_media_type " +
+                "from card_deck_card c join card_face cf on cf.catalog_item_id=c.card_id join catalog_item ci on ci.id=c.card_id " +
+                "join media_asset m on m.id=cf.front_asset_id where c.deck_id=? order by c.sort_order",id));
         return row;
     }
 
@@ -127,14 +135,31 @@ public class ApiController {
         else jdbc.update("update card_deck set back_asset_id=?,rules=?,cards_per_sheet=? where catalog_item_id=?",backAssetId,rules,cardsPerSheet,catalogItemId);
         jdbc.update("delete from card_deck_card where deck_id=?",catalogItemId);
         List<Map<String,Object>> cards=listOfMaps(body.get("cards"));
+        Set<UUID> linkedCardIds=new HashSet<>();
         for(int index=0;index<cards.size();index++) {
             Map<String,Object> card=cards.get(index);
             UUID frontAssetId=uuidOrNull(card.get("frontAssetId"));
-            if(frontAssetId==null) throw new IllegalArgumentException("Minden kártyához tölts fel előoldali képet.");
-            requireImageAsset(frontAssetId,"kártyalap");
+            UUID cardId=uuidOrNull(card.get("id"));
+            if(cardId==null&&frontAssetId==null) throw new IllegalArgumentException("Minden új kártyalaphoz tölts fel előoldali képet.");
+            if(cardId!=null&&!linkedCardIds.add(cardId)) throw new IllegalArgumentException("Egy kártyalap ugyanabban a csomagban csak egyszer szerepelhet.");
             String cardTitle=optional(card,"title");
             if(cardTitle!=null&&cardTitle.length()>200) throw new IllegalArgumentException("A kártyalap neve legfeljebb 200 karakter lehet.");
-            jdbc.update("insert into card_deck_card(deck_id,title,front_asset_id,sort_order) values (?,?,?,?)",catalogItemId,cardTitle,frontAssetId,index);
+            if(cardId!=null) {
+                jdbc.queryForObject("select catalog_item_id from card_face where catalog_item_id=?",UUID.class,cardId);
+                if(frontAssetId==null) frontAssetId=jdbc.queryForObject("select front_asset_id from card_face where catalog_item_id=?",UUID.class,cardId);
+                requireImageAsset(frontAssetId,"kártyalap");
+                String savedTitle=cardTitle!=null?cardTitle:jdbc.queryForObject("select title from catalog_item where id=?",String.class,cardId);
+                jdbc.update("update catalog_item set title=?,preview_asset_id=?,updated_at=? where id=? and type_code='CARD_FACE'",savedTitle,frontAssetId,Timestamp.from(Instant.now()),cardId);
+                jdbc.update("update card_face set front_asset_id=? where catalog_item_id=?",frontAssetId,cardId);
+            } else {
+                cardId=UUID.randomUUID();
+                linkedCardIds.add(cardId);
+                requireImageAsset(frontAssetId,"kártyalap");
+                String savedTitle=cardTitle!=null?cardTitle:jdbc.queryForObject("select original_name from media_asset where id=?",String.class,frontAssetId);
+                upsertCatalogItem(cardId,"CARD_FACE","card-"+cardId,savedTitle,null,null,"DRAFT",frontAssetId);
+                jdbc.update("insert into card_face(catalog_item_id,front_asset_id) values (?,?)",cardId,frontAssetId);
+            }
+            jdbc.update("insert into card_deck_card(deck_id,card_id,sort_order) values (?,?,?)",catalogItemId,cardId,index);
         }
     }
 
@@ -142,6 +167,133 @@ public class ApiController {
         if(assetId==null) return;
         String mediaType=jdbc.queryForObject("select media_type from media_asset where id=?",String.class,assetId);
         if(mediaType==null||!mediaType.toLowerCase(Locale.ROOT).startsWith("image/")) throw new IllegalArgumentException("A(z) "+label+" csak képfájl lehet.");
+    }
+
+    @GetMapping("/game-families")
+    public List<Map<String,Object>> gameFamilies(){return jdbc.queryForList("select code,name,sort_order from game_family where active=true order by sort_order,name");}
+
+    @PostMapping("/game-families")
+    public Map<String,Object> createGameFamily(@RequestBody Map<String,Object> body){
+        String name=required(body,"name");if(name.length()>120)throw new IllegalArgumentException("A játéktípus neve legfeljebb 120 karakter lehet.");
+        String code=Optional.ofNullable(optional(body,"code")).orElseGet(()->slugify(name).replace('-','_').toUpperCase(Locale.ROOT));
+        if(!code.matches("[A-Z0-9_]{2,40}"))throw new IllegalArgumentException("A játéktípus kódja csak nagybetűt, számot és aláhúzást tartalmazhat.");
+        jdbc.update("insert into game_family(code,name,sort_order) values (?,?,?)",code,name,boundedInt(body.get("sortOrder"),100,0,10000,"megjelenítési sorrend"));
+        return jdbc.queryForMap("select code,name,sort_order from game_family where code=?",code);
+    }
+
+    @GetMapping("/game-element-categories")
+    public List<Map<String,Object>> gameElementCategories(){return jdbc.queryForList("select code,name,sort_order from game_element_category where active=true order by sort_order,name");}
+
+    @PostMapping("/game-element-categories")
+    public Map<String,Object> createGameElementCategory(@RequestBody Map<String,Object> body){
+        String name=required(body,"name");if(name.length()>120)throw new IllegalArgumentException("A játékelem-kategória neve legfeljebb 120 karakter lehet.");
+        String code=Optional.ofNullable(optional(body,"code")).orElseGet(()->slugify(name).replace('-','_').toUpperCase(Locale.ROOT));
+        if(!code.matches("[A-Z0-9_]{2,40}"))throw new IllegalArgumentException("A kategóriakód csak nagybetűt, számot és aláhúzást tartalmazhat.");
+        jdbc.update("insert into game_element_category(code,name,sort_order) values (?,?,?)",code,name,boundedInt(body.get("sortOrder"),100,0,10000,"megjelenítési sorrend"));
+        return jdbc.queryForMap("select code,name,sort_order from game_element_category where code=?",code);
+    }
+
+    @GetMapping("/game-elements")
+    public List<Map<String,Object>> gameElements(){
+        return jdbc.queryForList("select ci.id,ci.slug,ci.title,ci.summary,ci.description,ci.status,ci.preview_asset_id,ge.category_code,gc.name as category_name,ge.print_pages,ge.units_per_sheet " +
+                "from game_element ge join catalog_item ci on ci.id=ge.catalog_item_id join game_element_category gc on gc.code=ge.category_code order by ci.updated_at desc");
+    }
+
+    @GetMapping("/game-elements/{id}")
+    public Map<String,Object> gameElement(@PathVariable UUID id){return loadGameElement(id);}
+
+    @PostMapping("/game-elements")
+    @Transactional
+    public Map<String,Object> createGameElement(@RequestBody Map<String,Object> body){UUID id=UUID.randomUUID();saveGameElement(id,body,true);return loadGameElement(id);}
+
+    @PutMapping("/game-elements/{id}")
+    @Transactional
+    public Map<String,Object> updateGameElement(@PathVariable UUID id,@RequestBody Map<String,Object> body){saveGameElement(id,body,false);return loadGameElement(id);}
+
+    @DeleteMapping("/game-elements/{id}")
+    public ResponseEntity<Void> archiveGameElement(@PathVariable UUID id){jdbc.update("update catalog_item set status='ARCHIVED',updated_at=? where id=? and type_code='GAME_ELEMENT'",Timestamp.from(Instant.now()),id);return ResponseEntity.noContent().build();}
+
+    private Map<String,Object> loadGameElement(UUID id){
+        Map<String,Object> row=jdbc.queryForMap("select ci.id,ci.slug,ci.title,ci.summary,ci.description,ci.status,ci.preview_asset_id,ge.category_code,gc.name as category_name,ge.print_pages,ge.units_per_sheet " +
+                "from game_element ge join catalog_item ci on ci.id=ge.catalog_item_id join game_element_category gc on gc.code=ge.category_code where ci.id=? and ci.type_code='GAME_ELEMENT'",id);
+        row.put("compatible_element_ids",jdbc.queryForList("select compatible_element_id from game_element_compatibility where element_id=? order by compatible_element_id",UUID.class,id));
+        return row;
+    }
+
+    private void saveGameElement(UUID id,Map<String,Object> body,boolean insert){
+        String title=required(body,"title");if(title.length()>360)throw new IllegalArgumentException("A játékelem neve legfeljebb 360 karakter lehet.");
+        String slug=Optional.ofNullable(optional(body,"slug")).orElseGet(()->slugify(title));
+        String summary=optional(body,"summary"),description=optional(body,"description"),itemStatus=status(body.get("status"));
+        String categoryCode=required(body,"categoryCode").toUpperCase(Locale.ROOT);
+        jdbc.queryForObject("select code from game_element_category where code=? and active=true",String.class,categoryCode);
+        UUID previewAssetId=uuidOrNull(body.get("previewAssetId"));requireImageAsset(previewAssetId,"játékelem képe");
+        int printPages=boundedInt(body.get("printPages"),0,0,100,"nyomtatandó oldalak száma");
+        int unitsPerSheet=boundedInt(body.get("unitsPerSheet"),1,1,100,"egy oldalra férő játékelemek száma");
+        upsertCatalogItem(id,"GAME_ELEMENT",slug,title,summary,description,itemStatus,previewAssetId);
+        if(insert)jdbc.update("insert into game_element(catalog_item_id,category_code,print_pages,units_per_sheet) values (?,?,?,?)",id,categoryCode,printPages,unitsPerSheet);
+        else jdbc.update("update game_element set category_code=?,print_pages=?,units_per_sheet=? where catalog_item_id=?",categoryCode,printPages,unitsPerSheet,id);
+        jdbc.update("delete from game_element_compatibility where element_id=?",id);
+        if(body.get("compatibleElementIds") instanceof List<?> compatibleIds)for(Object raw:compatibleIds){
+            UUID compatibleId;try{compatibleId=UUID.fromString(raw.toString());}catch(IllegalArgumentException ex){throw new IllegalArgumentException("Érvénytelen kompatibilis játékelem.");}
+            if(id.equals(compatibleId))throw new IllegalArgumentException("Egy játékelem nem lehet önmagával kompatibilis.");
+            jdbc.queryForObject("select catalog_item_id from game_element where catalog_item_id=?",UUID.class,compatibleId);
+            jdbc.update("insert into game_element_compatibility(element_id,compatible_element_id) values (?,?)",id,compatibleId);
+        }
+    }
+
+    @GetMapping("/games")
+    public List<Map<String,Object>> games(){
+        return jdbc.queryForList("select ci.id,ci.slug,ci.title,ci.summary,ci.description,ci.status,ci.preview_asset_id,g.family_code,gf.name as family_name,g.rules, " +
+                "(g.print_pages+coalesce(sum(ceil(gce.quantity::numeric/ge.units_per_sheet)*ge.print_pages),0)) as print_pages,count(gce.element_id) as element_count " +
+                "from game_content g join catalog_item ci on ci.id=g.catalog_item_id join game_family gf on gf.code=g.family_code " +
+                "left join game_content_element gce on gce.game_id=g.catalog_item_id left join game_element ge on ge.catalog_item_id=gce.element_id " +
+                "group by ci.id,g.catalog_item_id,gf.name,g.print_pages order by ci.updated_at desc");
+    }
+
+    @GetMapping("/games/{id}")
+    public Map<String,Object> game(@PathVariable UUID id){return loadGame(id);}
+
+    @PostMapping("/games")
+    @Transactional
+    public Map<String,Object> createGame(@RequestBody Map<String,Object> body){UUID id=UUID.randomUUID();saveGame(id,body,true);return loadGame(id);}
+
+    @PutMapping("/games/{id}")
+    @Transactional
+    public Map<String,Object> updateGame(@PathVariable UUID id,@RequestBody Map<String,Object> body){saveGame(id,body,false);return loadGame(id);}
+
+    @DeleteMapping("/games/{id}")
+    public ResponseEntity<Void> archiveGame(@PathVariable UUID id){jdbc.update("update catalog_item set status='ARCHIVED',updated_at=? where id=? and type_code='GAME'",Timestamp.from(Instant.now()),id);return ResponseEntity.noContent().build();}
+
+    private Map<String,Object> loadGame(UUID id){
+        Map<String,Object> row=jdbc.queryForMap("select ci.id,ci.slug,ci.title,ci.summary,ci.description,ci.status,ci.preview_asset_id,g.family_code,gf.name as family_name,g.rules,g.print_pages " +
+                "from game_content g join catalog_item ci on ci.id=g.catalog_item_id join game_family gf on gf.code=g.family_code where ci.id=? and ci.type_code='GAME'",id);
+        row.put("elements",jdbc.queryForList("select gce.element_id,gce.quantity,gce.sort_order,ci.title,ci.preview_asset_id,ge.category_code,gc.name as category_name " +
+                "from game_content_element gce join catalog_item ci on ci.id=gce.element_id join game_element ge on ge.catalog_item_id=ci.id join game_element_category gc on gc.code=ge.category_code " +
+                "where gce.game_id=? order by gce.sort_order,ci.title",id));
+        return row;
+    }
+
+    private void saveGame(UUID id,Map<String,Object> body,boolean insert){
+        String title=required(body,"title");if(title.length()>360)throw new IllegalArgumentException("A játék neve legfeljebb 360 karakter lehet.");
+        String slug=Optional.ofNullable(optional(body,"slug")).orElseGet(()->slugify(title));
+        String summary=optional(body,"summary"),description=optional(body,"description"),itemStatus=status(body.get("status"));
+        String familyCode=required(body,"familyCode").toUpperCase(Locale.ROOT);
+        jdbc.queryForObject("select code from game_family where code=? and active=true",String.class,familyCode);
+        UUID previewAssetId=uuidOrNull(body.get("previewAssetId"));requireImageAsset(previewAssetId,"játék borítóképe");
+        String rules=optional(body,"rules");int printPages=boundedInt(body.get("printPages"),0,0,1000,"játékszabály nyomtatási oldalszáma");
+        upsertCatalogItem(id,"GAME",slug,title,summary,description,itemStatus,previewAssetId);
+        if(insert)jdbc.update("insert into game_content(catalog_item_id,family_code,rules,print_pages) values (?,?,?,?)",id,familyCode,rules,printPages);
+        else jdbc.update("update game_content set family_code=?,rules=?,print_pages=? where catalog_item_id=?",familyCode,rules,printPages,id);
+        jdbc.update("delete from game_content_element where game_id=?",id);
+        List<Map<String,Object>> elements=listOfMaps(body.get("elements"));Set<UUID> uniqueElements=new HashSet<>();
+        for(int index=0;index<elements.size();index++){
+            Map<String,Object> element=elements.get(index);UUID elementId;
+            try{elementId=UUID.fromString(required(element,"elementId"));}catch(IllegalArgumentException ex){throw new IllegalArgumentException("Érvénytelen játékelem.");}
+            if(!uniqueElements.add(elementId))throw new IllegalArgumentException("Egy játékelem csak egyszer szerepeljen az összeállításban.");
+            jdbc.queryForObject("select catalog_item_id from game_element where catalog_item_id=?",UUID.class,elementId);
+            int quantity=boundedInt(element.get("quantity"),1,1,10000,"játékelem darabszáma");
+            jdbc.update("insert into game_content_element(game_id,element_id,quantity,sort_order) values (?,?,?,?)",id,elementId,quantity,index);
+        }
     }
 
     @PostMapping("/taxonomy")
@@ -383,9 +535,10 @@ public class ApiController {
         int quantity=boundedInt(body.get("quantity"),1,1,100000,"előkészítendő darabszám");
         String note=optional(body,"note");
         if(note!=null&&note.length()>2000) throw new IllegalArgumentException("A megjegyzés legfeljebb 2000 karakter lehet.");
-        jdbc.update("update product_preparation set quantity=?,printed=?,laminated=?,velcro=?,note=? where id=? and status='IN_PROGRESS'",quantity,
+        int updated=jdbc.update("update product_preparation set quantity=?,printed=?,laminated=?,velcro=?,note=? where id=? and status='IN_PROGRESS'",quantity,
                 Boolean.parseBoolean(Objects.toString(body.get("printed"),"false")),Boolean.parseBoolean(Objects.toString(body.get("laminated"),"false")),
                 Boolean.parseBoolean(Objects.toString(body.get("velcro"),"false")),note,id);
+        if(updated!=1) throw new IllegalArgumentException("Ez az előkészítés már lezárult, vagy nem található.");
         return jdbc.queryForMap("select pp.*,p.variant_name,ci.title as content_title,coalesce(ci.preview_asset_id,w.preview_asset_id,(select wp.preview_asset_id from bundle_worksheet bw join worksheet wp on wp.id=bw.worksheet_id where bw.bundle_id=p.bundle_id order by bw.sort_order limit 1)) as preview_asset_id from product_preparation pp join sale_product p on p.id=pp.product_id join catalog_item ci on ci.id=p.catalog_item_id left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id where pp.id=?",id);
     }
 
@@ -400,8 +553,8 @@ public class ApiController {
         List<Map<String,Object>> materialRequirements=jdbc.queryForList("select m.id,m.name,m.unit_name,m.stock_quantity,pm.quantity*? as required_quantity " +
                 "from product_material pm join material_item m on m.id=pm.material_id where pm.product_id=? order by m.id for update of m",quantity,productId);
         for(Map<String,Object> requirement:materialRequirements) {
-            BigDecimal available=(BigDecimal)requirement.get("stock_quantity");
-            BigDecimal required=(BigDecimal)requirement.get("required_quantity");
+            BigDecimal available=databaseDecimal(requirement.get("stock_quantity"));
+            BigDecimal required=databaseDecimal(requirement.get("required_quantity"));
             if(available.compareTo(required)<0) throw new IllegalArgumentException("Nincs elég készleten ebből az alapanyagból: " + requirement.get("name") + ". Szükséges: " + required.stripTrailingZeros().toPlainString() + " " + requirement.get("unit_name") + ", készleten: " + available.stripTrailingZeros().toPlainString() + ".");
         }
         for(Map<String,Object> requirement:materialRequirements) jdbc.update("update material_item set stock_quantity=stock_quantity-? where id=?",requirement.get("required_quantity"),requirement.get("id"));
@@ -421,7 +574,8 @@ public class ApiController {
     @DeleteMapping("/inventory/preparations/{id}")
     @Transactional
     public ResponseEntity<Void> deleteProductPreparation(@PathVariable UUID id) {
-        jdbc.update("delete from product_preparation where id=? and status='IN_PROGRESS'",id);
+        int deleted=jdbc.update("delete from product_preparation where id=? and status='IN_PROGRESS'",id);
+        if(deleted!=1) throw new IllegalArgumentException("Csak folyamatban lévő, létező előkészítés törölhető.");
         return ResponseEntity.noContent().build();
     }
 
@@ -456,7 +610,7 @@ public class ApiController {
 
     private Map<String, Object> saveSaleProduct(UUID id, Map<String, Object> body) {
         String contentType = required(body, "contentType").toUpperCase(Locale.ROOT);
-        if (!Set.of("WORKSHEET", "BUNDLE", "CARD_DECK").contains(contentType)) throw new IllegalArgumentException("Ehhez a tartalomtípushoz még nem hozható létre termékváltozat.");
+        if (!Set.of("WORKSHEET", "BUNDLE", "CARD_DECK", "GAME", "GAME_ELEMENT").contains(contentType)) throw new IllegalArgumentException("Ehhez a tartalomtípushoz még nem hozható létre termékváltozat.");
         UUID contentId;
         try { contentId = UUID.fromString(required(body, "contentId")); }
         catch (IllegalArgumentException ex) { throw new IllegalArgumentException("Érvénytelen tartalomazonosító."); }
@@ -474,7 +628,7 @@ public class ApiController {
         UUID catalogItemId;
         if ("WORKSHEET".equals(contentType)) catalogItemId=jdbc.queryForObject("select catalog_item_id from worksheet where id=?",UUID.class,contentId);
         else if("BUNDLE".equals(contentType)) catalogItemId=jdbc.queryForObject("select catalog_item_id from bundle_plan where id=?",UUID.class,contentId);
-        else catalogItemId=jdbc.queryForObject("select id from catalog_item where id=? and type_code='CARD_DECK'",UUID.class,contentId);
+        else catalogItemId=jdbc.queryForObject("select id from catalog_item where id=? and type_code=?",UUID.class,contentId,contentType);
         if (id == null) {
             id = UUID.randomUUID();
             jdbc.update("insert into sale_product(id,worksheet_id,bundle_id,catalog_item_id,variant_name,delivery_type,list_price,material_cost,print_sides) values (?,?,?,?,?,?,?,?,?)", id, worksheetId, bundleId,catalogItemId, variantName, deliveryType, listPrice, materialCost, printSides);
@@ -504,11 +658,17 @@ public class ApiController {
             if(product.get("worksheet_id")!=null) pages=Optional.ofNullable(jdbc.queryForObject("select coalesce(sum(page_count),0) from worksheet_page where worksheet_id=?",Long.class,product.get("worksheet_id"))).orElse(0L).intValue();
             else if(product.get("bundle_id")!=null) pages=Optional.ofNullable(jdbc.queryForObject("select coalesce(sum(p.page_count),0) from bundle_worksheet bw join worksheet_page p on p.worksheet_id=bw.worksheet_id where bw.bundle_id=?",Long.class,product.get("bundle_id"))).orElse(0L).intValue();
             else if("CARD_DECK".equals(product.get("content_type"))) {
-                Map<String,Object> deck=jdbc.queryForMap("select cd.cards_per_sheet,cd.back_asset_id,count(c.id) as card_count from card_deck cd left join card_deck_card c on c.deck_id=cd.catalog_item_id where cd.catalog_item_id=? group by cd.catalog_item_id",product.get("catalog_item_id"));
+                Map<String,Object> deck=jdbc.queryForMap("select cd.cards_per_sheet,cd.back_asset_id,count(c.card_id) as card_count from card_deck cd left join card_deck_card c on c.deck_id=cd.catalog_item_id where cd.catalog_item_id=? group by cd.catalog_item_id",product.get("catalog_item_id"));
                 int cardCount=((Number)deck.get("card_count")).intValue();
                 int perSheet=((Number)deck.get("cards_per_sheet")).intValue();
                 int sidesPerCard=(deck.get("back_asset_id")==null?1:2);
                 pages=((cardCount+perSheet-1)/perSheet)*sidesPerCard;
+            } else if("GAME".equals(product.get("content_type"))) {
+                int instructions=Optional.ofNullable(jdbc.queryForObject("select print_pages from game_content where catalog_item_id=?",Integer.class,product.get("catalog_item_id"))).orElse(0);
+                int components=Optional.ofNullable(jdbc.queryForObject("select coalesce(sum(ceil(gce.quantity::numeric/ge.units_per_sheet)*ge.print_pages),0) from game_content_element gce join game_element ge on ge.catalog_item_id=gce.element_id where gce.game_id=?",Long.class,product.get("catalog_item_id"))).orElse(0L).intValue();
+                pages=instructions+components;
+            } else if("GAME_ELEMENT".equals(product.get("content_type"))) {
+                pages=Optional.ofNullable(jdbc.queryForObject("select print_pages from game_element where catalog_item_id=?",Integer.class,product.get("catalog_item_id"))).orElse(0);
             }
         }
         int sides=product.get("print_sides") instanceof Number n?n.intValue():1;
@@ -999,6 +1159,11 @@ public class ApiController {
         catch (NumberFormatException | ArithmeticException ex) { throw new IllegalArgumentException("A(z) " + label + " legfeljebb két tizedesjegyű összeg legyen."); }
         if (amount.signum() < 0 || (!allowZero && amount.signum() == 0)) throw new IllegalArgumentException("A(z) " + label + " csak pozitív összeg lehet.");
         return amount;
+    }
+    private static BigDecimal databaseDecimal(Object value) {
+        if(value instanceof BigDecimal decimal) return decimal;
+        if(value==null) return BigDecimal.ZERO;
+        return new BigDecimal(value.toString());
     }
     private static BigDecimal decimalQuantity(Object value) {
         BigDecimal quantity;

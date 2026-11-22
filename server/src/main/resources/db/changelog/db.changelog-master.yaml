@@ -43,4 +43,8 @@ databaseChangeLog:
       file: db/changelog/changes/021-catalog-item-slug.yaml
   - include:
       file: db/changelog/changes/022-card-decks.yaml
+  - include:
+      file: db/changelog/changes/023-games-and-elements.yaml
+  - include:
+      file: db/changelog/changes/024-reusable-card-faces.yaml
 
