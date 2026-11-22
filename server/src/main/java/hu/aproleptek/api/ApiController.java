@@ -709,6 +709,89 @@ public class ApiController {
                 .forEach(this::recalculateProductMaterialCost);
     }
 
+    @GetMapping("/orders")
+    public List<Map<String,Object>> customerOrders() {
+        List<Map<String,Object>> orders=jdbc.queryForList("select * from customer_order order by case status when 'OPEN' then 0 when 'FULFILLED' then 1 else 2 end,created_at desc");
+        Map<UUID,Integer> available=new HashMap<>();
+        jdbc.queryForList("select id,stock_quantity from sale_product where delivery_type='PHYSICAL'").forEach(row->available.put((UUID)row.get("id"),((Number)row.get("stock_quantity")).intValue()));
+        Map<UUID,Map<UUID,Integer>> demandByOrder=new HashMap<>();
+        List<Map<String,Object>> openRows=jdbc.queryForList("select id from customer_order where status='OPEN' order by order_date,created_at,id");
+        for(Map<String,Object> open:openRows){
+            UUID orderId=(UUID)open.get("id");List<Map<String,Object>> lines=jdbc.queryForList("select product_id,quantity from customer_order_line where order_id=? order by product_id",orderId);
+            Map<UUID,Integer> production=new HashMap<>();
+            for(Map<String,Object> line:lines){UUID productId=(UUID)line.get("product_id");int quantity=((Number)line.get("quantity")).intValue();int stock=Math.max(0,available.getOrDefault(productId,0));int use=Math.min(stock,quantity);production.put(productId,quantity-use);available.put(productId,stock-use);}
+            demandByOrder.put(orderId,production);
+        }
+        for(Map<String,Object> order:orders){
+            UUID orderId=(UUID)order.get("id");List<Map<String,Object>> lines=jdbc.queryForList("select id,product_id,product_title,variant_name,quantity,list_unit_price,material_unit_cost,printing_cost " +
+                    "from customer_order_line where order_id=? order by product_title,variant_name",orderId);
+            for(Map<String,Object> line:lines){UUID productId=(UUID)line.get("product_id");line.put("available_stock_quantity",((Number)jdbc.queryForObject("select stock_quantity from sale_product where id=?",Integer.class,productId)).intValue());line.put("to_manufacture",((Number)demandByOrder.getOrDefault(orderId,Map.of()).getOrDefault(productId,0)).intValue());}
+            order.put("items",lines);
+        }
+        return orders;
+    }
+
+    @PostMapping("/orders")
+    @Transactional
+    public Map<String,Object> createCustomerOrder(@RequestBody Map<String,Object> body){return saveCustomerOrder(null,body);}
+
+    @PutMapping("/orders/{id}")
+    @Transactional
+    public Map<String,Object> updateCustomerOrder(@PathVariable UUID id,@RequestBody Map<String,Object> body){return saveCustomerOrder(id,body);}
+
+    private Map<String,Object> saveCustomerOrder(UUID existingId,Map<String,Object> body){
+        List<Map<String,Object>> rawItems=listOfMaps(body.get("items"));if(rawItems.isEmpty())throw new IllegalArgumentException("Adj hozzá legalább egy terméket a megrendeléshez.");
+        Map<UUID,Integer> quantities=new LinkedHashMap<>();for(Map<String,Object> item:rawItems){UUID productId;try{productId=UUID.fromString(required(item,"productId"));}catch(IllegalArgumentException ex){throw new IllegalArgumentException("Érvénytelen termékazonosító.");}quantities.merge(productId,boundedInt(item.get("quantity"),1,1,1000,"darabszám"),Integer::sum);}
+        java.sql.Date orderDate=dateValue(body.get("orderDate"),"megrendelés dátuma");String customerName=optional(body,"customerName");if(customerName!=null&&customerName.length()>160)throw new IllegalArgumentException("A vevő neve legfeljebb 160 karakter lehet.");
+        String channel=Optional.ofNullable(optional(body,"channel")).orElse("Vinted");if(channel.length()>80)throw new IllegalArgumentException("A csatorna neve legfeljebb 80 karakter lehet.");String note=optional(body,"note");
+        UUID packagingId=null;String packagingName=null,packagingUnit=null;BigDecimal packagingQuantity=BigDecimal.ZERO.setScale(3),packagingUnitCost=BigDecimal.ZERO.setScale(2),packagingTotalCost=BigDecimal.ZERO.setScale(2);
+        String packagingIdValue=optional(body,"packagingMaterialId");if(packagingIdValue!=null&&!packagingIdValue.isBlank()){try{packagingId=UUID.fromString(packagingIdValue);}catch(IllegalArgumentException ex){throw new IllegalArgumentException("Érvénytelen csomagolóanyag-azonosító.");}Map<String,Object> packaging=jdbc.queryForMap("select name,unit_name from material_item where id=? and active=true and is_packaging=true",packagingId);packagingName=(String)packaging.get("name");packagingUnit=(String)packaging.get("unit_name");packagingQuantity=decimalQuantity(body.get("packagingQuantity"));packagingUnitCost=jdbc.queryForObject("select coalesce(sum(total_cost)/nullif(sum(quantity),0),0) from material_purchase where material_id=?",BigDecimal.class,packagingId).setScale(2,RoundingMode.HALF_UP);packagingTotalCost=packagingUnitCost.multiply(packagingQuantity).setScale(2,RoundingMode.HALF_UP);}
+        List<Map<String,Object>> lines=new ArrayList<>();BigDecimal listTotal=BigDecimal.ZERO;
+        for(Map.Entry<UUID,Integer> entry:quantities.entrySet()){
+            Map<String,Object> product=jdbc.queryForMap("select p.*,ci.title as content_title,ci.type_code as content_type " +
+                    "from sale_product p join catalog_item ci on ci.id=p.catalog_item_id where p.id=? and p.active=true",entry.getKey());
+            if(!"PHYSICAL".equals(product.get("delivery_type")))throw new IllegalArgumentException("Megrendeléshez csak fizikai termék választható.");
+            BigDecimal printing=printingCost(product);BigDecimal listPrice=(BigDecimal)product.get("list_price");BigDecimal material=(BigDecimal)product.get("material_cost");
+            Map<String,Object> line=new HashMap<>();line.put("product_id",entry.getKey());line.put("product_title",product.get("content_title"));line.put("variant_name",product.get("variant_name"));line.put("quantity",entry.getValue());line.put("list_unit_price",listPrice);line.put("material_unit_cost",material);line.put("printing_cost",printing);lines.add(line);
+            listTotal=listTotal.add(listPrice.multiply(BigDecimal.valueOf(entry.getValue())));
+        }
+        BigDecimal agreedTotal=body.get("agreedTotal")==null?listTotal:money(body.get("agreedTotal"),"megbeszélt végösszeg",true);UUID orderId=existingId==null?UUID.randomUUID():existingId;
+        if(existingId==null)jdbc.update("insert into customer_order(id,order_date,customer_name,channel,list_total,agreed_total,note,packaging_material_id,packaging_name,packaging_unit,packaging_quantity,packaging_unit_cost,packaging_total_cost) values (?,?,?,?,?,?,?,?,?,?,?,?,?)",orderId,orderDate,customerName,channel,listTotal,agreedTotal,note,packagingId,packagingName,packagingUnit,packagingQuantity,packagingUnitCost,packagingTotalCost);
+        else{
+            Map<String,Object> old=jdbc.queryForMap("select status from customer_order where id=? for update",existingId);if(!"OPEN".equals(old.get("status")))throw new IllegalArgumentException("Csak nyitott megrendelés módosítható.");
+            jdbc.update("update customer_order set order_date=?,customer_name=?,channel=?,list_total=?,agreed_total=?,note=?,packaging_material_id=?,packaging_name=?,packaging_unit=?,packaging_quantity=?,packaging_unit_cost=?,packaging_total_cost=?,updated_at=? where id=?",orderDate,customerName,channel,listTotal,agreedTotal,note,packagingId,packagingName,packagingUnit,packagingQuantity,packagingUnitCost,packagingTotalCost,Timestamp.from(Instant.now()),existingId);
+            jdbc.update("delete from customer_order_line where order_id=?",existingId);
+        }
+        for(Map<String,Object> line:lines)jdbc.update("insert into customer_order_line(order_id,product_id,product_title,variant_name,quantity,list_unit_price,material_unit_cost,printing_cost) values (?,?,?,?,?,?,?,?)",orderId,line.get("product_id"),line.get("product_title"),line.get("variant_name"),line.get("quantity"),line.get("list_unit_price"),line.get("material_unit_cost"),line.get("printing_cost"));
+        return loadCustomerOrder(orderId);
+    }
+
+    @PostMapping("/orders/{id}/complete")
+    @Transactional
+    public Map<String,Object> completeCustomerOrder(@PathVariable UUID id){
+        Map<String,Object> order=jdbc.queryForMap("select * from customer_order where id=? for update",id);if(!"OPEN".equals(order.get("status")))throw new IllegalArgumentException("Csak nyitott megrendelés teljesíthető.");
+        List<Map<String,Object>> lines=jdbc.queryForList("select * from customer_order_line where order_id=? order by product_id",id);List<Map<String,Object>> saleItems=new ArrayList<>();BigDecimal orderListTotal=(BigDecimal)order.get("list_total"),agreedTotal=(BigDecimal)order.get("agreed_total"),allocated=BigDecimal.ZERO;
+        for(Map<String,Object> line:lines){UUID productId=(UUID)line.get("product_id");int quantity=((Number)line.get("quantity")).intValue();Map<String,Object> stock=jdbc.queryForMap("select delivery_type,stock_quantity from sale_product where id=? for update",productId);int current=((Number)stock.get("stock_quantity")).intValue();
+            if(!"PHYSICAL".equals(stock.get("delivery_type"))||current<quantity)throw new IllegalArgumentException("A megrendelés még nem teljesíthető. Készítsd el és vedd készletre a hiányzó darabokat.");
+            saleItems.add(Map.of("productId",productId.toString(),"quantity",quantity));
+        }
+        Map<String,Object> saleBody=new HashMap<>();saleBody.put("items",saleItems);saleBody.put("agreedTotal",agreedTotal);saleBody.put("saleDate",java.time.LocalDate.now().toString());saleBody.put("channel",order.get("channel"));saleBody.put("note",("Megrendelés teljesítve"+(order.get("customer_name")==null?"":" · "+order.get("customer_name"))+(order.get("note")==null?"":" · "+order.get("note"))).substring(0,Math.min(2000,("Megrendelés teljesítve"+(order.get("customer_name")==null?"":" · "+order.get("customer_name"))+(order.get("note")==null?"":" · "+order.get("note"))).length())));if(order.get("packaging_material_id")!=null)saleBody.put("packaging",Map.of("materialId",order.get("packaging_material_id").toString(),"quantity",order.get("packaging_quantity")));
+        Map<String,Object> sale=saveSale(null,saleBody);UUID saleId=(UUID)sale.get("id");
+        for(int index=0;index<lines.size();index++){
+            Map<String,Object> line=lines.get(index);BigDecimal lineList=((BigDecimal)line.get("list_unit_price")).multiply(BigDecimal.valueOf(((Number)line.get("quantity")).intValue()));
+            BigDecimal lineTotal=index==lines.size()-1?agreedTotal.subtract(allocated):orderListTotal.signum()==0?BigDecimal.ZERO:agreedTotal.multiply(lineList).divide(orderListTotal,2,RoundingMode.HALF_UP);allocated=allocated.add(lineTotal);
+            jdbc.update("update sale_line set product_title=?,variant_name=?,list_unit_price=?,material_unit_cost=?,printing_cost=?,agreed_line_total=? where sale_id=? and product_id=?",line.get("product_title"),line.get("variant_name"),line.get("list_unit_price"),((BigDecimal)line.get("material_unit_cost")).add((BigDecimal)line.get("printing_cost")),line.get("printing_cost"),lineTotal,saleId,line.get("product_id"));
+        }
+        jdbc.update("update sale_record set list_total=? where id=?",orderListTotal,saleId);jdbc.update("update customer_order set status='FULFILLED',sale_id=?,fulfilled_at=?,updated_at=? where id=?",saleId,Timestamp.from(Instant.now()),Timestamp.from(Instant.now()),id);
+        return loadCustomerOrder(id);
+    }
+
+    @PostMapping("/orders/{id}/cancel")
+    @Transactional
+    public ResponseEntity<Void> cancelCustomerOrder(@PathVariable UUID id){int updated=jdbc.update("update customer_order set status='CANCELLED',updated_at=? where id=? and status='OPEN'",Timestamp.from(Instant.now()),id);if(updated!=1)throw new IllegalArgumentException("Csak nyitott megrendelés mondható le.");return ResponseEntity.noContent().build();}
+
+    private Map<String,Object> loadCustomerOrder(UUID id){Map<String,Object> order=jdbc.queryForMap("select * from customer_order where id=?",id);order.put("items",jdbc.queryForList("select id,product_id,product_title,variant_name,quantity,list_unit_price,material_unit_cost,printing_cost from customer_order_line where order_id=? order by product_title,variant_name",id));return order;}
+
     @GetMapping("/sales")
     public List<Map<String, Object>> sales() {
         List<Map<String, Object>> rows = jdbc.queryForList("select * from sale_record order by sale_date desc,created_at desc limit 200");
@@ -971,9 +1054,9 @@ public class ApiController {
 
     private void saveWorksheet(UUID id, Map<String, Object> b, boolean insert) {
         String title = required(b, "title");
-        String slug = Optional.ofNullable(optional(b, "slug")).orElseGet(() -> slugify(title));
-        String status = status(b.get("status"));
         UUID catalogItemId=insert?UUID.randomUUID():jdbc.queryForObject("select catalog_item_id from worksheet where id=?",UUID.class,id);
+        String slug = availableCatalogSlug("WORKSHEET",Optional.ofNullable(optional(b, "slug")).orElseGet(() -> slugify(title)),catalogItemId);
+        String status = status(b.get("status"));
         String paperSize = choice(b.get("paperSize"), "A4", "papírméret", Set.of("A4", "A3", "LETTER"));
         String orientation = choice(b.get("orientation"), "PORTRAIT", "tájolás", Set.of("PORTRAIT", "LANDSCAPE"));
         String colorMode = choice(b.get("colorMode"), "COLOR", "színmód", Set.of("COLOR", "GRAYSCALE"));
@@ -1190,6 +1273,17 @@ public class ApiController {
     private static Object nullableInt(Object value) { if(value==null || value.toString().isBlank()) return null; return intValue(value,0); }
     private static Object uuidOrNull(Object value) { return value==null || value.toString().isBlank()?null:UUID.fromString(value.toString()); }
     private static String slugify(String text) { String s=java.text.Normalizer.normalize(text.toLowerCase(Locale.forLanguageTag("hu")), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}",""); return s.replaceAll("[^a-z0-9]+","-").replaceAll("^-|-$",""); }
+
+    private String availableCatalogSlug(String typeCode,String requestedSlug,UUID currentCatalogItemId) {
+        String base=slugify(requestedSlug==null?"":requestedSlug);
+        if(base.isBlank())base="tartalom";
+        base=base.substring(0,Math.min(base.length(),200));
+        String candidate=base;int suffix=2;
+        while(Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from catalog_item where type_code=? and slug=? and id<>?)",Boolean.class,typeCode,candidate,currentCatalogItemId))) {
+            String ending="-"+suffix++;candidate=base.substring(0,Math.min(base.length(),220-ending.length()))+ending;
+        }
+        return candidate;
+    }
     @SuppressWarnings("unchecked") private static List<Map<String,Object>> listOfMaps(Object value) { if(!(value instanceof List<?> l)) return new ArrayList<>(); return l.stream().filter(Map.class::isInstance).map(v->new HashMap<>((Map<String,Object>)v)).collect(Collectors.toCollection(ArrayList::new)); }
     @SuppressWarnings("unchecked") private static Map<String,Object> mapOf(Object value) { return value instanceof Map<?,?> m?new HashMap<>((Map<String,Object>)m):Map.of(); }
     private static Object[] prepend(Object first,Object[] values) { Object[] result=new Object[values.length+1]; result[0]=first; System.arraycopy(values,0,result,1,values.length); return result; }

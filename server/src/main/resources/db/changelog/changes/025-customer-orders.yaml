@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 025-customer-orders
+      author: codex
+      changes:
+        - createTable:
+            tableName: customer_order
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: order_date, type: DATE, defaultValueComputed: CURRENT_DATE, constraints: { nullable: false } }
+              - column: { name: customer_name, type: VARCHAR(160) }
+              - column: { name: channel, type: VARCHAR(80), defaultValue: Vinted, constraints: { nullable: false } }
+              - column: { name: list_total, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+              - column: { name: agreed_total, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+              - column: { name: note, type: TEXT }
+              - column: { name: packaging_material_id, type: UUID, constraints: { foreignKeyName: fk_customer_order_packaging, references: material_item(id) } }
+              - column: { name: packaging_name, type: VARCHAR(160) }
+              - column: { name: packaging_unit, type: VARCHAR(30) }
+              - column: { name: packaging_quantity, type: 'DECIMAL(12,3)', defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: packaging_unit_cost, type: 'DECIMAL(12,2)', defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: packaging_total_cost, type: 'DECIMAL(12,2)', defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), defaultValue: OPEN, constraints: { nullable: false } }
+              - column: { name: sale_id, type: UUID, constraints: { unique: true, foreignKeyName: fk_customer_order_sale, references: sale_record(id), deleteSetNull: true } }
+              - column: { name: fulfilled_at, type: TIMESTAMP WITH TIME ZONE }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER TABLE customer_order ADD CONSTRAINT ck_customer_order_status CHECK (status IN ('OPEN','FULFILLED','CANCELLED'));
+              ALTER TABLE customer_order ADD CONSTRAINT ck_customer_order_totals CHECK (list_total >= 0 AND agreed_total >= 0);
+              ALTER TABLE customer_order ADD CONSTRAINT ck_customer_order_fulfilled CHECK ((status='FULFILLED' AND sale_id IS NOT NULL AND fulfilled_at IS NOT NULL) OR status<>'FULFILLED');
+        - createTable:
+            tableName: customer_order_line
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: order_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_customer_order_line_order, references: customer_order(id), deleteCascade: true } }
+              - column: { name: product_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_customer_order_line_product, references: sale_product(id) } }
+              - column: { name: product_title, type: VARCHAR(360), constraints: { nullable: false } }
+              - column: { name: variant_name, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: quantity, type: INT, constraints: { nullable: false } }
+              - column: { name: list_unit_price, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+              - column: { name: material_unit_cost, type: 'DECIMAL(12,2)', constraints: { nullable: false } }
+              - column: { name: printing_cost, type: 'DECIMAL(12,2)', defaultValueNumeric: 0, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER TABLE customer_order_line ADD CONSTRAINT ck_customer_order_line_quantity CHECK (quantity > 0);
+        - createIndex:
+            tableName: customer_order
+            indexName: ix_customer_order_status_date
+            columns:
+              - column: { name: status }
+              - column: { name: order_date }
+              - column: { name: created_at }
+        - createIndex:
+            tableName: customer_order_line
+            indexName: ix_customer_order_line_product
+            columns:
+              - column: { name: product_id }
+      rollback:
+        - dropTable: { tableName: customer_order_line }
+        - dropTable: { tableName: customer_order }

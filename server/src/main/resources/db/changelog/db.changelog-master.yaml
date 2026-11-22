@@ -47,4 +47,6 @@ databaseChangeLog:
       file: db/changelog/changes/023-games-and-elements.yaml
   - include:
       file: db/changelog/changes/024-reusable-card-faces.yaml
+  - include:
+      file: db/changelog/changes/025-customer-orders.yaml
 

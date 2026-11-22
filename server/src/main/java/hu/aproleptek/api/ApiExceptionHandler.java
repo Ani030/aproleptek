@@ -55,6 +55,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<Map<String, String>> invalidRelation(DataIntegrityViolationException ex) {
+        Throwable root = ex.getMostSpecificCause();
+        log.warn("Database constraint rejected API request: {}", root == null ? ex.getClass().getSimpleName() : root.getMessage());
         return response(HttpStatus.CONFLICT, "A mentés ütközik egy meglévő kapcsolattal vagy adattal.");
     }
 
