@@ -94,7 +94,7 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 ## 5/A. Saját értékesítés, termékköltség és pénzügyi áttekintő
 
 - [x] Döntés rögzítése: az eladás több, meglévő katalógustartalomhoz kapcsolt termékből állhat, egyetlen megállapodott végösszeggel; nincs automatikus mennyiségi kedvezményszabály.
-- [x] Eladható termékváltozat kapcsolása feladatlaphoz vagy csomagtervhez, formátummal, listaárral és becsült anyagköltséggel. *(Liquibase `sale_product` tábla, termék API és admin űrlap.)*
+- [x] Eladható termékváltozat kapcsolása a jelenlegi feladatlaphoz vagy csomagtervhez, formátummal, listaárral és becsült anyagköltséggel. *(A közös katalógustartalom-modellre átállítás külön feladat az 5/B szakaszban.)*
 - [x] Több terméksor és mennyiség rögzítése egy eladásban. *(Admin eladási űrlap és tranzakciós `/sales` API.)*
 - [x] Listaár-összeg, elfogadott végösszeg és egyeztetési különbözet mentése; terméksoronkénti összeg automatikus arányosítása.
 - [x] Eladás dátuma, értékesítési csatornája (például Vinted) és megjegyzése rögzíthető.
@@ -102,13 +102,76 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Termékenkénti darabszám, eladási gyakoriság és bevétel kimutatása. *(Adminban összesített bevétel és legnépszerűbb termékek.)*
 - [x] Pénzügyi felület külön, felül váltható Áttekintő, Egyszeri kiadások, Fogyóanyagok és Eladások nézetekkel.
 - [x] Termékenkénti fedezet és időszakválasztós statisztika. *(A termékrangsor a történeti bevételt és anyagköltség levonása utáni fedezetet mutatja; az áttekintő eladási bevétele és becsült anyagköltsége dátumtartomány szerint szűrhető.)*
-- [x] Egyszeri eszközkiadások és fogyóanyag-beszerzések naplózása készletnyilvántartás nélkül. *(A beszerzési mennyiségből és teljes árból egységár készül; az anyagok átlagos egységára súlyozottan jelenik meg.)*
-- [x] Nincs készletvezetés, automatikus készletcsökkentés vagy automatikus rendelés-/fizetésintegráció ebben az ütemben.
-- [x] Fogyóanyag-beszerzések és egységár-számítás megvalósítása készletvezetés nélkül.
+- [x] Egyszeri eszközkiadások és fogyóanyag-beszerzések naplózása; beszerzési mennyiségből és árból súlyozott átlagár számítása.
+- [x] Piactéri rendelésimport és automatikus fizetésintegráció nincs; a saját eladások és készletmozgások kézzel rögzítettek.
+- [x] Fogyóanyag-beszerzések, egységár-számítás és fogyóanyag-készlet nyilvántartása.
 - [x] Fogyóanyagok mennyiségi összekapcsolása a termékváltozatokkal, automatikus anyagköltség-számítással. *(A termék anyaglistája a súlyozott átlagos egységárakból számol; új beszerzés frissíti az érintett termékváltozatok aktuális költségét. Az eladási sorok költségpillanatképe nem változik.)*
 - [x] Nyomtatási díj automatikus hozzáadása a fizikai termékváltozatok gyártási költségéhez, egy- és kétoldalas beállítással. *(A Pénzügy → Áttekintő nézetében állítható a nyomtatott oldalankénti díj; a rendszer a papírlapok és a nyomtatott felületek száma alapján számol, az eladás pedig a teljes gyártási költséget rögzíti pillanatképként.)*
 - [x] Termékadatlap megnyitása külön szerkesztőnézetben: felhasznált fogyóanyagok, darabonkénti mennyiség, számolt anyagköltség és tervezett eladási ár.
 - [x] Eladás szerkesztése, dátum ISO-formátumú kezelése és csomagolóanyag-választás eladásonként. *(A csomagolás súlyozott átlagos egységárból számolódik, mentéskor pillanatképként rögzül és arányosan kerül az eladási terméksorokra.)*
+
+## 5/B. Bővíthető katalógus- és termékmodell
+
+**Cél:** új terméktípus (például kártyacsomag vagy játék) saját tartalmi adatlapot kaphasson úgy, hogy az eladás, költségszámítás, előkészítés és készlet közös folyamatait ne kelljen típusonként újraépíteni.
+
+### Modell és adatmegőrzés
+
+- [x] Katalógustartalom, tartalomtípus, eladható termék, termékváltozat és eladási sor felelősségének dokumentált szétválasztása a `docs/termek-es-technikai-terv.md` szerint.
+- [x] Bővíthető `catalog_type` típusregiszter létrehozása; az első változat WORKSHEET, BUNDLE, CARD_DECK, GAME és GAME_ELEMENT típusokat rögzít közös Java/SQL enum nélkül. *(Liquibase `020-extensible-catalog-foundation`.)*
+- [x] Közös `catalog_item` alaprekord és típus/státusz/cím index létrehozása. *(Liquibase `020-extensible-catalog-foundation`.)*
+- [x] Katalógustípusok és közös katalógustételek olvasó API-ja (`/catalog/types`, `/catalog/items`).
+- [x] Feladatlap- és csomagterv API mentés/archiválás szinkronban tartja a közös katalógusrekordot.
+- [ ] Típusonként külön részlettáblák és validált API-kialakítás; a típus-specifikus mezők ne kerüljenek a közös termék- vagy eladástáblába.
+- [x] A `sale_product` közös katalógustartalomhoz kapcsolása, a meglévő termékváltozatok átvezetésével; a gyártási recept, nyomtatási költség, előkészítés és készlet továbbra is a közös termékváltozatot használja. *(A termék API új rekordnál is menti a közös katalógusazonosítót.)*
+- [x] Meglévő feladatlapok, csomagtervek és eladható termékváltozatok közös katalógusazonosítóinak visszatöltése migrációban.
+- [ ] Meglévő adatbázison ellenőrizni, hogy az eladások, anyagkapcsolatok, médiafájlok, készletek és előkészítési tételek azonosítói és adatai változatlanok maradnak.
+- [x] Minden eddigi sémaátalakítás új Liquibase changesetben történik; a `020-extensible-catalog-foundation` hozzáadva a master changeloghoz.
+- [x] A `020`–`022` migrációk lefutása a meglévő fejlesztői adatbázison ellenőrizve; Liquibase mind a 22 changesetet alkalmazottnak jelzi.
+- [ ] Teljesen üres adatbázis felépítésének ellenőrzése a teljes changeloggal.
+- [ ] Régi API-válaszok és admin folyamatok átállítása úgy, hogy a már rögzített eladások és költség-pillanatképek változatlanok maradjanak.
+- [ ] Közös katalóguslista és tartalomtípus szerinti szűrés kialakítása; a jelenlegi külön munkanézetek megmaradhatnak célzott szerkesztőként.
+
+### Kártyacsomag
+
+- [x] Kártyacsomag mint önálló katalógustartalom létrehozása. *(Liquibase részlettáblák, API CRUD és admin nézet.)*
+- [x] Borítókép, opcionális hátoldal, leírás/játékszabály és rendezett, képes kártyalap-lista kezelése.
+- [ ] Kártyalapok tartalmi elemekként kezelése, nem külön eladási termékként; azonos kártyalap több csomagban újrafelhasználható legyen, ha ez indokolt.
+- [x] Kártyák nyomtatási elrendezésének és egy oldalra férő kártyák számának rögzítése.
+- [x] Oldalszám, egy-/kétoldalas nyomtatás és nyomtatási költség számítása a kártyaelrendezésből.
+- [x] Kártyacsomag fizikai termékváltozatának anyaglistája, nyomtatási/laminálási/tépőzár előkészítése és költsége a feladatlapok közös folyamatát használja.
+- [x] Kártyacsomag termékváltozatának eladása és készletkezelése a közös termékfolyamatban működik.
+- [ ] Kártyacsomag létrehozása, mentése, termékváltozat-beállítása és készletre vétele felületen végigellenőrizve.
+
+### Bővíthető játékok és elemek
+
+- [ ] Játék mint önálló katalógustartalom és játékcsalád létrehozása (első példák: öltöztetős, boltos/pénztáros játék).
+- [ ] Újrafelhasználható játékelemek kezelése kategóriával, képpel és szükség szerinti kompatibilitással (például baba, ruha, kiegészítő, zöldség, gyümölcs).
+- [ ] Bővíthető elemkategóriák kialakítása fix, típusonkénti adatbázis-oszlopok helyett.
+- [ ] Játék, játékelem és összeállított eladható csomag kapcsolatainak külön kezelése.
+- [ ] Játékelemek több játékban/csomagban történő újrafelhasználásának támogatása.
+- [ ] Játék vagy játékelem önálló értékesítése csak külön létrehozott termékváltozattal történjen.
+- [ ] A fizikai játékkészletek ugyanazokat az anyag-, nyomtatás-, laminálás-, tépőzár-, előkészítés-, készlet- és eladási szolgáltatásokat használják.
+
+### Bővíthetőség ellenőrzése
+
+- [ ] Egy további, eddig nem ismert tartalomtípus felvehető legyen új részlettáblával és szerkesztővel a közös pénzügyi/készletfolyamat módosítása nélkül.
+- [ ] Új tartalomtípus fizikai és digitális termékváltozata létrehozható legyen.
+- [ ] Új tartalomtípus költsége, eladása, előkészítése, késztermékkészlete és készletmozgása azonos szabályok szerint jelenjen meg.
+- [ ] Migrációs és API-elfogadási forgatókönyvek rögzítése: meglévő feladatlap/eladás, új kártyacsomag, új játékcsomag és későbbi új típus.
+
+## 5/C. Fizikai készlet és előkészítés
+
+- [x] Fizikai eladható termékváltozat kész darabszámának megadása és manuális növelése/csökkentése.
+- [x] Minimumkészlet beállítása és alacsony készlet jelzése.
+- [x] Késztermék-készlet darabszámának és becsült előállítási értékének összesítése.
+- [x] Késztermék és alapanyag külön kezelése a készletnézetben.
+- [x] Előkészítési tételek létrehozása mennyiséggel, képpel, nyomtatás/laminálás/tépőzár jelölőkkel és megjegyzéssel.
+- [x] Egy termék több előkészítési tételének egy termékcsoport alatt történő összesítése, a részletek megnyithatók.
+- [x] Előkészítés alatt álló darabszám elkülönítése a késztermékkészlettől.
+- [ ] Előkészítésből késztermék bevételezésekor a bevételezett mennyiség kerüljön át a késztermékkészletbe, és ugyanennyivel csökkenjen/tűnjön el az előkészítési tételből.
+- [ ] A késztermék-bevételezés jelenleg jelzett „Váratlan hiba” esetének javítása és a maradék mennyiséggel történő részleges bevételezés ellenőrzése.
+- [ ] Eladás készletcsökkentésének, eladásszerkesztéskor történő korrekciónak és törlés/sztornó utáni visszaállításnak végigellenőrzése.
+- [ ] Készletmozgás-előzmények érthető megjelenítése és kézi korrekció okának rögzítése.
 
 ## 6. Kategóriák és keresés
 

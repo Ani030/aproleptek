@@ -57,6 +57,93 @@ public class ApiController {
         return jdbc.queryForList("select * from taxonomy_term" + activeClause + typeClause + " order by sort_order, name", type.toUpperCase(Locale.ROOT));
     }
 
+    @GetMapping("/catalog/types")
+    public List<Map<String,Object>> catalogTypes() {
+        return jdbc.queryForList("select code,name,sort_order from catalog_type where active=true order by sort_order,name");
+    }
+
+    @GetMapping("/catalog/items")
+    public List<Map<String,Object>> catalogItems(@RequestParam(required=false) String type,
+                                                  @RequestParam(defaultValue="") String q,
+                                                  @RequestParam(required=false) String status) {
+        String normalizedType=type==null||type.isBlank()?null:type.toUpperCase(Locale.ROOT);
+        String normalizedStatus=status==null||status.isBlank()?null:status.toUpperCase(Locale.ROOT);
+        String search="%"+q.trim().toLowerCase(Locale.ROOT)+"%";
+        return jdbc.queryForList("select ci.*,ct.name as type_name from catalog_item ci join catalog_type ct on ct.code=ci.type_code " +
+                        "where (cast(? as varchar) is null or ci.type_code=?) and (cast(? as varchar) is null or ci.status=?) " +
+                        "and (lower(ci.title) like ? or lower(coalesce(ci.summary,'')) like ?) order by ct.sort_order,ci.title",
+                normalizedType,normalizedType,normalizedStatus,normalizedStatus,search,search);
+    }
+
+    @GetMapping("/card-decks")
+    public List<Map<String,Object>> cardDecks() {
+        return jdbc.queryForList("select ci.id,ci.slug,ci.title,ci.summary,ci.description,ci.status,ci.preview_asset_id,cd.back_asset_id,cd.rules,cd.cards_per_sheet,count(c.id) as card_count " +
+                "from catalog_item ci join card_deck cd on cd.catalog_item_id=ci.id left join card_deck_card c on c.deck_id=ci.id " +
+                "group by ci.id,cd.catalog_item_id order by ci.updated_at desc");
+    }
+
+    @GetMapping("/card-decks/{id}")
+    public Map<String,Object> cardDeck(@PathVariable UUID id) { return loadCardDeck(id); }
+
+    @PostMapping("/card-decks")
+    @Transactional
+    public Map<String,Object> createCardDeck(@RequestBody Map<String,Object> body) {
+        UUID id=UUID.randomUUID(); saveCardDeck(id,body,true); return loadCardDeck(id);
+    }
+
+    @PutMapping("/card-decks/{id}")
+    @Transactional
+    public Map<String,Object> updateCardDeck(@PathVariable UUID id,@RequestBody Map<String,Object> body) {
+        saveCardDeck(id,body,false); return loadCardDeck(id);
+    }
+
+    @DeleteMapping("/card-decks/{id}")
+    public ResponseEntity<Void> archiveCardDeck(@PathVariable UUID id) {
+        jdbc.update("update catalog_item set status='ARCHIVED',updated_at=? where id=? and type_code='CARD_DECK'",Timestamp.from(Instant.now()),id);
+        return ResponseEntity.noContent().build();
+    }
+
+    private Map<String,Object> loadCardDeck(UUID id) {
+        Map<String,Object> row=jdbc.queryForMap("select ci.id,ci.slug,ci.title,ci.summary,ci.description,ci.status,ci.preview_asset_id,cd.back_asset_id,cd.rules,cd.cards_per_sheet " +
+                "from catalog_item ci join card_deck cd on cd.catalog_item_id=ci.id where ci.id=? and ci.type_code='CARD_DECK'",id);
+        row.put("cards",jdbc.queryForList("select c.id,c.title,c.front_asset_id,c.sort_order,m.original_name as front_name,m.media_type as front_media_type " +
+                "from card_deck_card c join media_asset m on m.id=c.front_asset_id where c.deck_id=? order by c.sort_order",id));
+        return row;
+    }
+
+    private void saveCardDeck(UUID id,Map<String,Object> body,boolean insert) {
+        String title=required(body,"title");
+        if(title.length()>360) throw new IllegalArgumentException("A kártyacsomag neve legfeljebb 360 karakter lehet.");
+        String slug=Optional.ofNullable(optional(body,"slug")).orElseGet(()->slugify(title));
+        String itemStatus=status(body.get("status"));
+        String summary=optional(body,"summary"),description=optional(body,"description"),rules=optional(body,"rules");
+        UUID previewAssetId=uuidOrNull(body.get("previewAssetId")),backAssetId=uuidOrNull(body.get("backAssetId"));
+        requireImageAsset(previewAssetId,"borítókép"); requireImageAsset(backAssetId,"hátoldal");
+        int cardsPerSheet=boundedInt(body.get("cardsPerSheet"),1,1,100,"egy oldalra rendezett kártyák száma");
+        UUID catalogItemId=id;
+        if(!insert) jdbc.queryForObject("select id from card_deck where catalog_item_id=?",UUID.class,id);
+        upsertCatalogItem(catalogItemId,"CARD_DECK",slug,title,summary,description,itemStatus,previewAssetId);
+        if(insert) jdbc.update("insert into card_deck(catalog_item_id,back_asset_id,rules,cards_per_sheet) values (?,?,?,?)",catalogItemId,backAssetId,rules,cardsPerSheet);
+        else jdbc.update("update card_deck set back_asset_id=?,rules=?,cards_per_sheet=? where catalog_item_id=?",backAssetId,rules,cardsPerSheet,catalogItemId);
+        jdbc.update("delete from card_deck_card where deck_id=?",catalogItemId);
+        List<Map<String,Object>> cards=listOfMaps(body.get("cards"));
+        for(int index=0;index<cards.size();index++) {
+            Map<String,Object> card=cards.get(index);
+            UUID frontAssetId=uuidOrNull(card.get("frontAssetId"));
+            if(frontAssetId==null) throw new IllegalArgumentException("Minden kártyához tölts fel előoldali képet.");
+            requireImageAsset(frontAssetId,"kártyalap");
+            String cardTitle=optional(card,"title");
+            if(cardTitle!=null&&cardTitle.length()>200) throw new IllegalArgumentException("A kártyalap neve legfeljebb 200 karakter lehet.");
+            jdbc.update("insert into card_deck_card(deck_id,title,front_asset_id,sort_order) values (?,?,?,?)",catalogItemId,cardTitle,frontAssetId,index);
+        }
+    }
+
+    private void requireImageAsset(UUID assetId,String label) {
+        if(assetId==null) return;
+        String mediaType=jdbc.queryForObject("select media_type from media_asset where id=?",String.class,assetId);
+        if(mediaType==null||!mediaType.toLowerCase(Locale.ROOT).startsWith("image/")) throw new IllegalArgumentException("A(z) "+label+" csak képfájl lehet.");
+    }
+
     @PostMapping("/taxonomy")
     public Map<String, Object> createTerm(@RequestBody Map<String, Object> body) {
         String type = required(body, "termType").toUpperCase(Locale.ROOT);
@@ -130,6 +217,7 @@ public class ApiController {
     @DeleteMapping("/worksheets/{id}")
     public ResponseEntity<Void> archiveWorksheet(@PathVariable UUID id) {
         jdbc.update("update worksheet set status='ARCHIVED', updated_at=? where id=?", Timestamp.from(Instant.now()), id);
+        jdbc.update("update catalog_item set status='ARCHIVED',updated_at=? where id=(select catalog_item_id from worksheet where id=?)",Timestamp.from(Instant.now()),id);
         return ResponseEntity.noContent().build();
     }
 
@@ -197,15 +285,17 @@ public class ApiController {
     @DeleteMapping("/bundles/{id}")
     public ResponseEntity<Void> archiveBundle(@PathVariable UUID id) {
         jdbc.update("update bundle_plan set status='ARCHIVED', updated_at=? where id=?",Timestamp.from(Instant.now()),id);
+        jdbc.update("update catalog_item set status='ARCHIVED',updated_at=? where id=(select catalog_item_id from bundle_plan where id=?)",Timestamp.from(Instant.now()),id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/products")
     public List<Map<String, Object>> saleProducts() {
-        List<Map<String,Object>> products = jdbc.queryForList("select p.*, coalesce(w.title,b.title) as content_title, " +
+        List<Map<String,Object>> products = jdbc.queryForList("select p.*, ci.title as content_title,ci.type_code as content_type, " +
+                "coalesce(ci.preview_asset_id,w.preview_asset_id,(select wp.preview_asset_id from bundle_worksheet bw join worksheet wp on wp.id=bw.worksheet_id where bw.bundle_id=p.bundle_id order by bw.sort_order limit 1)) as preview_asset_id, " +
                 "coalesce(s.units_sold,0) as units_sold, coalesce(s.sale_count,0) as sale_count, " +
                 "coalesce(s.revenue,0) as revenue, coalesce(s.material_cost,0) as sold_material_cost " +
-                "from sale_product p left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id " +
+                "from sale_product p join catalog_item ci on ci.id=p.catalog_item_id left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id " +
                 "left join (select product_id,sum(quantity) as units_sold,count(distinct sale_id) as sale_count, " +
                 "sum(agreed_line_total) as revenue,sum(quantity*material_unit_cost+packaging_cost) as material_cost from sale_line group by product_id) s on s.product_id=p.id " +
                 "order by p.active desc, content_title, p.variant_name");
@@ -214,6 +304,130 @@ public class ApiController {
             addPrintingCost(product);
         });
         return products;
+    }
+
+    @PutMapping("/products/{id}/stock")
+    @Transactional
+    public Map<String,Object> setProductStock(@PathVariable UUID id, @RequestBody Map<String,Object> body) {
+        int quantity=boundedInt(body.get("quantity"),0,0,100000,"készlet");
+        Integer previous=jdbc.queryForObject("select stock_quantity from sale_product where id=? and delivery_type='PHYSICAL' for update",Integer.class,id);
+        jdbc.update("update sale_product set stock_quantity=?,updated_at=? where id=? and delivery_type='PHYSICAL'",quantity,Timestamp.from(Instant.now()),id);
+        if(quantity!=previous) recordStockMovement(id,quantity-previous,"MANUAL_SET",null,"Készlet közvetlen beállítása");
+        return jdbc.queryForMap("select id,stock_quantity from sale_product where id=? and delivery_type='PHYSICAL'",id);
+    }
+
+    @PostMapping("/products/{id}/stock-adjustments")
+    @Transactional
+    public Map<String,Object> adjustProductStock(@PathVariable UUID id, @RequestBody Map<String,Object> body) {
+        int delta=boundedInt(body.get("delta"),0,-100000,100000,"készletmódosítás");
+        if(delta==0) throw new IllegalArgumentException("A készletmódosítás nem lehet nulla.");
+        jdbc.update("update sale_product set stock_quantity=stock_quantity+?,updated_at=? where id=? and delivery_type='PHYSICAL'",delta,Timestamp.from(Instant.now()),id);
+        recordStockMovement(id,delta,"MANUAL_ADJUSTMENT",null,delta>0?"Kézi készletfeltöltés":"Kézi készletcsökkentés");
+        return jdbc.queryForMap("select id,stock_quantity from sale_product where id=? and delivery_type='PHYSICAL'",id);
+    }
+
+    @PutMapping("/products/{id}/stock-minimum")
+    @Transactional
+    public Map<String,Object> setProductStockMinimum(@PathVariable UUID id, @RequestBody Map<String,Object> body) {
+        int minimum=boundedInt(body.get("minimum"),0,0,100000,"készletminimum");
+        jdbc.update("update sale_product set stock_minimum=?,updated_at=? where id=? and delivery_type='PHYSICAL'",minimum,Timestamp.from(Instant.now()),id);
+        return jdbc.queryForMap("select id,stock_minimum from sale_product where id=? and delivery_type='PHYSICAL'",id);
+    }
+
+    @PutMapping("/products/{id}/preparation")
+    @Transactional
+    public Map<String,Object> updateProductPreparation(@PathVariable UUID id,@RequestBody Map<String,Object> body) {
+        String note=optional(body,"note");
+        if(note!=null&&note.length()>2000) throw new IllegalArgumentException("A megjegyzés legfeljebb 2000 karakter lehet.");
+        jdbc.update("update sale_product set preparation_printed=?,preparation_laminated=?,preparation_velcro=?,preparation_note=?,updated_at=? where id=? and delivery_type='PHYSICAL'",
+                Boolean.parseBoolean(Objects.toString(body.get("printed"),"false")),Boolean.parseBoolean(Objects.toString(body.get("laminated"),"false")),
+                Boolean.parseBoolean(Objects.toString(body.get("velcro"),"false")),note,Timestamp.from(Instant.now()),id);
+        return jdbc.queryForMap("select id,preparation_printed,preparation_laminated,preparation_velcro,preparation_note from sale_product where id=? and delivery_type='PHYSICAL'",id);
+    }
+
+    @GetMapping("/inventory/movements")
+    public List<Map<String,Object>> stockMovements(@RequestParam(defaultValue="100") int limit) {
+        int safeLimit=Math.max(1,Math.min(limit,500));
+        return jdbc.queryForList("select sm.id,sm.product_id,sm.sale_id,sm.source_type,sm.quantity_delta,sm.note,sm.created_at, " +
+                "p.variant_name,ci.title as content_title " +
+                "from stock_movement sm join sale_product p on p.id=sm.product_id " +
+                "join catalog_item ci on ci.id=p.catalog_item_id left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id " +
+                "order by sm.created_at desc,sm.id desc limit ?",safeLimit);
+    }
+
+    @GetMapping("/inventory/preparations")
+    public List<Map<String,Object>> productPreparations() {
+        return jdbc.queryForList("select pp.*,p.variant_name,ci.title as content_title,coalesce(ci.preview_asset_id,w.preview_asset_id,(select wp.preview_asset_id from bundle_worksheet bw join worksheet wp on wp.id=bw.worksheet_id where bw.bundle_id=p.bundle_id order by bw.sort_order limit 1)) as preview_asset_id " +
+                "from product_preparation pp join sale_product p on p.id=pp.product_id " +
+                "join catalog_item ci on ci.id=p.catalog_item_id left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id " +
+                "order by case when pp.status='IN_PROGRESS' then 0 else 1 end,pp.created_at desc limit 200");
+    }
+
+    @PostMapping("/products/{id}/preparations")
+    @Transactional
+    public Map<String,Object> createProductPreparation(@PathVariable UUID id,@RequestBody Map<String,Object> body) {
+        jdbc.queryForObject("select id from sale_product where id=? and delivery_type='PHYSICAL' and active=true",UUID.class,id);
+        int quantity=boundedInt(body.get("quantity"),1,1,100000,"előkészítendő darabszám");
+        String note=optional(body,"note");
+        if(note!=null&&note.length()>2000) throw new IllegalArgumentException("A megjegyzés legfeljebb 2000 karakter lehet.");
+        UUID preparationId=UUID.randomUUID();
+        jdbc.update("insert into product_preparation(id,product_id,quantity,printed,laminated,velcro,note) values (?,?,?,?,?,?,?)",preparationId,id,quantity,
+                Boolean.parseBoolean(Objects.toString(body.get("printed"),"false")),Boolean.parseBoolean(Objects.toString(body.get("laminated"),"false")),
+                Boolean.parseBoolean(Objects.toString(body.get("velcro"),"false")),note);
+        return jdbc.queryForMap("select pp.*,p.variant_name,ci.title as content_title,coalesce(ci.preview_asset_id,w.preview_asset_id,(select wp.preview_asset_id from bundle_worksheet bw join worksheet wp on wp.id=bw.worksheet_id where bw.bundle_id=p.bundle_id order by bw.sort_order limit 1)) as preview_asset_id from product_preparation pp join sale_product p on p.id=pp.product_id join catalog_item ci on ci.id=p.catalog_item_id left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id where pp.id=?",preparationId);
+    }
+
+    @PutMapping("/inventory/preparations/{id}")
+    @Transactional
+    public Map<String,Object> updateProductPreparation(@PathVariable UUID id,@RequestBody Map<String,Object> body) {
+        int quantity=boundedInt(body.get("quantity"),1,1,100000,"előkészítendő darabszám");
+        String note=optional(body,"note");
+        if(note!=null&&note.length()>2000) throw new IllegalArgumentException("A megjegyzés legfeljebb 2000 karakter lehet.");
+        jdbc.update("update product_preparation set quantity=?,printed=?,laminated=?,velcro=?,note=? where id=? and status='IN_PROGRESS'",quantity,
+                Boolean.parseBoolean(Objects.toString(body.get("printed"),"false")),Boolean.parseBoolean(Objects.toString(body.get("laminated"),"false")),
+                Boolean.parseBoolean(Objects.toString(body.get("velcro"),"false")),note,id);
+        return jdbc.queryForMap("select pp.*,p.variant_name,ci.title as content_title,coalesce(ci.preview_asset_id,w.preview_asset_id,(select wp.preview_asset_id from bundle_worksheet bw join worksheet wp on wp.id=bw.worksheet_id where bw.bundle_id=p.bundle_id order by bw.sort_order limit 1)) as preview_asset_id from product_preparation pp join sale_product p on p.id=pp.product_id join catalog_item ci on ci.id=p.catalog_item_id left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id where pp.id=?",id);
+    }
+
+    @PostMapping("/inventory/preparations/{id}/complete")
+    @Transactional
+    public Map<String,Object> completeProductPreparation(@PathVariable UUID id,@RequestBody Map<String,Object> body) {
+        Map<String,Object> preparation=jdbc.queryForMap("select * from product_preparation where id=? for update",id);
+        if(!"IN_PROGRESS".equals(preparation.get("status"))) throw new IllegalArgumentException("Ez az előkészítés már lezárult.");
+        UUID productId=(UUID)preparation.get("product_id");
+        int remaining=((Number)preparation.get("quantity")).intValue();
+        int quantity=boundedInt(body.get("quantity"),remaining,1,remaining,"késztermékké tett darabszám");
+        List<Map<String,Object>> materialRequirements=jdbc.queryForList("select m.id,m.name,m.unit_name,m.stock_quantity,pm.quantity*? as required_quantity " +
+                "from product_material pm join material_item m on m.id=pm.material_id where pm.product_id=? order by m.id for update of m",quantity,productId);
+        for(Map<String,Object> requirement:materialRequirements) {
+            BigDecimal available=(BigDecimal)requirement.get("stock_quantity");
+            BigDecimal required=(BigDecimal)requirement.get("required_quantity");
+            if(available.compareTo(required)<0) throw new IllegalArgumentException("Nincs elég készleten ebből az alapanyagból: " + requirement.get("name") + ". Szükséges: " + required.stripTrailingZeros().toPlainString() + " " + requirement.get("unit_name") + ", készleten: " + available.stripTrailingZeros().toPlainString() + ".");
+        }
+        for(Map<String,Object> requirement:materialRequirements) jdbc.update("update material_item set stock_quantity=stock_quantity-? where id=?",requirement.get("required_quantity"),requirement.get("id"));
+        int moved=jdbc.update("update sale_product set stock_quantity=stock_quantity+?,updated_at=? where id=? and delivery_type='PHYSICAL'",quantity,Timestamp.from(Instant.now()),productId);
+        if(moved!=1) throw new IllegalArgumentException("Csak fizikai termék kerülhet késztermékkészletre.");
+        Timestamp completedAt=Timestamp.from(Instant.now());
+        if(quantity==remaining) jdbc.update("update product_preparation set status='COMPLETE',completed_at=? where id=?",completedAt,id);
+        else {
+            jdbc.update("update product_preparation set quantity=? where id=?",remaining-quantity,id);
+            jdbc.update("insert into product_preparation(id,product_id,quantity,printed,laminated,velcro,note,status,completed_at) values (?,?,?,?,?,?,?,'COMPLETE',?)",
+                    UUID.randomUUID(),productId,quantity,preparation.get("printed"),preparation.get("laminated"),preparation.get("velcro"),preparation.get("note"),completedAt);
+        }
+        recordStockMovement(productId,quantity,"PREPARATION_COMPLETED",null,"Előkészítésből " + quantity + " db késztermékként készletre véve");
+        return jdbc.queryForMap("select pp.*,p.variant_name,ci.title as content_title,coalesce(ci.preview_asset_id,w.preview_asset_id,(select wp.preview_asset_id from bundle_worksheet bw join worksheet wp on wp.id=bw.worksheet_id where bw.bundle_id=p.bundle_id order by bw.sort_order limit 1)) as preview_asset_id from product_preparation pp join sale_product p on p.id=pp.product_id join catalog_item ci on ci.id=p.catalog_item_id left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id where pp.id=?",id);
+    }
+
+    @DeleteMapping("/inventory/preparations/{id}")
+    @Transactional
+    public ResponseEntity<Void> deleteProductPreparation(@PathVariable UUID id) {
+        jdbc.update("delete from product_preparation where id=? and status='IN_PROGRESS'",id);
+        return ResponseEntity.noContent().build();
+    }
+
+    private void recordStockMovement(UUID productId,int delta,String sourceType,UUID saleId,String note) {
+        if(delta==0) return;
+        jdbc.update("insert into stock_movement(product_id,sale_id,source_type,quantity_delta,note) values (?,?,?,?,?)",productId,saleId,sourceType,delta,note);
     }
 
     @GetMapping("/settings/printing")
@@ -242,7 +456,7 @@ public class ApiController {
 
     private Map<String, Object> saveSaleProduct(UUID id, Map<String, Object> body) {
         String contentType = required(body, "contentType").toUpperCase(Locale.ROOT);
-        if (!Set.of("WORKSHEET", "BUNDLE").contains(contentType)) throw new IllegalArgumentException("A termék feladatlaphoz vagy csomagtervhez kapcsolható.");
+        if (!Set.of("WORKSHEET", "BUNDLE", "CARD_DECK").contains(contentType)) throw new IllegalArgumentException("Ehhez a tartalomtípushoz még nem hozható létre termékváltozat.");
         UUID contentId;
         try { contentId = UUID.fromString(required(body, "contentId")); }
         catch (IllegalArgumentException ex) { throw new IllegalArgumentException("Érvénytelen tartalomazonosító."); }
@@ -257,13 +471,15 @@ public class ApiController {
         BigDecimal materialCost = "DIGITAL".equals(deliveryType) ? BigDecimal.ZERO.setScale(2) : money(body.get("materialCost"), "anyagköltség", true);
         UUID worksheetId = "WORKSHEET".equals(contentType) ? contentId : null;
         UUID bundleId = "BUNDLE".equals(contentType) ? contentId : null;
-        if ("WORKSHEET".equals(contentType)) jdbc.queryForObject("select id from worksheet where id=?", UUID.class, contentId);
-        else jdbc.queryForObject("select id from bundle_plan where id=?", UUID.class, contentId);
+        UUID catalogItemId;
+        if ("WORKSHEET".equals(contentType)) catalogItemId=jdbc.queryForObject("select catalog_item_id from worksheet where id=?",UUID.class,contentId);
+        else if("BUNDLE".equals(contentType)) catalogItemId=jdbc.queryForObject("select catalog_item_id from bundle_plan where id=?",UUID.class,contentId);
+        else catalogItemId=jdbc.queryForObject("select id from catalog_item where id=? and type_code='CARD_DECK'",UUID.class,contentId);
         if (id == null) {
             id = UUID.randomUUID();
-            jdbc.update("insert into sale_product(id,worksheet_id,bundle_id,variant_name,delivery_type,list_price,material_cost,print_sides) values (?,?,?,?,?,?,?,?)", id, worksheetId, bundleId, variantName, deliveryType, listPrice, materialCost, printSides);
+            jdbc.update("insert into sale_product(id,worksheet_id,bundle_id,catalog_item_id,variant_name,delivery_type,list_price,material_cost,print_sides) values (?,?,?,?,?,?,?,?,?)", id, worksheetId, bundleId,catalogItemId, variantName, deliveryType, listPrice, materialCost, printSides);
         } else {
-            jdbc.update("update sale_product set worksheet_id=?,bundle_id=?,variant_name=?,delivery_type=?,list_price=?,material_cost=?,print_sides=?,updated_at=? where id=?", worksheetId, bundleId, variantName, deliveryType, listPrice, materialCost, printSides, Timestamp.from(Instant.now()), id);
+            jdbc.update("update sale_product set worksheet_id=?,bundle_id=?,catalog_item_id=?,variant_name=?,delivery_type=?,list_price=?,material_cost=?,print_sides=?,updated_at=? where id=?", worksheetId, bundleId,catalogItemId, variantName, deliveryType, listPrice, materialCost, printSides, Timestamp.from(Instant.now()), id);
         }
         jdbc.update("delete from product_material where product_id=?",id);
         Set<UUID> linkedMaterials=new HashSet<>();
@@ -276,7 +492,7 @@ public class ApiController {
             jdbc.update("insert into product_material(product_id,material_id,quantity) values (?,?,?)",id,materialId,decimalQuantity(item.get("quantity")));
         }
         if(!recipe.isEmpty()) recalculateProductMaterialCost(id);
-        Map<String,Object> product=jdbc.queryForMap("select p.*, coalesce(w.title,b.title) as content_title from sale_product p left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id where p.id=?", id);
+        Map<String,Object> product=jdbc.queryForMap("select p.*, ci.title as content_title,ci.type_code as content_type from sale_product p join catalog_item ci on ci.id=p.catalog_item_id where p.id=?", id);
         product.put("materials",productMaterials(id));
         addPrintingCost(product);
         return product;
@@ -287,6 +503,13 @@ public class ApiController {
         if("PHYSICAL".equals(product.get("delivery_type"))) {
             if(product.get("worksheet_id")!=null) pages=Optional.ofNullable(jdbc.queryForObject("select coalesce(sum(page_count),0) from worksheet_page where worksheet_id=?",Long.class,product.get("worksheet_id"))).orElse(0L).intValue();
             else if(product.get("bundle_id")!=null) pages=Optional.ofNullable(jdbc.queryForObject("select coalesce(sum(p.page_count),0) from bundle_worksheet bw join worksheet_page p on p.worksheet_id=bw.worksheet_id where bw.bundle_id=?",Long.class,product.get("bundle_id"))).orElse(0L).intValue();
+            else if("CARD_DECK".equals(product.get("content_type"))) {
+                Map<String,Object> deck=jdbc.queryForMap("select cd.cards_per_sheet,cd.back_asset_id,count(c.id) as card_count from card_deck cd left join card_deck_card c on c.deck_id=cd.catalog_item_id where cd.catalog_item_id=? group by cd.catalog_item_id",product.get("catalog_item_id"));
+                int cardCount=((Number)deck.get("card_count")).intValue();
+                int perSheet=((Number)deck.get("cards_per_sheet")).intValue();
+                int sidesPerCard=(deck.get("back_asset_id")==null?1:2);
+                pages=((cardCount+perSheet-1)/perSheet)*sidesPerCard;
+            }
         }
         int sides=product.get("print_sides") instanceof Number n?n.intValue():1;
         BigDecimal sideCost=new BigDecimal(jdbc.queryForObject("select setting_value from app_setting where setting_key='print_side_cost'",String.class));
@@ -390,24 +613,33 @@ public class ApiController {
             packagingTotalCost=packagingUnitCost.multiply(packagingQuantity).setScale(2,RoundingMode.HALF_UP);
         }
 
-        record Line(UUID productId, String title, String variant, int quantity, BigDecimal unitPrice, BigDecimal unitCost, BigDecimal printingCost) {
+        record Line(UUID productId, String title, String variant, int quantity, BigDecimal unitPrice, BigDecimal unitCost, BigDecimal printingCost, boolean physical) {
             BigDecimal listTotal() { return unitPrice.multiply(BigDecimal.valueOf(quantity)); }
         }
         List<Line> lines = new ArrayList<>();
         BigDecimal listTotal = BigDecimal.ZERO;
         for (Map.Entry<UUID, Integer> entry : quantities.entrySet()) {
-            Map<String, Object> product = jdbc.queryForMap("select p.*,coalesce(w.title,b.title) as content_title from sale_product p left join worksheet w on w.id=p.worksheet_id left join bundle_plan b on b.id=p.bundle_id where p.id=? and p.active=true", entry.getKey());
+            Map<String, Object> product = jdbc.queryForMap("select p.*,ci.title as content_title from sale_product p join catalog_item ci on ci.id=p.catalog_item_id where p.id=? and p.active=true", entry.getKey());
             BigDecimal printCost=printingCost(product);
             BigDecimal totalCost=((BigDecimal)product.get("material_cost")).add(printCost);
-            Line line = new Line(entry.getKey(), (String) product.get("content_title"), (String) product.get("variant_name"), entry.getValue(), (BigDecimal) product.get("list_price"), totalCost, printCost);
+            Line line = new Line(entry.getKey(), (String) product.get("content_title"), (String) product.get("variant_name"), entry.getValue(), (BigDecimal) product.get("list_price"), totalCost, printCost, "PHYSICAL".equals(product.get("delivery_type")));
             lines.add(line); listTotal = listTotal.add(line.listTotal());
         }
         UUID saleId=existingId==null?UUID.randomUUID():existingId;
+        List<Map<String,Object>> restoredStock=List.of();
+        if(existingId!=null) {
+            restoredStock=jdbc.queryForList("select sl.product_id,sum(sl.quantity) as quantity from sale_line sl join sale_product p on p.id=sl.product_id where sl.sale_id=? and p.delivery_type='PHYSICAL' group by sl.product_id",saleId);
+            restoredStock
+                    .forEach(row->jdbc.update("update sale_product set stock_quantity=stock_quantity+?,updated_at=? where id=?",row.get("quantity"),Timestamp.from(Instant.now()),row.get("product_id")));
+        }
+        for(Line line:lines) if(line.physical()) jdbc.update("update sale_product set stock_quantity=stock_quantity-?,updated_at=? where id=? and delivery_type='PHYSICAL'",line.quantity(),Timestamp.from(Instant.now()),line.productId());
         if(existingId==null) jdbc.update("insert into sale_record(id,sale_date,channel,list_total,agreed_total,note,packaging_material_id,packaging_name,packaging_unit,packaging_quantity,packaging_unit_cost,packaging_total_cost) values (?,?,?,?,?,?,?,?,?,?,?,?)",saleId,saleDate,channel,listTotal,agreedTotal,optional(body,"note"),packagingMaterialId,packagingName,packagingUnit,packagingQuantity,packagingUnitCost,packagingTotalCost);
         else {
             jdbc.update("update sale_record set sale_date=?,channel=?,list_total=?,agreed_total=?,note=?,packaging_material_id=?,packaging_name=?,packaging_unit=?,packaging_quantity=?,packaging_unit_cost=?,packaging_total_cost=? where id=?",saleDate,channel,listTotal,agreedTotal,optional(body,"note"),packagingMaterialId,packagingName,packagingUnit,packagingQuantity,packagingUnitCost,packagingTotalCost,saleId);
             jdbc.update("delete from sale_line where sale_id=?",saleId);
         }
+        for(Map<String,Object> oldLine:restoredStock) recordStockMovement((UUID)oldLine.get("product_id"),((Number)oldLine.get("quantity")).intValue(),"SALE_EDIT_RESTORE",saleId,"Eladás szerkesztése: korábbi mennyiség visszaadása");
+        for(Line line:lines) if(line.physical()) recordStockMovement(line.productId(),-line.quantity(),existingId==null?"SALE":"SALE_EDIT",saleId,existingId==null?"Eladás miatti készletcsökkenés":"Eladás módosítása: új mennyiség levonása");
         BigDecimal allocated = BigDecimal.ZERO;
         BigDecimal packagingAllocated=BigDecimal.ZERO;
         for (int i = 0; i < lines.size(); i++) {
@@ -432,6 +664,27 @@ public class ApiController {
                 "sum(total_cost) as total_spent, sum(total_cost)/nullif(sum(quantity),0) as unit_cost " +
                 "from material_purchase group by material_id) p on p.material_id=m.id " +
                 "order by m.active desc,m.name");
+    }
+
+    @PutMapping("/materials/{id}/stock")
+    @Transactional
+    public Map<String,Object> setMaterialStock(@PathVariable UUID id,@RequestBody Map<String,Object> body) {
+        BigDecimal quantity=materialStockQuantity(body.get("quantity"));
+        jdbc.queryForObject("select id from material_item where id=? for update",UUID.class,id);
+        jdbc.update("update material_item set stock_quantity=? where id=?",quantity,id);
+        return jdbc.queryForMap("select id,stock_quantity from material_item where id=?",id);
+    }
+
+    @PostMapping("/materials/{id}/stock-adjustments")
+    @Transactional
+    public Map<String,Object> adjustMaterialStock(@PathVariable UUID id,@RequestBody Map<String,Object> body) {
+        BigDecimal delta;
+        try { delta=new BigDecimal(Objects.toString(body.get("delta"))).setScale(3,RoundingMode.HALF_UP); }
+        catch(Exception ex) { throw new IllegalArgumentException("Érvénytelen alapanyag-mennyiség."); }
+        if(delta.signum()==0 || delta.abs().compareTo(new BigDecimal("1000000"))>0) throw new IllegalArgumentException("A módosítás 0 és 1 000 000 közötti mennyiség legyen.");
+        jdbc.queryForObject("select id from material_item where id=? for update",UUID.class,id);
+        jdbc.update("update material_item set stock_quantity=greatest(stock_quantity+?,0) where id=?",delta,id);
+        return jdbc.queryForMap("select id,stock_quantity from material_item where id=?",id);
     }
 
     @PostMapping("/materials")
@@ -466,6 +719,7 @@ public class ApiController {
         UUID purchaseId=UUID.randomUUID();
         java.sql.Date purchaseDate=dateValue(body.get("purchaseDate"),"beszerzési dátum");
         jdbc.update("insert into material_purchase(id,material_id,purchase_date,quantity,total_cost,unit_cost,note) values (?,?,?,?,?,?,?)",purchaseId,id,purchaseDate,quantity,totalCost,unitCost,optional(body,"note"));
+        jdbc.update("update material_item set stock_quantity=stock_quantity+? where id=?",quantity,id);
         recalculateProductsUsingMaterial(id);
         return jdbc.queryForMap("select p.*,m.name as material_name,m.unit_name from material_purchase p join material_item m on m.id=p.material_id where p.id=?",purchaseId);
     }
@@ -548,20 +802,30 @@ public class ApiController {
                 .body(resource);
     }
 
+    private void upsertCatalogItem(UUID id,String typeCode,String slug,String title,String summary,String description,String status,UUID previewAssetId) {
+        Timestamp now=Timestamp.from(Instant.now());
+        jdbc.update("insert into catalog_item(id,type_code,slug,title,summary,description,status,preview_asset_id,created_at,updated_at) values (?,?,?,?,?,?,?,?,?,?) " +
+                        "on conflict(id) do update set type_code=excluded.type_code,slug=excluded.slug,title=excluded.title,summary=excluded.summary,description=excluded.description,status=excluded.status,preview_asset_id=excluded.preview_asset_id,updated_at=excluded.updated_at",
+                id,typeCode,slug,title,summary,description,status,previewAssetId,now,now);
+    }
+
     private void saveWorksheet(UUID id, Map<String, Object> b, boolean insert) {
         String title = required(b, "title");
         String slug = Optional.ofNullable(optional(b, "slug")).orElseGet(() -> slugify(title));
         String status = status(b.get("status"));
+        UUID catalogItemId=insert?UUID.randomUUID():jdbc.queryForObject("select catalog_item_id from worksheet where id=?",UUID.class,id);
         String paperSize = choice(b.get("paperSize"), "A4", "papírméret", Set.of("A4", "A3", "LETTER"));
         String orientation = choice(b.get("orientation"), "PORTRAIT", "tájolás", Set.of("PORTRAIT", "LANDSCAPE"));
         String colorMode = choice(b.get("colorMode"), "COLOR", "színmód", Set.of("COLOR", "GRAYSCALE"));
         String usageType = choice(b.get("usageType"), "DIGITAL", "felhasználás", Set.of("DIGITAL", "PHYSICAL", "BOTH"));
+        String originType = choice(b.get("originType"), "ORIGINAL", "eredet", Set.of("ORIGINAL", "ONLINE"));
         Object previewId = uuidOrNull(b.get("previewAssetId"));
         Object[] values = {title, slug, optional(b, "summary"), optional(b, "description"), optional(b, "instructions"), status,
-                paperSize, orientation, colorMode, usageType, optional(b, "safetyNotes"), previewId, Timestamp.from(Instant.now()),
+                paperSize, orientation, colorMode, usageType, originType, optional(b, "safetyNotes"), previewId, Timestamp.from(Instant.now()),
                 "PUBLISHED".equals(status) ? Timestamp.from(Instant.now()) : null};
-        if (insert) jdbc.update("insert into worksheet(id,title,slug,summary,description,instructions,status,paper_size,orientation,color_mode,usage_type,safety_notes,preview_asset_id,updated_at,published_at) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", prepend(id, values));
-        else jdbc.update("update worksheet set title=?,slug=?,summary=?,description=?,instructions=?,status=?,paper_size=?,orientation=?,color_mode=?,usage_type=?,safety_notes=?,preview_asset_id=?,updated_at=?,published_at=coalesce(?,published_at) where id=?",
+        upsertCatalogItem(catalogItemId,"WORKSHEET",slug,title,optional(b,"summary"),optional(b,"description"),status,(UUID)previewId);
+        if (insert) jdbc.update("insert into worksheet(id,catalog_item_id,title,slug,summary,description,instructions,status,paper_size,orientation,color_mode,usage_type,origin_type,safety_notes,preview_asset_id,updated_at,published_at) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", prepend(catalogItemId, prepend(id, values)));
+        else jdbc.update("update worksheet set title=?,slug=?,summary=?,description=?,instructions=?,status=?,paper_size=?,orientation=?,color_mode=?,usage_type=?,origin_type=?,safety_notes=?,preview_asset_id=?,updated_at=?,published_at=coalesce(?,published_at) where id=?",
                 append(values, id));
         List<Map<String, Object>> pages = listOfMaps(b.get("pages"));
         if (!insert) jdbc.update("delete from worksheet_page where worksheet_id=?", id);
@@ -587,6 +851,7 @@ public class ApiController {
             order++;
         }
         jdbc.update("update worksheet set preview_asset_id=(select preview_asset_id from worksheet_page where worksheet_id=? and page_type='MAIN' order by sort_order limit 1) where id=?", id, id);
+        jdbc.update("update catalog_item ci set slug=w.slug,title=w.title,summary=w.summary,description=w.description,status=w.status,preview_asset_id=w.preview_asset_id,updated_at=w.updated_at from worksheet w where w.catalog_item_id=ci.id and w.id=?",id);
         jdbc.update("delete from worksheet_term where worksheet_id=? and term_id in (select id from taxonomy_term where active=true)", id);
         saveTerms("worksheet_id", id, b.get("termIds"));
     }
@@ -618,8 +883,8 @@ public class ApiController {
     }
 
     private List<Map<String,Object>> worksheetSaleProducts(UUID worksheetId,boolean includeMaterials){
-        List<Map<String,Object>> products=jdbc.queryForList("select p.id,p.worksheet_id,p.delivery_type,p.print_sides,p.variant_name,p.list_price,p.material_cost,coalesce(s.units_sold,0) as units_sold,coalesce(s.revenue,0) as revenue,coalesce(s.sold_material_cost,0) as sold_material_cost " +
-                "from sale_product p left join (select product_id,sum(quantity) as units_sold,sum(agreed_line_total) as revenue,sum(quantity*material_unit_cost+packaging_cost) as sold_material_cost from sale_line group by product_id) s on s.product_id=p.id " +
+        List<Map<String,Object>> products=jdbc.queryForList("select p.id,p.worksheet_id,p.delivery_type,p.print_sides,p.variant_name,p.list_price,p.material_cost,p.stock_quantity,p.stock_minimum,w.preview_asset_id,coalesce(s.units_sold,0) as units_sold,coalesce(s.revenue,0) as revenue,coalesce(s.sold_material_cost,0) as sold_material_cost " +
+                "from sale_product p join worksheet w on w.id=p.worksheet_id left join (select product_id,sum(quantity) as units_sold,sum(agreed_line_total) as revenue,sum(quantity*material_unit_cost+packaging_cost) as sold_material_cost from sale_line group by product_id) s on s.product_id=p.id " +
                 "where p.worksheet_id=? and p.active=true order by p.variant_name",worksheetId);
         products.forEach(product->{addPrintingCost(product);if(includeMaterials)product.put("materials",productMaterials((UUID)product.get("id")));});
         return products;
@@ -665,9 +930,12 @@ public class ApiController {
         String slug=Optional.ofNullable(optional(b,"slug")).orElseGet(()->slugify(title));
         String type=valueOr(b.get("bundleType"),"DIGITAL");
         if(!Set.of("DIGITAL","PHYSICAL","BOTH").contains(type)) throw new IllegalArgumentException("Érvénytelen csomagtípus.");
+        UUID catalogItemId=insert?UUID.randomUUID():jdbc.queryForObject("select catalog_item_id from bundle_plan where id=?",UUID.class,id);
+        upsertCatalogItem(catalogItemId,"BUNDLE",slug,title,null,optional(b,"description"),status(b.get("status")),null);
         Object[] values={title,slug,optional(b,"description"),type,status(b.get("status")),Timestamp.from(Instant.now())};
-        if(insert) jdbc.update("insert into bundle_plan(id,title,slug,description,bundle_type,status,updated_at) values (?,?,?,?,?,?,?)",prepend(id,values));
+        if(insert) jdbc.update("insert into bundle_plan(id,catalog_item_id,title,slug,description,bundle_type,status,updated_at) values (?,?,?,?,?,?,?,?)",prepend(catalogItemId,prepend(id,values)));
         else jdbc.update("update bundle_plan set title=?,slug=?,description=?,bundle_type=?,status=?,updated_at=? where id=?",append(values,id));
+        jdbc.update("update catalog_item ci set slug=b.slug,title=b.title,description=b.description,status=b.status,updated_at=b.updated_at from bundle_plan b where b.catalog_item_id=ci.id and b.id=?",id);
         jdbc.update("delete from bundle_worksheet where bundle_id=?",id);
         if(b.get("worksheetIds") instanceof List<?> ids) {
             int order=0;
@@ -738,6 +1006,14 @@ public class ApiController {
         catch (NumberFormatException | ArithmeticException ex) { throw new IllegalArgumentException("A mennyiség legfeljebb három tizedesjegyű pozitív szám legyen."); }
         if(quantity.signum()<=0) throw new IllegalArgumentException("A mennyiség pozitív szám legyen.");
         return quantity;
+    }
+
+    private static BigDecimal materialStockQuantity(Object value) {
+        try {
+            BigDecimal quantity=new BigDecimal(Objects.toString(value)).setScale(3,RoundingMode.HALF_UP);
+            if(quantity.signum()<0 || quantity.compareTo(new BigDecimal("1000000"))>0) throw new IllegalArgumentException("Az alapanyag készlete 0 és 1 000 000 közötti mennyiség legyen.");
+            return quantity;
+        } catch(NumberFormatException ex) { throw new IllegalArgumentException("Érvénytelen alapanyag-mennyiség."); }
     }
     private static java.sql.Date dateValue(Object value,String label) {
         if(value==null || value.toString().isBlank()) return java.sql.Date.valueOf(java.time.LocalDate.now());

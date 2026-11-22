@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 016-stock-movement-history
+      author: codex
+      changes:
+        - createTable:
+            tableName: stock_movement
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: product_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_stock_movement_product, references: sale_product(id) } }
+              - column: { name: sale_id, type: UUID, constraints: { foreignKeyName: fk_stock_movement_sale, references: sale_record(id), deleteSetNull: true } }
+              - column: { name: source_type, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: quantity_delta, type: INT, constraints: { nullable: false } }
+              - column: { name: note, type: VARCHAR(240) }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createIndex:
+            tableName: stock_movement
+            indexName: ix_stock_movement_created
+            columns:
+              - column: { name: created_at }
+        - createIndex:
+            tableName: stock_movement
+            indexName: ix_stock_movement_product
+            columns:
+              - column: { name: product_id }
+      rollback:
+        - dropTable: { tableName: stock_movement }

@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 015-product-stock-minimum
+      author: codex
+      changes:
+        - addColumn:
+            tableName: sale_product
+            columns:
+              - column:
+                  name: stock_minimum
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: sale_product
+            columnName: stock_minimum

@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-worksheet-origin
+      author: codex
+      changes:
+        - addColumn:
+            tableName: worksheet
+            columns:
+              - column:
+                  name: origin_type
+                  type: VARCHAR(20)
+                  defaultValue: ORIGINAL
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE worksheet ADD CONSTRAINT ck_worksheet_origin_type CHECK (origin_type IN ('ORIGINAL','ONLINE'))
+      rollback:
+        - sql:
+            sql: ALTER TABLE worksheet DROP CONSTRAINT IF EXISTS ck_worksheet_origin_type
+        - dropColumn:
+            tableName: worksheet
+            columnName: origin_type

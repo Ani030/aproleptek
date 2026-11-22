@@ -1,0 +1,147 @@
+databaseChangeLog:
+  - changeSet:
+      id: 020-extensible-catalog-foundation
+      author: codex
+      changes:
+        - createTable:
+            tableName: catalog_type
+            columns:
+              - column: { name: code, type: VARCHAR(40), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: VARCHAR(120), constraints: { nullable: false } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+        - insert:
+            tableName: catalog_type
+            columns:
+              - column: { name: code, value: WORKSHEET }
+              - column: { name: name, value: Feladatlap }
+              - column: { name: sort_order, valueNumeric: 10 }
+        - insert:
+            tableName: catalog_type
+            columns:
+              - column: { name: code, value: BUNDLE }
+              - column: { name: name, value: Feladatlapcsomag }
+              - column: { name: sort_order, valueNumeric: 20 }
+        - insert:
+            tableName: catalog_type
+            columns:
+              - column: { name: code, value: CARD_DECK }
+              - column: { name: name, value: Kártyacsomag }
+              - column: { name: sort_order, valueNumeric: 30 }
+        - insert:
+            tableName: catalog_type
+            columns:
+              - column: { name: code, value: GAME }
+              - column: { name: name, value: Játék }
+              - column: { name: sort_order, valueNumeric: 40 }
+        - insert:
+            tableName: catalog_type
+            columns:
+              - column: { name: code, value: GAME_ELEMENT }
+              - column: { name: name, value: Játékelem }
+              - column: { name: sort_order, valueNumeric: 50 }
+        - createTable:
+            tableName: catalog_item
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: type_code, type: VARCHAR(40), constraints: { nullable: false, foreignKeyName: fk_catalog_item_type, references: catalog_type(code) } }
+              - column: { name: title, type: VARCHAR(360), constraints: { nullable: false } }
+              - column: { name: summary, type: VARCHAR(500) }
+              - column: { name: description, type: TEXT }
+              - column: { name: status, type: VARCHAR(20), defaultValue: DRAFT, constraints: { nullable: false } }
+              - column: { name: preview_asset_id, type: UUID, constraints: { foreignKeyName: fk_catalog_item_preview, references: media_asset(id) } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addColumn:
+            tableName: worksheet
+            columns:
+              - column: { name: catalog_item_id, type: UUID }
+        - addColumn:
+            tableName: bundle_plan
+            columns:
+              - column: { name: catalog_item_id, type: UUID }
+        - sql:
+            sql: UPDATE worksheet SET catalog_item_id=gen_random_uuid(); UPDATE bundle_plan SET catalog_item_id=gen_random_uuid();
+        - sql:
+            sql: >-
+              INSERT INTO catalog_item(id,type_code,title,summary,description,status,preview_asset_id,created_at,updated_at)
+              SELECT catalog_item_id,'WORKSHEET',title,summary,description,status,preview_asset_id,created_at,updated_at FROM worksheet;
+              INSERT INTO catalog_item(id,type_code,title,description,status,created_at,updated_at)
+              SELECT catalog_item_id,'BUNDLE',title,description,status,created_at,updated_at FROM bundle_plan;
+        - addNotNullConstraint:
+            tableName: worksheet
+            columnName: catalog_item_id
+            columnDataType: UUID
+        - addNotNullConstraint:
+            tableName: bundle_plan
+            columnName: catalog_item_id
+            columnDataType: UUID
+        - addForeignKeyConstraint:
+            baseTableName: worksheet
+            baseColumnNames: catalog_item_id
+            referencedTableName: catalog_item
+            referencedColumnNames: id
+            constraintName: fk_worksheet_catalog_item
+        - addForeignKeyConstraint:
+            baseTableName: bundle_plan
+            baseColumnNames: catalog_item_id
+            referencedTableName: catalog_item
+            referencedColumnNames: id
+            constraintName: fk_bundle_catalog_item
+        - addUniqueConstraint:
+            tableName: worksheet
+            columnNames: catalog_item_id
+            constraintName: uq_worksheet_catalog_item
+        - addUniqueConstraint:
+            tableName: bundle_plan
+            columnNames: catalog_item_id
+            constraintName: uq_bundle_catalog_item
+        - addColumn:
+            tableName: sale_product
+            columns:
+              - column: { name: catalog_item_id, type: UUID }
+        - sql:
+            sql: >-
+              UPDATE sale_product p SET catalog_item_id=w.catalog_item_id
+              FROM worksheet w WHERE p.worksheet_id=w.id;
+              UPDATE sale_product p SET catalog_item_id=b.catalog_item_id
+              FROM bundle_plan b WHERE p.bundle_id=b.id;
+        - addNotNullConstraint:
+            tableName: sale_product
+            columnName: catalog_item_id
+            columnDataType: UUID
+        - addForeignKeyConstraint:
+            baseTableName: sale_product
+            baseColumnNames: catalog_item_id
+            referencedTableName: catalog_item
+            referencedColumnNames: id
+            constraintName: fk_sale_product_catalog_item
+        - createIndex:
+            tableName: catalog_item
+            indexName: ix_catalog_item_type_status_title
+            columns:
+              - column: { name: type_code }
+              - column: { name: status }
+              - column: { name: title }
+        - createIndex:
+            tableName: sale_product
+            indexName: ix_sale_product_catalog_item
+            columns:
+              - column: { name: catalog_item_id }
+        - sql:
+            sql: ALTER TABLE sale_product DROP CONSTRAINT ck_product_one_content
+      rollback:
+        - sql:
+            sql: ALTER TABLE sale_product ADD CONSTRAINT ck_product_one_content CHECK ((worksheet_id IS NOT NULL AND bundle_id IS NULL) OR (worksheet_id IS NULL AND bundle_id IS NOT NULL))
+        - dropIndex: { tableName: sale_product, indexName: ix_sale_product_catalog_item }
+        - dropForeignKeyConstraint: { baseTableName: sale_product, constraintName: fk_sale_product_catalog_item }
+        - dropColumn: { tableName: sale_product, columnName: catalog_item_id }
+        - dropUniqueConstraint: { tableName: bundle_plan, constraintName: uq_bundle_catalog_item }
+        - dropUniqueConstraint: { tableName: worksheet, constraintName: uq_worksheet_catalog_item }
+        - dropForeignKeyConstraint: { baseTableName: bundle_plan, constraintName: fk_bundle_catalog_item }
+        - dropForeignKeyConstraint: { baseTableName: worksheet, constraintName: fk_worksheet_catalog_item }
+        - dropColumn: { tableName: bundle_plan, columnName: catalog_item_id }
+        - dropColumn: { tableName: worksheet, columnName: catalog_item_id }
+        - dropIndex: { tableName: catalog_item, indexName: ix_catalog_item_type_status_title }
+        - dropTable: { tableName: catalog_item }
+        - dropTable: { tableName: catalog_type }

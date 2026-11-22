@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 018-product-preparation-checklist
+      author: codex
+      changes:
+        - addColumn:
+            tableName: sale_product
+            columns:
+              - column: { name: preparation_printed, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: preparation_laminated, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: preparation_velcro, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: preparation_note, type: TEXT }
+      rollback:
+        - dropColumn:
+            tableName: sale_product
+            columnName: preparation_printed
+        - dropColumn:
+            tableName: sale_product
+            columnName: preparation_laminated
+        - dropColumn:
+            tableName: sale_product
+            columnName: preparation_velcro
+        - dropColumn:
+            tableName: sale_product
+            columnName: preparation_note

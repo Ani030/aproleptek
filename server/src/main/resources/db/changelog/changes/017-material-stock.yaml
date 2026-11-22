@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 017-material-stock
+      author: codex
+      changes:
+        - addColumn:
+            tableName: material_item
+            columns:
+              - column:
+                  name: stock_quantity
+                  type: 'DECIMAL(14,3)'
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - sql:
+            comment: Seed current raw material stock from all recorded purchases; usage can then be adjusted manually.
+            sql: UPDATE material_item m SET stock_quantity=COALESCE((SELECT SUM(p.quantity) FROM material_purchase p WHERE p.material_id=m.id),0)
+      rollback:
+        - dropColumn:
+            tableName: material_item
+            columnName: stock_quantity

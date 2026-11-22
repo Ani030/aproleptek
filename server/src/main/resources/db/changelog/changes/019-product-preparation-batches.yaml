@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 019-product-preparation-batches
+      author: codex
+      changes:
+        - createTable:
+            tableName: product_preparation
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: product_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_preparation_product, references: sale_product(id) } }
+              - column: { name: quantity, type: INT, constraints: { nullable: false } }
+              - column: { name: printed, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: laminated, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: velcro, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: note, type: TEXT }
+              - column: { name: status, type: VARCHAR(20), defaultValue: IN_PROGRESS, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: completed_at, type: TIMESTAMP WITH TIME ZONE }
+        - sql:
+            sql: ALTER TABLE product_preparation ADD CONSTRAINT ck_preparation_quantity CHECK (quantity > 0)
+        - createIndex:
+            tableName: product_preparation
+            indexName: ix_preparation_status_created
+            columns:
+              - column: { name: status }
+              - column: { name: created_at }
+      rollback:
+        - dropTable: { tableName: product_preparation }

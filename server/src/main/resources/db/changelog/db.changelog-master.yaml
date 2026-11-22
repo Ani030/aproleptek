@@ -23,4 +23,24 @@ databaseChangeLog:
       file: db/changelog/changes/011-sale-edit-and-packaging.yaml
   - include:
       file: db/changelog/changes/012-sale-print-cost-snapshot.yaml
+  - include:
+      file: db/changelog/changes/013-worksheet-origin.yaml
+  - include:
+      file: db/changelog/changes/014-product-stock.yaml
+  - include:
+      file: db/changelog/changes/015-product-stock-minimum.yaml
+  - include:
+      file: db/changelog/changes/016-stock-movement-history.yaml
+  - include:
+      file: db/changelog/changes/017-material-stock.yaml
+  - include:
+      file: db/changelog/changes/018-product-preparation-checklist.yaml
+  - include:
+      file: db/changelog/changes/019-product-preparation-batches.yaml
+  - include:
+      file: db/changelog/changes/020-extensible-catalog-foundation.yaml
+  - include:
+      file: db/changelog/changes/021-catalog-item-slug.yaml
+  - include:
+      file: db/changelog/changes/022-card-decks.yaml
 

@@ -56,9 +56,12 @@ Adminisztráció
 ├── Játékötletek
 │   ├── Lista és keresés
 │   └── Új / szerkesztett játékötlet
-├── Csomagtervek
+├── Tartalmak
+│   ├── Feladatlapok
+│   ├── Kártyacsomagok
+│   └── Játékok és bővíthető játékelemek
 ├── Pénzügy és önköltség
-│   ├── Eladható termékek (feladatlaphoz vagy csomaghoz kapcsolva)
+│   ├── Eladható termékek (bármely katalógustartalomhoz kapcsolva)
 │   ├── Eladások (több termék egy megállapodott végösszeggel)
 │   └── Bevétel, kiadás és népszerűség áttekintő
 ├── Kategóriák és címkék
@@ -112,7 +115,7 @@ Főoldal
 
 ### Eladható termék és eladás rögzítése – saját értékesítés MVP
 
-1. Egy feladatlaphoz vagy csomagtervhez eladható termékváltozat hozható létre, például digitális vagy nyomtatott kivitelben.
+1. Bármely katalógustartalomhoz eladható termékváltozat hozható létre, például digitális vagy fizikai kivitelben. A tartalom típusa nem változtatja meg az eladási folyamatot.
 2. A termékváltozathoz egyszer megadható a listaár és az egy példányra jutó anyagköltség. Fizikai változatnál a rendszer az adminban beállított nyomtatott oldalankénti tintaköltséget is hozzáadja; termékenként választható az egy- vagy kétoldalas nyomtatás, az oldalszámból pedig automatikusan számolódik a lapköltség.
 3. Egy eladás rögzítésekor több termék kiválasztható, mennyiséggel együtt. A rendszer összesíti a listaárakat.
 4. A vevővel egyeztetett végösszeget egyszer kell megadni az egész összeállításra. Nincs automatikus darabszám alapú kedvezményszabály.
@@ -120,7 +123,46 @@ Főoldal
 6. Az értékesítési csatorna (induláskor például Vinted), dátum és opcionális megjegyzés rögzíthető.
 7. Kimutatás készül az eladott darabszámról, az eladások gyakoriságáról, a bevételről és a becsült gyártási költség (anyag és nyomtatás) utáni fedezetről termékenként és időszakonként.
 
-Az első pénzügyi ütem nem vezet készletet. A fogyóanyagok beszerzési naplója mennyiséget és teljes árat tárol, az egységár pedig beszerzésekből súlyozott átlagként számolódik. Az egyszeri eszközkiadások külön kategóriában jelennek meg. Egyelőre egyik sem hoz létre készletmozgást. A termékváltozathoz anyaglista rendelhető mennyiségekkel; az anyagköltség az anyagok súlyozott egységárából automatikusan számolódik. A fizikai termékváltozat gyártási költségébe a nyomtatott oldalanként beállított tintaköltség is beleszámít. Egyoldalas módban egy papírlap egy nyomtatott felület; kétoldalas módban egy lap két nyomtatott felület, és mindkettő után felszámítódik az oldalankénti díj. Új beszerzés az érintett termékváltozatok aktuális költségét frissíti. A múltbeli eladás pillanatkép: a későbbi listaár-, anyag- és nyomtatásidíj-változtatás nem módosítja.
+Az anyagok beszerzési naplója mennyiséget és teljes árat tárol; az egységár a beszerzésekből súlyozott átlagként számolódik. Az egyszeri eszközkiadások külön kategóriában jelennek meg. A termékváltozathoz anyaglista rendelhető mennyiségekkel; az anyagköltség az anyagok súlyozott egységárából automatikusan számolódik. A fizikai termékváltozat gyártási költségébe a nyomtatott oldalanként beállított tintaköltség is beleszámít. Egyoldalas módban egy papírlap egy nyomtatott felület; kétoldalas módban egy lap két nyomtatott felület, és mindkettő után felszámítódik az oldalankénti díj. A fizikai termékváltozat készlete, minimumkészlete és előkészítési tételei követhetők; eladás készletcsökkenést rögzít. Új beszerzés az érintett termékváltozatok aktuális költségét frissíti. A múltbeli eladás pillanatkép: a későbbi listaár-, anyag- és nyomtatásidíj-változtatás nem módosítja.
+
+### Bővíthető katalógus- és termékmodell
+
+A katalógustartalom, az eladható termék, a termékváltozat és az eladási sor külön fogalom:
+
+- **Katalógustartalom:** szerkeszthető, képekkel és fájlokkal rendelkező szakmai vagy játékos tartalom, például feladatlap, kártyacsomag vagy játék.
+- **Tartalomtípus:** a tartalom saját adatlapját és szerkesztőjét határozza meg. Új típus hozzáadása ne igényelje az eladás, pénzügy vagy készlet működésének átírását.
+- **Eladható termék:** egy katalógustartalom értékesítésre szánt egysége.
+- **Termékváltozat:** az eladható kivitel, például digitális fájl, nyomtatott kártyacsomag vagy laminált feladatlap. Ehhez tartozik az ár, gyártási recept, nyomtatási beállítás és készlet.
+- **Eladás:** egy vagy több termékváltozatból álló tranzakció, amely a korábban rögzített ár- és költségpillanatképeket használja.
+
+Az adatmodell javasolt alapja egy közös `catalog_item` rekord stabil azonosítóval, címmel, státusszal, borító/előnézeti médiával és típusazonosítóval. A `catalog_type` bővíthető törzsadatként sorolja fel a típusokat; új tartalomtípushoz nem kell enumot vagy eladási táblát módosítani. A típus saját adatai külön, a `catalog_item.id`-hez kapcsolódó részlettáblákban legyenek. A közös médiakapcsolatok és tartalomkapcsolatok ne kerüljenek típusonként duplikálásra.
+
+Az első technikai lépés elkészült: `020-extensible-catalog-foundation` bevezeti a típusregisztert és a közös katalógustáblát, a feladatlapokhoz, csomagtervekhez és eladható termékekhez pedig visszamenőleges adatkapcsolatot épít. A backend biztosítja a típus- és katalóguslista olvasó API-ját, és a meglévő feladatlap-/csomagterv-mentés frissíti a közös rekordot. A típusonkénti szerkesztők, kártyacsomag-adatok és játékadatok még külön megvalósítási feladatok.
+
+A feladatlapok és csomagtervek meglévő azonosítói, fájljai, termékei, eladásai és készletadatai migrációval kerüljenek az új alapmodellbe. Minden termékváltozat a `catalog_item`-re hivatkozzon; az eladás, gyártási recept, nyomtatási költség, késztermékkészlet és előkészítési tétel továbbra is ezt a közös termékváltozatot használja. Tartalomtípus-specifikus mező csak a saját tartalomtáblába kerülhet. A már alkalmazott Liquibase changeseteket nem módosítjuk; az átállás új, visszaellenőrizhető migrációval történik.
+
+#### Kártyacsomag
+
+Egy kártyacsomag önálló katalógustartalom. Saját borítóképe, opcionális közös hátoldala, leírása/játékszabálya és rendezett kártyalap-listája van. A kártyalapok külön médiatartalmak, nem külön eladási termékek. Egy vagy több fizikai/digitális termékváltozat kapcsolható a csomaghoz.
+
+A fizikai kártyacsomag ugyanazt a gyártási rendszert használja, mint a fizikai feladatlap: anyaglista, nyomtatási díj, egy- vagy kétoldalas nyomtatás, laminálás és opcionális tépőzár, előkészítési tételek, késztermék-készlet és eladás. A gyártási mennyiség számításához rögzíteni kell a kártyák nyomtatási elrendezését (például hány kártya fér egy oldalra); a rendszer ne feltételezzen automatikusan egy kártyát oldalanként.
+
+Az első kártyacsomag-fejlesztés külön `card_deck` és `card_deck_card` részlettáblát, admin listát/szerkesztőt, borító- és hátoldal-képkezelést, rendezhető kártyalapokat, játékszabály mezőt és oldalankénti kártyaszámot ad. A kártyacsomag digitális vagy fizikai termékváltozata a közös eladási és készletmodellhez kapcsolódik; a fizikai nyomtatási költség a lapok számából, oldalbeállításból és a hátoldal meglétéből számolódik. Az egyes kártyalapok több csomag közötti újrafelhasználható katalóguselemként kezelése külön bővítés.
+
+#### Bővíthető játékok és játékelemek
+
+Egy játék (például öltöztetős vagy boltos-pénztáros játék) önálló katalógustartalom. A játék saját részlettáblája hivatkozik az újrafelhasználható játékelemekre, például babákra, ruhákra, kiegészítőkre, zöldségekre és gyümölcsökre. Az elem kategóriája és kompatibilitása adatokkal kezelendő, ne új adatbázis-oszlopokkal. Egy elem több játékban vagy csomagban is felhasználható. A játék elemei önmagukban csak akkor kapnak eladható termékváltozatot, ha külön is értékesítjük őket; a játékcsomag összetétele nem keveredik össze az eladási sorokkal.
+
+#### Közös gyártási és készletfolyamat
+
+- Gyártási recept termékváltozatonként: fogyóanyag és mennyiség, manuális költségelem szükség esetén, nyomtatott oldalak és oldalankénti díj.
+- Előkészítési követelmények termékváltozatonként: nyomtatás, laminálás, tépőzár; a nem releváns lépés kikapcsolható. Az előkészítési tételek száma és állapota követi a meglévő készletfolyamatot.
+- Késztermék-készlet és minimumkészlet az eladható fizikai termékváltozaton van, nem a tartalom egyes képein vagy lapjain.
+- Eladáskor a fizikai termékváltozat készlete csökken; korrekció és sztornó visszaállítja a készletet a meglévő szabályok szerint.
+- Digitális termékváltozatra nyomtatási/laminálási előkészítés és fizikai készlet nem vonatkozik.
+- A kártyacsomag és a játék termékváltozatai ugyanazokat a költség-, eladási-, készlet- és előkészítési szolgáltatásokat használják, mint a feladatlapok.
+
+Az elrendezés, a csomagolás, a kártyák és játékelemek újrafelhasználása tartalmi kapcsolatokban jelenik meg. Új terméktípus hozzáadásakor csak a típusregisztrációt, saját részlettáblát/API-t és szerkesztőnézetet kell hozzáadni, majd a közös termékváltozatot a katalógustartalomhoz kapcsolni.
 
 ## 6. Tartalmi adatmodell
 
@@ -226,6 +268,8 @@ React/Vite admin SPA
 Spring Boot moduláris alkalmazás
   ├── auth / authorization
   ├── worksheet / cutout sheet
+  ├── catalog item / content type
+  ├── card deck / game extensions
   ├── activity
   ├── taxonomy
   ├── media
@@ -298,9 +342,9 @@ Vite-os adminfelületnél a SPA megfelelő. A későbbi nyilvános, keresőforga
 - önálló játékötlet rögzítése és opcionális kapcsolatai;
 - piszkozat és publikált státusz;
 - csomagterv összeállítása fizetés és rendelés nélkül;
-- eladható termékváltozat összekapcsolása feladatlaphoz vagy csomagtervhez;
+- eladható termékváltozat összekapcsolása katalógustartalomhoz (a bővíthető modell részletes terve az 5/B szakaszban van);
 - több termékből álló saját eladás rögzítése egy egyeztetett végösszeggel, listaár-összesítéssel és termékenkénti statisztikával;
-- termékenkénti listaár és becsült anyagköltség kezelése készletvezetés nélkül;
+- termékenkénti listaár, becsült anyagköltség és fizikai készlet kezelése;
 - fogyóanyag-beszerzések mennyiségi egységárral és egyszeri eszközkiadások naplózása;
 - React/Vite admin és Spring Boot/PostgreSQL/Liquibase backend.
 
@@ -309,7 +353,7 @@ Vite-os adminfelületnél a SPA megfelelő. A későbbi nyilvános, keresőforga
 - vásárlói regisztráció és szülői szerepkör;
 - kosár, fizetés, számlázás és szállítás;
 - védett digitális vásárlási letöltés;
-- készletkezelés, piactéri rendelésimport és rendelésteljesítési adminisztráció;
+- piactéri rendelésimport és teljes webshopos rendelésteljesítési adminisztráció;
 - automatikus darabszám alapú kedvezményszabályok;
 - automatikus piactéri rendelésimport és fizetésintegráció;
 - előfizetéses klub;
@@ -318,11 +362,12 @@ Vite-os adminfelületnél a SPA megfelelő. A későbbi nyilvános, keresőforga
 
 ## 12. Későbbi bővítési fázisok
 
-1. **Katalógus publikálása:** publikus feladatlap- és játékötlet-kereső.
-2. **Webshop:** digitális és fizikai termékváltozatok, rendelések és teljesítés.
-3. **Tartalmi bővítés:** játéknaptár, jelesnapi gyűjtemények, cikkek és heti terv.
-4. **Személyes funkciók:** fiók, kedvencek, játékajánló, minimális profiladatokkal.
-5. **Játékklub:** előfizetés, tagsági tartalmak és hozzáférés-kezelés.
+1. **Katalógusmodell bővítése:** közös katalógusalap és meglévő feladatlap/termékadatok biztonságos migrációja.
+2. **Kártyacsomagok:** kártyalapok, borító, hátoldal, leírás és fizikai gyártási folyamat.
+3. **Bővíthető játékok:** öltöztetős és boltos/pénztáros játékok, újrafelhasználható elemekkel és összeállításokkal.
+4. **Katalógus publikálása:** publikus feladatlap-, kártya- és játékkereső.
+5. **Webshop:** digitális és fizikai termékváltozatok, rendelések és teljesítés.
+6. **Tartalmi és személyes funkciók:** játéknaptár, cikkek, heti terv, fiók, kedvencek, ajánló és későbbi játékklub.
 
 ## 13. Biztonság, adatvédelem és minőség
 
@@ -343,11 +388,14 @@ Vite-os adminfelületnél a SPA megfelelő. A későbbi nyilvános, keresőforga
 - A feladatlapok külön kereshetők és szűrhetők korosztály, feladattípus, témakör és készségterület szerint.
 - Az „Állatok” és „Természet” témakörök külön címkék; egy tartalom mindkettőhöz rendelhető.
 - Játékötlet feladatlapkapcsolat nélkül is létrehozható és menthető.
-- Csomagterv több feladatlapot tud összefogni, de még nem indít rendelést.
-- Eladható termék feladatlaphoz vagy csomagtervhez köthető; egy eladás több terméket rögzít a listaárak összegével és a kézzel megadott, egyeztetett végösszeggel.
+- Csomagterv több feladatlapot tud összefogni, de önmagában nem indít rendelést.
+- A jelenlegi termékváltozat feladatlaphoz vagy csomagtervhez köthető; a tervezett közös katalógusmodellre átállás után bármely tartalomtípushoz kapcsolható.
+- Egy eladás több terméket rögzít a listaárak összegével és a kézzel megadott, egyeztetett végösszeggel.
 - A vevővel kialkudott összeg eltérése arányosan oszlik meg a termékek között; termék- és áradatok pillanatképként megmaradnak.
 - Termékenként megadható anyaglista mennyiségekkel, amelynek aktuális anyagköltsége a fogyóanyagok súlyozott átlagos egységárából számolódik.
 - Eladási összesítő megmutatja a bevételt, az eladott mennyiséget és a termékenkénti népszerűséget.
+- A fizikai termékváltozat készlete és előkészítése kezelhető; az új kártya- és játéktípusok ugyanazt a közös folyamatot használják.
+- Új katalógustípus felvétele nem igényli a közös pénzügyi, eladási, készlet- vagy előkészítési logika típusonkénti átírását.
 - A Liquibase migrációkból üres adatbázis felépíthető.
 - Fájlok és rekordok mentése, valamint tesztkörnyezeti visszaállítása dokumentált.
 

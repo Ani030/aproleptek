@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 014-product-stock
+      author: codex
+      changes:
+        - addColumn:
+            tableName: sale_product
+            columns:
+              - column:
+                  name: stock_quantity
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: sale_product
+            columnName: stock_quantity

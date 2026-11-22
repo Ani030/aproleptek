@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 021-catalog-item-slug
+      author: codex
+      changes:
+        - addColumn:
+            tableName: catalog_item
+            columns:
+              - column: { name: slug, type: VARCHAR(220) }
+        - sql:
+            sql: >-
+              UPDATE catalog_item ci SET slug=w.slug FROM worksheet w WHERE w.catalog_item_id=ci.id;
+              UPDATE catalog_item ci SET slug=b.slug FROM bundle_plan b WHERE b.catalog_item_id=ci.id;
+        - addNotNullConstraint:
+            tableName: catalog_item
+            columnName: slug
+            columnDataType: VARCHAR(220)
+        - addUniqueConstraint:
+            tableName: catalog_item
+            columnNames: type_code, slug
+            constraintName: uq_catalog_item_type_slug
+      rollback:
+        - dropUniqueConstraint: { tableName: catalog_item, constraintName: uq_catalog_item_type_slug }
+        - dropColumn: { tableName: catalog_item, columnName: slug }

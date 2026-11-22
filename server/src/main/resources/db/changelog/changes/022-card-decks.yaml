@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 022-card-decks
+      author: codex
+      changes:
+        - createTable:
+            tableName: card_deck
+            columns:
+              - column: { name: catalog_item_id, type: UUID, constraints: { primaryKey: true, nullable: false, foreignKeyName: fk_card_deck_catalog_item, references: catalog_item(id), deleteCascade: true } }
+              - column: { name: back_asset_id, type: UUID, constraints: { foreignKeyName: fk_card_deck_back, references: media_asset(id) } }
+              - column: { name: rules, type: TEXT }
+              - column: { name: cards_per_sheet, type: INT, defaultValueNumeric: 1, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER TABLE card_deck ADD CONSTRAINT ck_card_deck_cards_per_sheet CHECK (cards_per_sheet > 0 AND cards_per_sheet <= 100)
+        - createTable:
+            tableName: card_deck_card
+            columns:
+              - column: { name: id, type: UUID, defaultValueComputed: gen_random_uuid(), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: deck_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_card_deck_card_deck, references: card_deck(catalog_item_id), deleteCascade: true } }
+              - column: { name: title, type: VARCHAR(200) }
+              - column: { name: front_asset_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_card_deck_card_front, references: media_asset(id) } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: card_deck_card
+            columnNames: deck_id, sort_order
+            constraintName: uq_card_deck_card_order
+        - createIndex:
+            tableName: card_deck_card
+            indexName: ix_card_deck_card_order
+            columns:
+              - column: { name: deck_id }
+              - column: { name: sort_order }
+      rollback:
+        - dropTable: { tableName: card_deck_card }
+        - dropTable: { tableName: card_deck }
