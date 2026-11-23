@@ -109,6 +109,11 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Nyomtatási díj automatikus hozzáadása a fizikai termékváltozatok gyártási költségéhez, egy- és kétoldalas beállítással. *(A Pénzügy → Áttekintő nézetében állítható a nyomtatott oldalankénti díj; a rendszer a papírlapok és a nyomtatott felületek száma alapján számol, az eladás pedig a teljes gyártási költséget rögzíti pillanatképként.)*
 - [x] Termékadatlap megnyitása külön szerkesztőnézetben: felhasznált fogyóanyagok, darabonkénti mennyiség, számolt anyagköltség és tervezett eladási ár.
 - [x] Eladás szerkesztése, dátum ISO-formátumú kezelése és csomagolóanyag-választás eladásonként. *(A csomagolás súlyozott átlagos egységárból számolódik, mentéskor pillanatképként rögzül és arányosan kerül az eladási terméksorokra.)*
+- [x] Saját, kézzel rögzített vevői megrendelések kezelése külön Megrendelések menüpontban, nyitott, teljesített és lemondott fülekkel; az Eladások menüpontban a végleges eladások maradnak.
+- [x] Megrendelés soronként mutassa a készletből és a korábbi nyitott megrendelésekből számított gyártandó darabszámot.
+- [x] Megrendelés terméksorának készre jelölése checkboxszal; teljesítés csak minden sor készre jelölése után lehetséges.
+- [x] Teljesítéskor normál eladási rekord, termékkészlet-csökkenés és a megrendeléshez legyártott hiány készletmozgása készüljön; a csomagolóanyag kerüljön át az eladásra.
+- [ ] Megrendelés létrehozása, szerkesztése, készre jelölése, teljesítése, lemondása és az eladási/készletadatok összhangja böngészőből végigellenőrizve.
 
 ## 5/B. Bővíthető katalógus- és termékmodell
 
@@ -170,9 +175,10 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Egy termék több előkészítési tételének egy termékcsoport alatt történő összesítése, a részletek megnyithatók.
 - [x] Előkészítés alatt álló darabszám elkülönítése a késztermékkészlettől.
 - [x] Előkészítésből késztermék bevételezésekor a bevételezett mennyiség átkerül a késztermékkészletbe, és ugyanennyivel csökken az előkészítési tétel (teljes és részleges API-folyamat izolált adatbázis-klónon ellenőrizve).
+- [x] Megrendelés teljesítésekor a készre jelölt, még készleten nem lévő darabok készletbevételezése és eladási készletcsökkenése külön készletmozgásként naplózódik.
 - [x] A korábban jelzett „Váratlan hiba” jelenlegi kóddal nem reprodukálódott a klónon; a részleges bevételezés sikerült. A szerveroldali naplózás most megőrzi a jövőbeli váratlan kivételek stack trace-ét.
 - [ ] Eladás készletcsökkentésének, eladásszerkesztéskor történő korrekciónak és törlés/sztornó utáni visszaállításnak végigellenőrzése.
-- [ ] Készletmozgás-előzmények érthető megjelenítése és kézi korrekció okának rögzítése.
+- [x] Késztermék- és alapanyagmozgások előzménye, kézi módosítások indoklásával; beszerzés és előkészítés miatti felhasználás is naplózódik (027-es migráció).
 
 ## 6. Kategóriák és keresés
 
@@ -249,28 +255,49 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [ ] Fejlesztői indítás, migráció és admin első belépés dokumentálva.
 - [ ] MVP elfogadási kritériumok teljesülése rögzítve.
 
-## 10. Későbbi ütemek – most nem blokkolják az MVP-t
+## 10. Szülői termékoldal, előfizetés és játékcsomagok
 
-### Publikus katalógus
+### Rögzített irány és oldal terve
 
-- [ ] Publikált feladatlapok nyilvános listája és részletező oldala.
-- [ ] Publikus játékötlet-kereső korosztály és téma szerint.
-- [ ] SEO renderelési megoldás kiválasztása (előrenderelés vagy SSR).
+- [x] Külön admin szerkesztő és szülői/nevelői ügyfélfelület szerepkörének rögzítése; adminból szülői előnézet szükséges.
+- [x] Üzleti modell rögzítése: havi előfizetés és/vagy külön megvásárolható teljes játékcsomag; a feladatlap önmagában nem nyilvános vásárlási termék.
+- [x] A feladatlap hozzáférése az azt igénylő játék vagy játékcsomag hozzáférését követi; a szükséges lap a csomag része.
+- [x] Szülői játékoldal és „Sétálj a vonalon!” példaoldal tartalmi felépítésének dokumentálása.
+- [x] Kategóriaág rögzítése: Nagymozgás és testtudat → Egyensúlyfejlesztő játékok.
+- [x] Pénzügyi admin belső értékesítési naplójának elkülönítése a jövőbeli nyilvános bolt ajánlataitól; korábbi rekordok és belső termékek megmaradnak.
 
-### Webshop
+### Tartalom és admin szerkesztő
 
-- [ ] Digitális és fizikai termékváltozatok.
-- [ ] Kosár és rendelési folyamat.
-- [ ] Fizetési szolgáltató integráció.
-- [ ] Digitális letöltés biztonságos hozzáféréssel.
-- [ ] Fizikai készlet, szállítási módok és rendelésállapotok.
+- [ ] Fejlesztő játék önálló tartalomtípusának mezői: borítókép, cím, rövid leírás, ajánlott életkor, játékidő-tartomány, helyszín, eszközigény.
+- [ ] Játékoldal tartalmi részei: fejlesztési területek magyarázattal, eszközök, számozott menet, könnyítés, nehezítés, játékos változat, biztonság és szülői/nevelői tipp.
+- [ ] Témakör–alcsoport kezelésének admin terve és adatmodellje; elsőként Nagymozgás és testtudat → Egyensúlyfejlesztő játékok.
+- [ ] Fejlesztési területek kezelése külön a témakörtől; induló értékek: egyensúly, mozgáskoordináció, testtudat, figyelem, mozgásos önbizalom.
+- [ ] Játékhoz kapcsolódó feladatlapok kezelése kötelező/kiegészítő jelöléssel.
+- [ ] Admin „Megtekintés szülőként” előnézet tesztállapotokkal: látogató, fiókos jogosultság nélkül, aktív előfizető, játékcsomag-tulajdonos; csak szimulálja a hozzáférési felületet, valódi jogosultságot nem ír.
+- [ ] „Sétálj a vonalon! – Játékos egyensúlyfejlesztés” mintaoldal feltöltése a tervben rögzített 18 hónapos kortól, 5–10 perces játékidővel és öt fejlesztési területtel.
 
-### Fiókok, ajánló és klub
+### Szülői oldal és hozzáférés
 
-- [ ] Szülői fiók és kedvencek.
-- [ ] Szűrőalapú „Mit játsszunk ma?” ajánló.
-- [ ] Heti játéknaptár és nyomtatható terv.
-- [ ] Előfizetéses klub és tagsági hozzáférések.
+- [ ] Egységes főoldal és fejlesztési témák szerint böngészhető játékáttekintő.
+- [ ] Játékkártya egységes borítóképpel, címmel, életkorral, idővel, fejlesztési területekkel és hozzáférési jelzéssel.
+- [ ] Reszponzív részletes játékoldal a rögzített tartalmi sorrenddel.
+- [ ] Tartalmonkénti hozzáférés beállítása: teljesen nyilvános, előfizetéses vagy egyedi játékcsomag része; publikus előnézeti kártya mindhárom esethez.
+- [ ] Feladatlap ne kapjon önálló nyilvános termékoldalt, árat vagy vásárlási gombot; a hozzá tartozó játékból legyen elérhető.
+- [ ] Szülői/nevelői fiók regisztrációval, bejelentkezéssel és szerepkör-alapú hozzáféréssel.
+- [ ] Fiókban előfizetés állapota és külön megvett játékcsomagok listája.
+- [ ] Jogosultsági modell: aktív előfizetéshez rendelt tartalmak és egyedi játékcsomag-vásárlások elkülönítése.
+- [ ] Játékleírás, feladatlap és nyomtatási fájl letöltésének szerveroldali jogosultság-ellenőrzése.
+
+### Játékcsomagok és kereskedelmi működés
+
+- [ ] Játékcsomag-összeállító fejlesztő játékot, kötelező feladatlapot és kiegészítő anyagot is tudjon tartalmazni.
+- [ ] Teljes, önállóan elvégezhető játékcsomag megjelenítése külön ajánlatként; benne a feladatlapok nem külön termékek.
+- [ ] Havi előfizetési csomag és az abba bevont játékok adminisztrációja.
+- [ ] Egyszeri játékcsomag-vásárlás hozzáférési időtartamának üzleti döntése. *(Javaslat: tartós hozzáférés, de árusítás előtt jóváhagyandó.)*
+- [ ] Előfizetési ár, számlázás, próbaidő, lemondás, visszatérítés és jogosultság-megszűnés szabályainak rögzítése.
+- [ ] Fizetési szolgáltató kiválasztása és kosár/fizetési folyamat kialakítása.
+- [ ] Nyilvános oldal renderelési/SEO megoldásának kiválasztása (előrenderelés vagy SSR).
+- [ ] Szülői és admin nézetek jogosultsági, mobilos és hozzáférhetőségi elfogadási ellenőrzése.
 
 ## 11. Megvalósítási sorrend
 
@@ -282,6 +309,10 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 6. Taxonómia és admin keresés: `TASK_TYPE` migráció, külön Állatok és Természet címkék, régi összevont címke biztonságos kivezetése.
 7. API-szűrők és feladatlapkapcsolatok bővítése korosztály, feladattípus, témakör és készségterület szerint.
 8. React admin kategóriakezelő, feladatlap-szerkesztő és külön feladattípus/témakör szűrők.
-9. Játékötletek és csomagtervek.
-10. Tartalomfeltöltés és elfogadási ellenőrzés, külön állat és természet témákkal és feladattípus szerinti kereséssel.
-11. Későbbi publikus katalógus és webshop tervezése.
+9. Fejlesztő játékok admin adatlapja, borítóképe, részletes tartalmi mezői és opcionális feladatlap-kapcsolatai.
+10. Nagymozgás és testtudat → Egyensúlyfejlesztő játékok kategóriaág és a „Sétálj a vonalon!” mintaoldal.
+11. Szülői ügyfélfelület, reszponzív játékáttekintő, részletes játékoldal és hozzáférési jelzések.
+12. Admin „Megtekintés szülőként” szimulált látogatói, előfizetői és játékcsomag-tulajdonosi nézetekkel.
+13. Teljes játékcsomag összeállítása fejlesztő játékokból és az azokhoz tartozó kötelező/kiegészítő feladatlapokból; feladatlap önálló nyilvános értékesítése nélkül.
+14. Szülői fiókok, előfizetések, vásárlások és szerveroldali hozzáférési jogosultságok.
+15. Fizetési szolgáltató, védett fájlkiszolgálás, számlázás, lemondás, visszatérítés és kiadásra kész ellenőrzés.

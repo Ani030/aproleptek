@@ -49,4 +49,8 @@ databaseChangeLog:
       file: db/changelog/changes/024-reusable-card-faces.yaml
   - include:
       file: db/changelog/changes/025-customer-orders.yaml
+  - include:
+      file: db/changelog/changes/026-order-line-readiness.yaml
+  - include:
+      file: db/changelog/changes/027-material-stock-movements.yaml
 

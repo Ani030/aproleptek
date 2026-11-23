@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 026-order-line-readiness
+      author: codex
+      changes:
+        - addColumn:
+            tableName: customer_order_line
+            columns:
+              - column: { name: ready_for_fulfillment, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+      rollback:
+        - dropColumn: { tableName: customer_order_line, columnName: ready_for_fulfillment }
