@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 042-align-emotional-activity-ages
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              update activity a
+              set age_recommendation='18–36 hónap',updated_at=CURRENT_TIMESTAMP
+              where exists (
+                select 1
+                from activity_term at
+                join taxonomy_term child on child.id=at.term_id
+                join taxonomy_term root on root.id=child.parent_id
+                where at.activity_id=a.id
+                  and root.term_type='ACTIVITY_TOPIC'
+                  and root.slug='erzelmi-fejlodes-es-onszabalyozas'
+              );

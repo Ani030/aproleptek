@@ -52,9 +52,72 @@ public class ApiController {
     public List<Map<String, Object>> taxonomy(@RequestParam(required = false) String type,
                                               @RequestParam(defaultValue = "false") boolean includeInactive) {
         String activeClause = includeInactive ? "" : " where active=true";
-        if (type == null || type.isBlank()) return jdbc.queryForList("select * from taxonomy_term" + activeClause + " order by term_type, sort_order, name");
+        if (type == null || type.isBlank()) return jdbc.queryForList("select * from taxonomy_term" + activeClause + " order by term_type, coalesce((select parent.sort_order from taxonomy_term parent where parent.id=taxonomy_term.parent_id),sort_order), case when parent_id is null then 0 else 1 end, sort_order, name");
         String typeClause = activeClause.isEmpty() ? " where term_type=?" : " and term_type=?";
-        return jdbc.queryForList("select * from taxonomy_term" + activeClause + typeClause + " order by sort_order, name", type.toUpperCase(Locale.ROOT));
+        return jdbc.queryForList("select * from taxonomy_term" + activeClause + typeClause + " order by coalesce((select parent.sort_order from taxonomy_term parent where parent.id=taxonomy_term.parent_id),sort_order), case when parent_id is null then 0 else 1 end, sort_order, name", type.toUpperCase(Locale.ROOT));
+    }
+
+    @GetMapping("/public/activities")
+    public List<Map<String,Object>> publicActivities(@RequestParam(required=false) String topic) {
+        List<Map<String,Object>> items=jdbc.queryForList("select a.id,a.slug,a.title,a.summary,'PUBLIC' as access_mode,a.age_recommendation,a.duration_min_minutes,a.duration_max_minutes,a.duration_minutes,a.location_type,a.equipment_level,a.cover_asset_id from activity a where a.status='PUBLISHED' and (cast(? as varchar) is null or exists(select 1 from activity_term at join taxonomy_term t on t.id=at.term_id left join taxonomy_term parent on parent.id=t.parent_id where at.activity_id=a.id and t.term_type='ACTIVITY_TOPIC' and (t.slug=? or parent.slug=?))) order by a.updated_at desc",topic,topic,topic);
+        items.forEach(item->{UUID id=UUID.fromString(item.get("id").toString());item.put("topics",publicActivityTopics(id));item.put("skills",termsFor("activity_id",id).stream().filter(t->"ACTIVITY_SKILL".equals(t.get("term_type"))).map(t->Map.of("name",t.get("name"),"description",Objects.toString(t.get("default_description"),""))).toList());item.put("coverUrl",item.get("cover_asset_id")==null?null:"/api/v1/public/activities/"+item.get("slug")+"/cover");item.remove("id");item.remove("cover_asset_id");});
+        return items;
+    }
+
+    @GetMapping("/public/activity-topics")
+    public List<Map<String,Object>> publicActivityTopics() {
+        return jdbc.queryForList("select t.name,t.slug,t.default_description as description,parent.name as parent_name,parent.slug as parent_slug,parent.default_description as parent_description from taxonomy_term t left join taxonomy_term parent on parent.id=t.parent_id where t.term_type='ACTIVITY_TOPIC' and t.active=true and (parent.id is null or parent.active=true) order by coalesce(parent.sort_order,t.sort_order),case when t.parent_id is null then 0 else 1 end,t.sort_order,t.name");
+    }
+
+    @GetMapping("/public/activities/{slug}")
+    public Map<String,Object> publicActivity(@PathVariable String slug) {
+        Map<String,Object> item=jdbc.queryForMap("select a.* from activity a where a.slug=? and a.status='PUBLISHED'",slug);
+        Map<String,Object> result=new LinkedHashMap<>();
+        result.put("slug",item.get("slug"));result.put("title",item.get("title"));result.put("summary",item.get("summary"));result.put("accessMode","PUBLIC");result.put("unlocked",true);result.put("ageRecommendation",item.get("age_recommendation"));result.put("durationMinMinutes",item.get("duration_min_minutes"));result.put("durationMaxMinutes",item.get("duration_max_minutes"));result.put("durationMinutes",item.get("duration_minutes"));result.put("locationType",item.get("location_type"));result.put("equipmentLevel",item.get("equipment_level"));result.put("coverUrl",item.get("cover_asset_id")==null?null:"/api/v1/public/activities/"+slug+"/cover");
+        List<Map<String,Object>> terms=termsFor("activity_id",item.get("id"));
+        result.put("topics",publicActivityTopics(UUID.fromString(item.get("id").toString())));
+        Map<String,String> activitySkillDescriptions=activitySkillDescriptions(UUID.fromString(item.get("id").toString()));
+        result.put("skills",terms.stream().filter(t->"ACTIVITY_SKILL".equals(t.get("term_type"))).map(t->Map.of("id",t.get("id").toString(),"name",t.get("name"),"description",activitySkillDescriptions.getOrDefault(t.get("id").toString(),Objects.toString(t.get("default_description"),"")))).toList());
+        for(String field:List.of("description","materials","preparation","instructions","easy_variant","challenge_variant","playful_variant","safety_notes","parent_tip"))result.put(field,item.get(field));result.put("worksheets",publicActivityWorksheets(UUID.fromString(item.get("id").toString()),slug));
+        return result;
+    }
+
+    private List<Map<String,Object>> publicActivityTopics(UUID activityId) {
+        return jdbc.queryForList("select t.name,t.slug,parent.name as parent_name,parent.slug as parent_slug from activity_term at join taxonomy_term t on t.id=at.term_id left join taxonomy_term parent on parent.id=t.parent_id where at.activity_id=? and t.term_type='ACTIVITY_TOPIC' order by coalesce(parent.sort_order,t.sort_order),t.sort_order,t.name",activityId);
+    }
+
+    private UUID taxonomyParent(String type,Object rawParentId,UUID currentId) {
+        if(rawParentId==null||rawParentId.toString().isBlank())return null;
+        if(!Set.of("TOPIC","ACTIVITY_TOPIC").contains(type))throw new IllegalArgumentException("Csak kategóriának lehet fő kategóriája.");
+        UUID parentId;
+        try{parentId=UUID.fromString(rawParentId.toString());}catch(IllegalArgumentException ex){throw new IllegalArgumentException("Érvénytelen fő kategória.");}
+        if(parentId.equals(currentId))throw new IllegalArgumentException("Egy kategória nem lehet saját maga fő kategóriája.");
+        Map<String,Object> parent=jdbc.query("select term_type,parent_id from taxonomy_term where id=?",rs->{if(!rs.next())return null;Map<String,Object> row=new HashMap<>();row.put("type",rs.getString("term_type"));row.put("parent",rs.getObject("parent_id"));return row;},parentId);
+        if(parent==null||!type.equals(parent.get("type"))||parent.get("parent")!=null)throw new IllegalArgumentException("Fő kategóriának csak azonos típusú, legfelső szintű kategória választható.");
+        if(currentId!=null&&jdbc.queryForObject("select count(*) from taxonomy_term where parent_id=?",Integer.class,currentId)>0)throw new IllegalArgumentException("Ennek a fő kategóriának már vannak altípusai, ezért nem tehető egy másik kategória alá.");
+        return parentId;
+    }
+
+    private List<Map<String,Object>> publicActivityWorksheets(UUID activityId,String slug) {
+        List<Map<String,Object>> worksheets=jdbc.queryForList("select w.id,w.title,aw.relation_type,aw.sort_order from activity_worksheet aw join worksheet w on w.id=aw.worksheet_id where aw.activity_id=? and w.status='PUBLISHED' order by aw.sort_order",activityId);
+        worksheets.forEach(worksheet->{UUID worksheetId=UUID.fromString(worksheet.get("id").toString());List<Map<String,Object>> pages=jdbc.queryForList("select wp.id,wp.page_type,wp.title,wp.page_count,wp.notes,wp.sort_order,coalesce(wp.preview_asset_id,case when wp.page_type='MAIN' then w.preview_asset_id end) as preview_asset_id,wp.print_asset_id from worksheet_page wp join worksheet w on w.id=wp.worksheet_id where wp.worksheet_id=? order by wp.sort_order",worksheetId);pages.forEach(page->{UUID pageId=UUID.fromString(page.get("id").toString());if(page.get("preview_asset_id")!=null)page.put("previewUrl","/api/v1/public/activities/"+slug+"/worksheets/"+worksheetId+"/pages/"+pageId+"/assets/preview");if(page.get("print_asset_id")!=null)page.put("printUrl","/api/v1/public/activities/"+slug+"/worksheets/"+worksheetId+"/pages/"+pageId+"/assets/print");page.remove("preview_asset_id");page.remove("print_asset_id");});worksheet.put("pages",pages);worksheet.remove("id");});
+        return worksheets;
+    }
+
+    @GetMapping("/public/activities/{slug}/worksheets/{worksheetId}/pages/{pageId}/assets/{kind}")
+    public ResponseEntity<Resource> publicWorksheetAsset(@PathVariable String slug,@PathVariable UUID worksheetId,@PathVariable UUID pageId,@PathVariable String kind) throws IOException {
+        if(!Set.of("preview","print").contains(kind))throw new IllegalArgumentException("Ismeretlen feladatlapfájl-típus.");
+        String assetColumn=kind.equals("preview")?"wp.preview_asset_id":"wp.print_asset_id";
+        String previewAsset=kind.equals("preview")?"coalesce(wp.preview_asset_id,case when wp.page_type='MAIN' then w.preview_asset_id end)":"wp.print_asset_id";
+        Map<String,Object> asset=jdbc.queryForMap("select m.storage_key,m.media_type,m.original_name from activity a join activity_worksheet aw on aw.activity_id=a.id join worksheet w on w.id=aw.worksheet_id join worksheet_page wp on wp.worksheet_id=w.id join media_asset m on m.id="+(kind.equals("preview")?previewAsset:assetColumn)+" where a.slug=? and a.status='PUBLISHED' and w.status='PUBLISHED' and w.id=? and wp.id=?",slug,worksheetId,pageId);
+        String disposition=kind.equals("preview")?"inline":"attachment";
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(asset.get("media_type").toString())).header(HttpHeaders.CONTENT_DISPOSITION,disposition+"; filename*=UTF-8''"+encodeFilename(asset.get("original_name").toString())).body(storage.load(asset.get("storage_key").toString()));
+    }
+
+    @GetMapping("/public/activities/{slug}/cover")
+    public ResponseEntity<Resource> publicActivityCover(@PathVariable String slug) throws IOException {
+        Map<String,Object> asset=jdbc.queryForMap("select m.storage_key,m.media_type,m.original_name from activity a join media_asset m on m.id=a.cover_asset_id where a.slug=? and a.status='PUBLISHED'",slug);
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(asset.get("media_type").toString())).header(HttpHeaders.CONTENT_DISPOSITION,"inline; filename*=UTF-8''"+encodeFilename(asset.get("original_name").toString())).body(storage.load(asset.get("storage_key").toString()));
     }
 
     @GetMapping("/catalog/types")
@@ -299,12 +362,13 @@ public class ApiController {
     @PostMapping("/taxonomy")
     public Map<String, Object> createTerm(@RequestBody Map<String, Object> body) {
         String type = required(body, "termType").toUpperCase(Locale.ROOT);
-        if (!Set.of("AGE", "TASK_TYPE", "TOPIC", "SKILL").contains(type)) throw new IllegalArgumentException("Érvénytelen kategóriatípus.");
+        if (!Set.of("AGE", "TASK_TYPE", "TOPIC", "SKILL", "ACTIVITY_TOPIC", "ACTIVITY_SKILL").contains(type)) throw new IllegalArgumentException("Érvénytelen kategóriatípus.");
         String name = required(body, "name");
         String slug = optional(body, "slug");
         if (slug == null) slug = slugify(name);
         UUID id = UUID.randomUUID();
-        jdbc.update("insert into taxonomy_term(id, term_type, name, slug, sort_order) values (?,?,?,?,?)", id, type, name, slug, intValue(body.get("sortOrder"), 0));
+        UUID parentId=taxonomyParent(type,body.get("parentId"),null);
+        jdbc.update("insert into taxonomy_term(id, term_type, name, slug, sort_order,parent_id) values (?,?,?,?,?,?)", id, type, name, slug, intValue(body.get("sortOrder"), 0),parentId);
         return jdbc.queryForMap("select * from taxonomy_term where id=?", id);
     }
 
@@ -319,16 +383,18 @@ public class ApiController {
         int sortOrder = boundedInt(body.get("sortOrder"), 0, 0, 10000, "megjelenítési sorrend");
         boolean active = body.containsKey("active") ? Boolean.parseBoolean(body.get("active").toString())
                 : jdbc.query("select active from taxonomy_term where id=?", rs -> rs.next() && rs.getBoolean(1), id);
-        int updated = jdbc.update("update taxonomy_term set name=?, slug=?, sort_order=?, active=? where id=?", name, slug, sortOrder, active, id);
+        String termType=jdbc.query("select term_type from taxonomy_term where id=?",rs->rs.next()?rs.getString(1):null,id);
+        UUID parentId=taxonomyParent(termType,body.get("parentId"),id);
+        int updated = jdbc.update("update taxonomy_term set name=?, slug=?, sort_order=?, active=?, parent_id=? where id=?", name, slug, sortOrder, active,parentId,id);
         if (updated == 0) throw new IllegalArgumentException("A kategória nem található.");
         return jdbc.queryForMap("select * from taxonomy_term where id=?", id);
     }
 
     @PutMapping("/taxonomy/{id}/defaults")
     public Map<String, Object> updateTaskTypeDefaults(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
-        int updated = jdbc.update("update taxonomy_term set default_description=?, default_instructions=? where id=? and term_type='TASK_TYPE'",
+        int updated = jdbc.update("update taxonomy_term set default_description=?, default_instructions=? where id=? and term_type in ('TASK_TYPE','SKILL','ACTIVITY_SKILL','ACTIVITY_TOPIC')",
                 optional(body, "defaultDescription"), optional(body, "defaultInstructions"), id);
-        if (updated == 0) throw new IllegalArgumentException("A feladattípus nem található.");
+        if (updated == 0) throw new IllegalArgumentException("A feladattípus vagy készségterület nem található.");
         return jdbc.queryForMap("select * from taxonomy_term where id=?", id);
     }
 
@@ -342,7 +408,7 @@ public class ApiController {
                                           @RequestParam(required = false) UUID skillId,
                                           @RequestParam(defaultValue = "0") int page,
                                           @RequestParam(defaultValue = "20") int size) {
-        int safePage = Math.max(page, 0), safeSize = Math.min(Math.max(size, 1), 100);
+        int safePage = Math.max(page, 0), safeSize = Math.min(Math.max(size, 1), 500);
         List<Map<String, Object>> items = worksheetList(q, status, termId, ageId, taskTypeId, topicId, skillId, safePage * safeSize, safeSize);
         Long total = worksheetCount(q, status, termId, ageId, taskTypeId, topicId, skillId);
         return Map.of("items", items, "page", safePage, "size", safeSize, "total", total);
@@ -373,17 +439,28 @@ public class ApiController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/activities/catalog")
+    public Map<String, Object> activityCatalog() {
+        List<Map<String,Object>> items = jdbc.queryForList("select a.id,a.title,a.status from activity a where a.status<>'ARCHIVED' order by a.updated_at desc");
+        items.forEach(item -> item.put("terms", termsFor("activity_id", item.get("id")).stream()
+                .filter(term -> "ACTIVITY_TOPIC".equals(term.get("term_type")))
+                .map(term -> Map.of("id",term.get("id"),"name",term.get("name"),"slug",term.get("slug"),"term_type",term.get("term_type"),"parent_id",Objects.toString(term.get("parent_id"),"")))
+                .toList()));
+        return Map.of("items",items,"total",items.size());
+    }
+
     @GetMapping("/activities")
     public Map<String, Object> activities(@RequestParam(defaultValue = "") String q,
                                           @RequestParam(required = false) String status,
+                                          @RequestParam(required = false) UUID termId,
                                           @RequestParam(defaultValue = "0") int page,
                                           @RequestParam(defaultValue = "20") int size) {
-        int safePage = Math.max(page, 0), safeSize = Math.min(Math.max(size, 1), 100);
+        int safePage = Math.max(page, 0), safeSize = Math.min(Math.max(size, 1), 500);
         String search = "%" + q.trim().toLowerCase(Locale.ROOT) + "%";
-        List<Map<String, Object>> items = jdbc.queryForList("select * from activity where (lower(title) like ? or lower(coalesce(summary,'')) like ?) and (cast(? as varchar) is null or status=?) order by updated_at desc limit ? offset ?",
-                search, search, status, status, safeSize, safePage * safeSize);
-        Long total = jdbc.queryForObject("select count(*) from activity where (lower(title) like ? or lower(coalesce(summary,'')) like ?) and (cast(? as varchar) is null or status=?)", Long.class, search, search, status, status);
-        items.forEach(item -> item.put("terms", termsFor("activity_id", item.get("id"))));
+        List<Map<String, Object>> items = jdbc.queryForList("select a.*,m.original_name as cover_name from activity a left join media_asset m on m.id=a.cover_asset_id where a.status<>'ARCHIVED' and (lower(a.title) like ? or lower(coalesce(a.summary,'')) like ?) and (cast(? as varchar) is null or a.status=?) and (cast(? as uuid) is null or exists(select 1 from activity_term at join taxonomy_term t on t.id=at.term_id where at.activity_id=a.id and (t.id=? or t.parent_id=?))) order by a.updated_at desc limit ? offset ?",
+                search, search, status, status, termId, termId, termId, safeSize, safePage * safeSize);
+        Long total = jdbc.queryForObject("select count(*) from activity a where a.status<>'ARCHIVED' and (lower(a.title) like ? or lower(coalesce(a.summary,'')) like ?) and (cast(? as varchar) is null or a.status=?) and (cast(? as uuid) is null or exists(select 1 from activity_term at join taxonomy_term t on t.id=at.term_id where at.activity_id=a.id and (t.id=? or t.parent_id=?)))", Long.class, search, search, status, status, termId, termId, termId);
+        items.forEach(item -> { item.put("terms", termsFor("activity_id", item.get("id"))); item.put("worksheets", activityWorksheets(UUID.fromString(item.get("id").toString()))); });
         return Map.of("items", items, "page", safePage, "size", safeSize, "total", total);
     }
 
@@ -490,7 +567,7 @@ public class ApiController {
 
     @PutMapping("/products/{id}/preparation")
     @Transactional
-    public Map<String,Object> updateProductPreparation(@PathVariable UUID id,@RequestBody Map<String,Object> body) {
+    public Map<String,Object> updateProductPreparationChecklist(@PathVariable UUID id,@RequestBody Map<String,Object> body) {
         String note=optional(body,"note");
         if(note!=null&&note.length()>2000) throw new IllegalArgumentException("A megjegyzés legfeljebb 2000 karakter lehet.");
         jdbc.update("update sale_product set preparation_printed=?,preparation_laminated=?,preparation_velcro=?,preparation_note=?,updated_at=? where id=? and delivery_type='PHYSICAL'",
@@ -1188,10 +1265,18 @@ public class ApiController {
 
     private void saveActivity(UUID id, Map<String,Object> b, boolean insert) {
         String title = required(b,"title"), slug = Optional.ofNullable(optional(b,"slug")).orElseGet(() -> slugify(title));
-        Object[] values = {title, slug, optional(b,"summary"), optional(b,"description"), nullableInt(b.get("durationMinutes")), valueOr(b.get("locationType"),"ANY"), optional(b,"materials"), optional(b,"preparation"), optional(b,"instructions"), optional(b,"easyVariant"), optional(b,"challengeVariant"), optional(b,"safetyNotes"), status(b.get("status")), Timestamp.from(Instant.now())};
-        if (insert) jdbc.update("insert into activity(id,title,slug,summary,description,duration_minutes,location_type,materials,preparation,instructions,easy_variant,challenge_variant,safety_notes,status,updated_at) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", prepend(id,values));
-        else jdbc.update("update activity set title=?,slug=?,summary=?,description=?,duration_minutes=?,location_type=?,materials=?,preparation=?,instructions=?,easy_variant=?,challenge_variant=?,safety_notes=?,status=?,updated_at=? where id=?", append(values,id));
+        Integer durationMin=nullableInt(b.get("durationMinMinutes")), durationMax=nullableInt(b.get("durationMaxMinutes"));
+        if(durationMin!=null&&durationMax!=null&&durationMax<durationMin) throw new IllegalArgumentException("A játékidő felső határa nem lehet kisebb az alsónál.");
+        String equipment=valueOr(b.get("equipmentLevel"),"MINIMAL");
+        if(!Set.of("MINIMAL","MEDIUM","EXTENSIVE").contains(equipment)) throw new IllegalArgumentException("Érvénytelen eszközigény.");
+        UUID coverAssetId=uuidOrNull(b.get("coverAssetId")); requireImageAsset(coverAssetId,"borítókép");
+        Object[] values = {title, slug, optional(b,"summary"), optional(b,"description"), nullableInt(b.get("durationMinutes")), valueOr(b.get("locationType"),"ANY"), optional(b,"materials"), optional(b,"preparation"), optional(b,"instructions"), optional(b,"easyVariant"), optional(b,"challengeVariant"), optional(b,"safetyNotes"), status(b.get("status")), Timestamp.from(Instant.now()), coverAssetId, optional(b,"ageRecommendation"), durationMin, durationMax, equipment, optional(b,"playfulVariant"), optional(b,"parentTip")};
+        if (insert) jdbc.update("insert into activity(id,title,slug,summary,description,duration_minutes,location_type,materials,preparation,instructions,easy_variant,challenge_variant,safety_notes,status,updated_at,cover_asset_id,age_recommendation,duration_min_minutes,duration_max_minutes,equipment_level,playful_variant,parent_tip) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", prepend(id,values));
+        else jdbc.update("update activity set title=?,slug=?,summary=?,description=?,duration_minutes=?,location_type=?,materials=?,preparation=?,instructions=?,easy_variant=?,challenge_variant=?,safety_notes=?,status=?,updated_at=?,cover_asset_id=?,age_recommendation=?,duration_min_minutes=?,duration_max_minutes=?,equipment_level=?,playful_variant=?,parent_tip=? where id=?", append(values,id));
         jdbc.update("delete from activity_term where activity_id=? and term_id in (select id from taxonomy_term where active=true)", id); saveTerms("activity_id",id,b.get("termIds"));
+        saveActivitySkillDescriptions(id,b.get("skillDescriptions"));
+        jdbc.update("delete from activity_worksheet where activity_id=?",id);
+        if(b.get("worksheetLinks") instanceof List<?> links) { int order=0; for(Object raw:links) { if(!(raw instanceof Map<?,?> link)) continue; UUID worksheetId=UUID.fromString(Objects.toString(link.get("worksheetId"))); String relation=Objects.toString(link.get("relationType"),"OPTIONAL"); if(!Set.of("REQUIRED","OPTIONAL").contains(relation)) throw new IllegalArgumentException("Érvénytelen feladatlap-kapcsolat."); jdbc.queryForObject("select id from worksheet where id=? and status<>'ARCHIVED'",UUID.class,worksheetId); jdbc.update("insert into activity_worksheet(activity_id,worksheet_id,relation_type,sort_order) values (?,?,?,?)",id,worksheetId,relation,order++); } }
     }
 
     private void saveBundle(UUID id,Map<String,Object> b,boolean insert) {
@@ -1214,7 +1299,28 @@ public class ApiController {
 
     private Map<String,Object> loadActivity(UUID id) {
         Map<String,Object> row = jdbc.queryForMap("select * from activity where id=?",id);
-        row.put("terms",termsFor("activity_id",id)); return row;
+        row.put("terms",termsFor("activity_id",id)); row.put("skillDescriptions",activitySkillDescriptions(id)); row.put("worksheets",activityWorksheets(id)); return row;
+    }
+
+    private void saveActivitySkillDescriptions(UUID activityId,Object raw) {
+        if(!(raw instanceof Map<?,?> descriptions))return;
+        jdbc.update("delete from activity_skill_description where activity_id=?",activityId);
+        for(Map.Entry<?,?> entry:descriptions.entrySet()){
+            String description=Objects.toString(entry.getValue(),"").trim();if(description.isEmpty())continue;
+            if(description.length()>1200)throw new IllegalArgumentException("A fejlesztési terület magyarázata legfeljebb 1200 karakter lehet.");
+            UUID termId=UUID.fromString(Objects.toString(entry.getKey()));
+            Integer selected=jdbc.queryForObject("select count(*) from activity_term at join taxonomy_term t on t.id=at.term_id where at.activity_id=? and at.term_id=? and t.term_type='ACTIVITY_SKILL'",Integer.class,activityId,termId);
+            if(selected==null||selected==0)throw new IllegalArgumentException("Magyarázat csak a játékhoz kiválasztott fejlesztési területhez adható meg.");
+            jdbc.update("insert into activity_skill_description(activity_id,term_id,description) values (?,?,?)",activityId,termId,description);
+        }
+    }
+
+    private List<Map<String,Object>> activityWorksheets(UUID id) { return jdbc.queryForList("select w.id,w.title,aw.relation_type,aw.sort_order from activity_worksheet aw join worksheet w on w.id=aw.worksheet_id where aw.activity_id=? order by aw.sort_order",id); }
+
+    private Map<String,String> activitySkillDescriptions(UUID activityId) {
+        Map<String,String> descriptions=new LinkedHashMap<>();
+        jdbc.queryForList("select term_id,description from activity_skill_description where activity_id=?",activityId).forEach(row->descriptions.put(row.get("term_id").toString(),Objects.toString(row.get("description"),"")));
+        return descriptions;
     }
 
     private List<Map<String,Object>> termsFor(String column, Object id) {
@@ -1230,7 +1336,8 @@ public class ApiController {
         for (Object term : ids) {
             UUID termId = UUID.fromString(term.toString());
             String type = jdbc.queryForObject("select term_type from taxonomy_term where id=?", String.class, termId);
-            if ("activity_id".equals(column) && "TASK_TYPE".equals(type)) throw new IllegalArgumentException("A feladattípus csak feladatlaphoz rendelhető.");
+            if ("activity_id".equals(column) && !Set.of("ACTIVITY_TOPIC","ACTIVITY_SKILL").contains(type)) throw new IllegalArgumentException("Fejlesztő játékhoz csak a játékok saját kategóriái rendelhetők.");
+            if ("worksheet_id".equals(column) && Set.of("ACTIVITY_TOPIC","ACTIVITY_SKILL").contains(type)) throw new IllegalArgumentException("Játék-kategória nem rendelhető feladatlaphoz.");
             boolean alreadyLinked = jdbc.queryForObject("select exists(select 1 from " + relation + " where " + column + "=? and term_id=?)", Boolean.class, id, termId);
             boolean active = jdbc.queryForObject("select active from taxonomy_term where id=?", Boolean.class, termId);
             if (!active && !alreadyLinked) throw new IllegalArgumentException("Inaktív kategória új tartalomhoz nem rendelhető.");
@@ -1296,8 +1403,8 @@ public class ApiController {
     }
     private static String status(Object value) { String s=valueOr(value,"DRAFT"); if(!Set.of("DRAFT","REVIEW","PUBLISHED","ARCHIVED").contains(s)) throw new IllegalArgumentException("Érvénytelen státusz."); return s; }
     private static int intValue(Object value,int fallback) { if(value==null) return fallback; try{return Integer.parseInt(value.toString());}catch(NumberFormatException ex){return fallback;} }
-    private static Object nullableInt(Object value) { if(value==null || value.toString().isBlank()) return null; return intValue(value,0); }
-    private static Object uuidOrNull(Object value) { return value==null || value.toString().isBlank()?null:UUID.fromString(value.toString()); }
+    private static Integer nullableInt(Object value) { if(value==null || value.toString().isBlank()) return null; return intValue(value,0); }
+    private static UUID uuidOrNull(Object value) { return value==null || value.toString().isBlank()?null:UUID.fromString(value.toString()); }
     private static String slugify(String text) { String s=java.text.Normalizer.normalize(text.toLowerCase(Locale.forLanguageTag("hu")), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}",""); return s.replaceAll("[^a-z0-9]+","-").replaceAll("^-|-$",""); }
 
     private String availableCatalogSlug(String typeCode,String requestedSlug,UUID currentCatalogItemId) {

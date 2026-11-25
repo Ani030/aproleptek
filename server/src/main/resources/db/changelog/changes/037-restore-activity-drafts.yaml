@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 037-restore-requested-activity-drafts
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              update activity
+              set status='DRAFT',updated_at=CURRENT_TIMESTAMP
+              where slug in ('egyenes-vonalon-jaras','kanyargos-uton-haladas','alagutban-negykezlab-maszas')
+                and status='ARCHIVED';

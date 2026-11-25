@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
                         .anyRequest().hasRole("ADMIN"))
                 .httpBasic(Customizer.withDefaults())
                 .exceptionHandling(errors -> errors

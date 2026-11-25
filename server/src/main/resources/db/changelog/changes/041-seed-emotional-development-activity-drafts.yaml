@@ -1,0 +1,224 @@
+databaseChangeLog:
+  - changeSet:
+      id: 041-seed-emotional-development-activity-drafts
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description) values ('ACTIVITY_TOPIC','Érzelmi fejlődés és önszabályozás','erzelmi-fejlodes-es-onszabalyozas',70,true,null,'Az érzelmi fejlődés és önszabályozás támogatja a gyermeket érzései felismerésében, kifejezésében és fokozatos szabályozásában. A közös játékok segíthetnek a várakozás, a megnyugvás, a kudarcok kezelése, a változásokhoz való alkalmazkodás és az érzelmi biztonság megtapasztalásában. Az ötletek 18–36 hónapos gyermekekhez készülnek, és a gyermek aktuális fejlettségéhez igazíthatók.') on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=null,default_description=excluded.default_description;
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id)
+              select 'ACTIVITY_TOPIC',v.name,v.slug,v.sort_order,true,root.id from (values
+                ('Érzelmek felismerése és megnevezése','erzelmek-felismerese-es-megnevezese',10),
+                ('Érzelmek kifejezése és kommunikációja','erzelmek-kifejezese-es-kommunikacioja',20),
+                ('Frusztráció és kudarc kezelése','frusztracio-es-kudarc-kezelese',30),
+                ('Várakozás és türelem','varakozas-es-turelem',40),
+                ('Megnyugvás és feszültségoldás','megnyugvas-es-feszultsegoldas',50),
+                ('Impulzuskontroll és viselkedésszabályozás','impulzuskontroll-es-viselkedesszabalyozas',60),
+                ('Változások elfogadása és rugalmas alkalmazkodás','valtozasok-elfogadasa-es-rugalmas-alkalmazkodas',70),
+                ('Félelmek és bizonytalanság kezelése','felelmek-es-bizonytalansag-kezelese',80),
+                ('Önbizalom, énkép és kompetenciaérzés','onbizalom-enkep-es-kompetenciaerzes',90),
+                ('Érzelmi biztonság és kapcsolódás','erzelmi-biztonsag-es-kapcsolodas',100)) as v(name,slug,sort_order) cross join taxonomy_term root where root.term_type='ACTIVITY_TOPIC' and root.slug='erzelmi-fejlodes-es-onszabalyozas' on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=excluded.parent_id;
+              insert into activity(title,slug,status,age_recommendation)
+              values
+                ('Érzelmes babajáték','erzelmes-babajatek','DRAFT','18–36 hónap'),
+                ('Milyen arcot vágok? – Tükörjáték','milyen-arcot-vagok-tukorjatek','DRAFT','18–36 hónap'),
+                ('Érzelmek párosítása','erzelmek-parositasa','DRAFT','18–36 hónap'),
+                ('Hogyan érzi magát a maci?','hogyan-erzi-magat-a-maci','DRAFT','18–36 hónap'),
+                ('Érzelmes állatkák','erzelmes-allatkak','DRAFT','18–36 hónap'),
+                ('Mutasd meg, hogyan örülsz!','mutasd-meg-hogyan-orulsz','DRAFT','18–36 hónap'),
+                ('Érzelmek felismerése mesekönyvekben','erzelmek-felismerese-mesekonyvekben','DRAFT','18–36 hónap'),
+                ('Érzelmes bábozás','erzelmes-babozas','DRAFT','18–36 hónap'),
+                ('Érzelemkerék','erzelemkerek','DRAFT','18–36 hónap'),
+                ('Milyen érzés volt a mai nap?','milyen-erzes-volt-a-mai-nap','DRAFT','18–36 hónap'),
+                ('Mutasd meg, mit érzel!','mutasd-meg-mit-erzel','DRAFT','18–36 hónap'),
+                ('Érzelmek színekkel','erzelmek-szinekkel','DRAFT','18–36 hónap'),
+                ('Rajzoljuk le az érzéseinket!','rajzoljuk-le-az-erzeseinket','DRAFT','18–36 hónap'),
+                ('Érzelmes tánc','erzelmes-tanc','DRAFT','18–36 hónap'),
+                ('Vidám és szomorú dallamok','vidam-es-szomoru-dallamok','DRAFT','18–36 hónap'),
+                ('Mesélj a plüssödnek!','meselj-a-plussodnek','DRAFT','18–36 hónap'),
+                ('Érzelmes hangutánzás','erzelmes-hangutanzas','DRAFT','18–36 hónap'),
+                ('Most erre van szükségem!','most-erre-van-szuksegem','DRAFT','18–36 hónap'),
+                ('Ölelést kérek','olelest-kerek','DRAFT','18–36 hónap'),
+                ('Érzelmi postaláda','erzelmi-postalada','DRAFT','18–36 hónap'),
+                ('Ledőlt a torony – Építsük újra!','ledolt-a-torony-epitsuk-ujra','DRAFT','18–36 hónap'),
+                ('Próbáljuk meg még egyszer!','probaljuk-meg-meg-egyszer','DRAFT','18–36 hónap'),
+                ('Segítséget kérek','segitseget-kerek','DRAFT','18–36 hónap'),
+                ('A macinak sem sikerül mindig','a-macinak-sem-sikerul-mindig','DRAFT','18–36 hónap'),
+                ('Nem illik a helyére','nem-illik-a-helyere','DRAFT','18–36 hónap'),
+                ('Keressünk másik megoldást!','keressunk-masik-megoldast','DRAFT','18–36 hónap'),
+                ('Mérges vagyok – Gyurmagyúrás','merges-vagyok-gyurmagyuras','DRAFT','18–36 hónap'),
+                ('Mérges firkálás','merges-firkalas','DRAFT','18–36 hónap'),
+                ('Most nem sikerült, később megpróbáljuk','most-nem-sikerult-kesobb-megprobaljuk','DRAFT','18–36 hónap'),
+                ('A próbálkozás öröme','a-probalkozas-orome','DRAFT','18–36 hónap'),
+                ('Felváltva építés','felvaltva-epites','DRAFT','18–36 hónap'),
+                ('Most én, most te!','most-en-most-te','DRAFT','18–36 hónap'),
+                ('Várjuk meg a buborékokat!','varjuk-meg-a-buborekokat','DRAFT','18–36 hónap'),
+                ('Várakozás homokórával','varakozas-homokoraval','DRAFT','18–36 hónap'),
+                ('Zenélj, amikor rád kerül a sor!','zenelj-amikor-rad-kerul-a-sor','DRAFT','18–36 hónap'),
+                ('Labdagurítás felváltva','labdaguritas-felvaltva','DRAFT','18–36 hónap'),
+                ('Mikor bújik elő a nyuszi?','mikor-bujik-elo-a-nyuszi','DRAFT','18–36 hónap'),
+                ('Közös puzzle-kirakás','kozos-puzzle-kirakas','DRAFT','18–36 hónap'),
+                ('Mikor kerülök sorra? – Boltos játék','mikor-kerulok-sorra-boltos-jatek','DRAFT','18–36 hónap'),
+                ('Készül a finomság – Közös sütés','keszul-a-finomsag-kozos-sutes','DRAFT','18–36 hónap'),
+                ('Virágszagolás és gyertyafújás – Játékos légzés','viragszagolas-es-gyertyafujas-jatekos-legzes','DRAFT','18–36 hónap'),
+                ('Alszik a plüss a pocakomon','alszik-a-pluss-a-pocakomon','DRAFT','18–36 hónap'),
+                ('Nyugalomkuckó kialakítása','nyugalomkucko-kialakitasa','DRAFT','18–36 hónap'),
+                ('Teknősbéka-játék','teknosbeka-jatek','DRAFT','18–36 hónap'),
+                ('Ölelős plüss kiválasztása','olelos-pluss-kivalasztasa','DRAFT','18–36 hónap'),
+                ('Lassan úszó halacskák','lassan-uszo-halacskak','DRAFT','18–36 hónap'),
+                ('Nyugtató mondókák','nyugtato-mondokak','DRAFT','18–36 hónap'),
+                ('Puha labda szorítása','puha-labda-szoritasa','DRAFT','18–36 hónap'),
+                ('Nyugalomüveg megfigyelése','nyugalomuveg-megfigyelese','DRAFT','18–36 hónap'),
+                ('Megnyugvást segítő kártyák','megnyugvast-segito-kartyak','DRAFT','18–36 hónap'),
+                ('Piros lámpa, zöld lámpa','piros-lampa-zold-lampa','DRAFT','18–36 hónap'),
+                ('Szoborjáték','szoborjatek','DRAFT','18–36 hónap'),
+                ('Táncolj, amíg szól a zene!','tancolj-amig-szol-a-zene','DRAFT','18–36 hónap'),
+                ('Alszik és felébred a maci','alszik-es-felebred-a-maci','DRAFT','18–36 hónap'),
+                ('Csak akkor indulj, ha tapsolok!','csak-akkor-indulj-ha-tapsolok','DRAFT','18–36 hónap'),
+                ('Gyorsan és lassan','gyorsan-es-lassan','DRAFT','18–36 hónap'),
+                ('Halk és hangos dob','halk-es-hangos-dob','DRAFT','18–36 hónap'),
+                ('Finom kezek – Plüsssimogatás','finom-kezek-plusssimogatas','DRAFT','18–36 hónap'),
+                ('Várj a jelzésre!','varj-a-jelzesre','DRAFT','18–36 hónap'),
+                ('Állj meg, és válassz!','allj-meg-es-valassz','DRAFT','18–36 hónap'),
+                ('Ma másik úton megyünk','ma-masik-uton-megyunk','DRAFT','18–36 hónap'),
+                ('Változik a játékszabály','valtozik-a-jatekszabaly','DRAFT','18–36 hónap'),
+                ('A maci új helyen alszik','a-maci-uj-helyen-alszik','DRAFT','18–36 hónap'),
+                ('Másképp is lehet építeni','maskepp-is-lehet-epiteni','DRAFT','18–36 hónap'),
+                ('Válasszunk másik játékot!','valasszunk-masik-jatekot','DRAFT','18–36 hónap'),
+                ('Meglepetésdoboz','meglepetesdoboz','DRAFT','18–36 hónap'),
+                ('Felcserélt szerepek','felcserelt-szerepek','DRAFT','18–36 hónap'),
+                ('A megszokottól eltérő mese','a-megszokottol-eltero-mese','DRAFT','18–36 hónap'),
+                ('Először – aztán kártyák','eloszor-aztan-kartyak','DRAFT','18–36 hónap'),
+                ('Búcsú a játéktól – Átmeneti rituálék','bucsu-a-jatektol-atmeneti-ritualek','DRAFT','18–36 hónap'),
+                ('A maci fél a sötétben','a-maci-fel-a-sotetben','DRAFT','18–36 hónap'),
+                ('Barátságos árnyékok','baratsagos-arnyekok','DRAFT','18–36 hónap'),
+                ('Ismerkedés a szokatlan hangokkal','ismerkedes-a-szokatlan-hangokkal','DRAFT','18–36 hónap'),
+                ('Bátor nyuszi','bator-nyuszi','DRAFT','18–36 hónap'),
+                ('Orvosos szerepjáték','orvosos-szerepjatek','DRAFT','18–36 hónap'),
+                ('Felfedezés anya vagy apa kezét fogva','felfedezes-anya-vagy-apa-kezet-fogva','DRAFT','18–36 hónap'),
+                ('Új játék megismerése lépésről lépésre','uj-jatek-megismerese-lepesrol-lepesre','DRAFT','18–36 hónap'),
+                ('Bátorságkavics','batorsagkavics','DRAFT','18–36 hónap'),
+                ('Nézzük meg együtt!','nezzuk-meg-egyutt','DRAFT','18–36 hónap'),
+                ('Meséljünk a félelmekről!','meseljunk-a-felelmekrol','DRAFT','18–36 hónap'),
+                ('Nézd, meg tudom csinálni!','nezd-meg-tudom-csinalni','DRAFT','18–36 hónap'),
+                ('Mire vagyok büszke?','mire-vagyok-buszke','DRAFT','18–36 hónap'),
+                ('Az én ügyes kezeim','az-en-ugyes-kezeim','DRAFT','18–36 hónap'),
+                ('Mit tudok már egyedül?','mit-tudok-mar-egyedul','DRAFT','18–36 hónap'),
+                ('Én választok!','en-valasztok','DRAFT','18–36 hónap'),
+                ('Én vagyok a segítő','en-vagyok-a-segito','DRAFT','18–36 hónap'),
+                ('Tanítsuk meg a macit!','tanitsuk-meg-a-macit','DRAFT','18–36 hónap'),
+                ('Az én alkotásom','az-en-alkotasom','DRAFT','18–36 hónap'),
+                ('Sikerélménydoboz','sikerelmenydoboz','DRAFT','18–36 hónap'),
+                ('Ilyen vagyok én – Saját képes könyv','ilyen-vagyok-en-sajat-kepes-konyv','DRAFT','18–36 hónap'),
+                ('Szeretetölelés','szeretetoleles','DRAFT','18–36 hónap'),
+                ('Különleges közös kézfogás','kulonleges-kozos-kezfogas','DRAFT','18–36 hónap'),
+                ('Búcsúpuszi és visszatérés','bucsupuszi-es-visszateres','DRAFT','18–36 hónap'),
+                ('Szeretetüzenetek','szeretetuzenetek','DRAFT','18–36 hónap'),
+                ('Biztonságot adó plüss','biztonsagot-ado-pluss','DRAFT','18–36 hónap'),
+                ('Közös kuckóépítés','kozos-kuckoepites','DRAFT','18–36 hónap'),
+                ('Csak rád figyelek – Közös játékidő','csak-rad-figyelek-kozos-jatekido','DRAFT','18–36 hónap'),
+                ('Családi fényképek nézegetése','csaladi-fenykepek-nezegetese','DRAFT','18–36 hónap'),
+                ('Kik szeretnek engem?','kik-szeretnek-engem','DRAFT','18–36 hónap'),
+                ('Esti érzelmi beszélgetés','esti-erzelmi-beszelgetes','DRAFT','18–36 hónap') on conflict (slug) do nothing;
+              insert into activity_term(activity_id,term_id)
+              select a.id,t.id from activity a join taxonomy_term t on t.term_type='ACTIVITY_TOPIC' and t.slug=case
+                when a.slug='erzelmes-babajatek' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='milyen-arcot-vagok-tukorjatek' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='erzelmek-parositasa' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='hogyan-erzi-magat-a-maci' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='erzelmes-allatkak' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='mutasd-meg-hogyan-orulsz' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='erzelmek-felismerese-mesekonyvekben' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='erzelmes-babozas' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='erzelemkerek' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='milyen-erzes-volt-a-mai-nap' then 'erzelmek-felismerese-es-megnevezese'
+                when a.slug='mutasd-meg-mit-erzel' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='erzelmek-szinekkel' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='rajzoljuk-le-az-erzeseinket' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='erzelmes-tanc' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='vidam-es-szomoru-dallamok' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='meselj-a-plussodnek' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='erzelmes-hangutanzas' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='most-erre-van-szuksegem' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='olelest-kerek' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='erzelmi-postalada' then 'erzelmek-kifejezese-es-kommunikacioja'
+                when a.slug='ledolt-a-torony-epitsuk-ujra' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='probaljuk-meg-meg-egyszer' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='segitseget-kerek' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='a-macinak-sem-sikerul-mindig' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='nem-illik-a-helyere' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='keressunk-masik-megoldast' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='merges-vagyok-gyurmagyuras' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='merges-firkalas' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='most-nem-sikerult-kesobb-megprobaljuk' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='a-probalkozas-orome' then 'frusztracio-es-kudarc-kezelese'
+                when a.slug='felvaltva-epites' then 'varakozas-es-turelem'
+                when a.slug='most-en-most-te' then 'varakozas-es-turelem'
+                when a.slug='varjuk-meg-a-buborekokat' then 'varakozas-es-turelem'
+                when a.slug='varakozas-homokoraval' then 'varakozas-es-turelem'
+                when a.slug='zenelj-amikor-rad-kerul-a-sor' then 'varakozas-es-turelem'
+                when a.slug='labdaguritas-felvaltva' then 'varakozas-es-turelem'
+                when a.slug='mikor-bujik-elo-a-nyuszi' then 'varakozas-es-turelem'
+                when a.slug='kozos-puzzle-kirakas' then 'varakozas-es-turelem'
+                when a.slug='mikor-kerulok-sorra-boltos-jatek' then 'varakozas-es-turelem'
+                when a.slug='keszul-a-finomsag-kozos-sutes' then 'varakozas-es-turelem'
+                when a.slug='viragszagolas-es-gyertyafujas-jatekos-legzes' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='alszik-a-pluss-a-pocakomon' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='nyugalomkucko-kialakitasa' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='teknosbeka-jatek' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='olelos-pluss-kivalasztasa' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='lassan-uszo-halacskak' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='nyugtato-mondokak' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='puha-labda-szoritasa' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='nyugalomuveg-megfigyelese' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='megnyugvast-segito-kartyak' then 'megnyugvas-es-feszultsegoldas'
+                when a.slug='piros-lampa-zold-lampa' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='szoborjatek' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='tancolj-amig-szol-a-zene' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='alszik-es-felebred-a-maci' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='csak-akkor-indulj-ha-tapsolok' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='gyorsan-es-lassan' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='halk-es-hangos-dob' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='finom-kezek-plusssimogatas' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='varj-a-jelzesre' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='allj-meg-es-valassz' then 'impulzuskontroll-es-viselkedesszabalyozas'
+                when a.slug='ma-masik-uton-megyunk' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='valtozik-a-jatekszabaly' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='a-maci-uj-helyen-alszik' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='maskepp-is-lehet-epiteni' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='valasszunk-masik-jatekot' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='meglepetesdoboz' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='felcserelt-szerepek' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='a-megszokottol-eltero-mese' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='eloszor-aztan-kartyak' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='bucsu-a-jatektol-atmeneti-ritualek' then 'valtozasok-elfogadasa-es-rugalmas-alkalmazkodas'
+                when a.slug='a-maci-fel-a-sotetben' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='baratsagos-arnyekok' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='ismerkedes-a-szokatlan-hangokkal' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='bator-nyuszi' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='orvosos-szerepjatek' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='felfedezes-anya-vagy-apa-kezet-fogva' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='uj-jatek-megismerese-lepesrol-lepesre' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='batorsagkavics' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='nezzuk-meg-egyutt' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='meseljunk-a-felelmekrol' then 'felelmek-es-bizonytalansag-kezelese'
+                when a.slug='nezd-meg-tudom-csinalni' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='mire-vagyok-buszke' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='az-en-ugyes-kezeim' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='mit-tudok-mar-egyedul' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='en-valasztok' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='en-vagyok-a-segito' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='tanitsuk-meg-a-macit' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='az-en-alkotasom' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='sikerelmenydoboz' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='ilyen-vagyok-en-sajat-kepes-konyv' then 'onbizalom-enkep-es-kompetenciaerzes'
+                when a.slug='szeretetoleles' then 'erzelmi-biztonsag-es-kapcsolodas'
+                when a.slug='kulonleges-kozos-kezfogas' then 'erzelmi-biztonsag-es-kapcsolodas'
+                when a.slug='bucsupuszi-es-visszateres' then 'erzelmi-biztonsag-es-kapcsolodas'
+                when a.slug='szeretetuzenetek' then 'erzelmi-biztonsag-es-kapcsolodas'
+                when a.slug='biztonsagot-ado-pluss' then 'erzelmi-biztonsag-es-kapcsolodas'
+                when a.slug='kozos-kuckoepites' then 'erzelmi-biztonsag-es-kapcsolodas'
+                when a.slug='csak-rad-figyelek-kozos-jatekido' then 'erzelmi-biztonsag-es-kapcsolodas'
+                when a.slug='csaladi-fenykepek-nezegetese' then 'erzelmi-biztonsag-es-kapcsolodas'
+                when a.slug='kik-szeretnek-engem' then 'erzelmi-biztonsag-es-kapcsolodas'
+                when a.slug='esti-erzelmi-beszelgetes' then 'erzelmi-biztonsag-es-kapcsolodas' end where a.slug in ('erzelmes-babajatek','milyen-arcot-vagok-tukorjatek','erzelmek-parositasa','hogyan-erzi-magat-a-maci','erzelmes-allatkak','mutasd-meg-hogyan-orulsz','erzelmek-felismerese-mesekonyvekben','erzelmes-babozas','erzelemkerek','milyen-erzes-volt-a-mai-nap','mutasd-meg-mit-erzel','erzelmek-szinekkel','rajzoljuk-le-az-erzeseinket','erzelmes-tanc','vidam-es-szomoru-dallamok','meselj-a-plussodnek','erzelmes-hangutanzas','most-erre-van-szuksegem','olelest-kerek','erzelmi-postalada','ledolt-a-torony-epitsuk-ujra','probaljuk-meg-meg-egyszer','segitseget-kerek','a-macinak-sem-sikerul-mindig','nem-illik-a-helyere','keressunk-masik-megoldast','merges-vagyok-gyurmagyuras','merges-firkalas','most-nem-sikerult-kesobb-megprobaljuk','a-probalkozas-orome','felvaltva-epites','most-en-most-te','varjuk-meg-a-buborekokat','varakozas-homokoraval','zenelj-amikor-rad-kerul-a-sor','labdaguritas-felvaltva','mikor-bujik-elo-a-nyuszi','kozos-puzzle-kirakas','mikor-kerulok-sorra-boltos-jatek','keszul-a-finomsag-kozos-sutes','viragszagolas-es-gyertyafujas-jatekos-legzes','alszik-a-pluss-a-pocakomon','nyugalomkucko-kialakitasa','teknosbeka-jatek','olelos-pluss-kivalasztasa','lassan-uszo-halacskak','nyugtato-mondokak','puha-labda-szoritasa','nyugalomuveg-megfigyelese','megnyugvast-segito-kartyak','piros-lampa-zold-lampa','szoborjatek','tancolj-amig-szol-a-zene','alszik-es-felebred-a-maci','csak-akkor-indulj-ha-tapsolok','gyorsan-es-lassan','halk-es-hangos-dob','finom-kezek-plusssimogatas','varj-a-jelzesre','allj-meg-es-valassz','ma-masik-uton-megyunk','valtozik-a-jatekszabaly','a-maci-uj-helyen-alszik','maskepp-is-lehet-epiteni','valasszunk-masik-jatekot','meglepetesdoboz','felcserelt-szerepek','a-megszokottol-eltero-mese','eloszor-aztan-kartyak','bucsu-a-jatektol-atmeneti-ritualek','a-maci-fel-a-sotetben','baratsagos-arnyekok','ismerkedes-a-szokatlan-hangokkal','bator-nyuszi','orvosos-szerepjatek','felfedezes-anya-vagy-apa-kezet-fogva','uj-jatek-megismerese-lepesrol-lepesre','batorsagkavics','nezzuk-meg-egyutt','meseljunk-a-felelmekrol','nezd-meg-tudom-csinalni','mire-vagyok-buszke','az-en-ugyes-kezeim','mit-tudok-mar-egyedul','en-valasztok','en-vagyok-a-segito','tanitsuk-meg-a-macit','az-en-alkotasom','sikerelmenydoboz','ilyen-vagyok-en-sajat-kepes-konyv','szeretetoleles','kulonleges-kozos-kezfogas','bucsupuszi-es-visszateres','szeretetuzenetek','biztonsagot-ado-pluss','kozos-kuckoepites','csak-rad-figyelek-kozos-jatekido','csaladi-fenykepek-nezegetese','kik-szeretnek-engem','esti-erzelmi-beszelgetes') on conflict (activity_id,term_id) do nothing;

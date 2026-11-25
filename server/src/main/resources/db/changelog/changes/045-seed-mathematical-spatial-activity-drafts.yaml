@@ -1,0 +1,224 @@
+databaseChangeLog:
+  - changeSet:
+      id: 045-seed-mathematical-spatial-activity-drafts
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description) values ('ACTIVITY_TOPIC','Matematikai és térbeli alapkészségek','matematikai-es-terbeli-alapkepessegek',90,true,null,'A matematikai gondolkodás megalapozása már kisgyermekkorban elkezdődik. Nem a számok megtanulása az elsődleges cél, hanem a mennyiségek, formák, méretek, térbeli viszonyok és szabályszerűségek játékos megtapasztalása.') on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=null,default_description=excluded.default_description;
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description)
+              select 'ACTIVITY_TOPIC',v.name,v.slug,v.sort_order,true,root.id,v.description from (values
+                ('Mennyiségek és mennyiségi viszonyok','mennyisegek-es-mennyisegi-viszonyok',10,'Kevés, sok, több, kevesebb, ugyanannyi, üres és tele.'),
+                ('Számlálás és számfogalom','szamlalas-es-szamfogalom',20,'A számnevek, mennyiségek és számjegyek fokozatos összekapcsolása.'),
+                ('Formák és geometriai alakzatok','formak-es-geometriai-alakzatok',30,'Formafelismerés, formaazonosítás és geometriai tapasztalatszerzés.'),
+                ('Méretek és nagyságbeli viszonyok','meretek-es-nagysagbeli-viszonyok',40,'Kicsi, nagy, közepes, hosszú, rövid, magas, alacsony, széles és keskeny.'),
+                ('Soralkotás és mintázatok','soralkotas-es-mintazatok',50,'Ismétlődő minták felismerése, folytatása és önálló létrehozása.'),
+                ('Térbeli viszonyok','terbeli-viszonyok',60,'Alatt, fölött, mellett, előtt, mögött, között, benne és rajta.'),
+                ('Irányok és térbeli tájékozódás','iranyok-es-terbeli-tajekozodas',70,'Előre, hátra, fel, le és oldalra; később a jobb és bal irány felismerése.'),
+                ('Mérés és összehasonlítás','meres-es-osszehasonlitas',80,'Hosszúság, tömeg, magasság, űrtartalom és távolság játékos megtapasztalása.'),
+                ('Rész-egész viszonyok és térbeli konstrukció','resz-egesz-viszonyok-es-terbeli-konstrukcio',90,'Annak megértése, hogy kisebb részekből nagyobb egységek építhetők fel.'),
+                ('Csoportosítás és halmazalkotás','csoportositas-es-halmazalkotas',100,'Matematikai tulajdonságok szerinti válogatás, rendszerezés és több szempont együttes figyelembevétele.')) as v(name,slug,sort_order,description) cross join taxonomy_term root where root.term_type='ACTIVITY_TOPIC' and root.slug='matematikai-es-terbeli-alapkepessegek' on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=excluded.parent_id,default_description=excluded.default_description;
+              insert into activity(title,slug,status)
+              values
+                ('Etessük meg az állatokat!','etessuk-meg-az-allatokat','DRAFT'),
+                ('Melyik kosárban van több gyümölcs?','melyik-kosarban-van-tobb-gyumolcs','DRAFT'),
+                ('Üres vagy tele?','ures-vagy-tele','DRAFT'),
+                ('Minden babának jusson egy tányér!','minden-babanak-jusson-egy-tanyer','DRAFT'),
+                ('Osszuk szét az almákat!','osszuk-szet-az-almakat','DRAFT'),
+                ('Töltsük meg a poharakat!','toltsuk-meg-a-poharakat','DRAFT'),
+                ('Kevés vagy sok?','keves-vagy-sok','DRAFT'),
+                ('Legyen ugyanannyi!','legyen-ugyanannyi','DRAFT'),
+                ('Építsünk több kockából!','epitsunk-tobb-kockabol','DRAFT'),
+                ('Melyikből hiányzik?','melyikbol-hianyzik','DRAFT'),
+                ('Számoljuk meg az állatokat!','szamoljuk-meg-az-allatokat','DRAFT'),
+                ('Hány alma van a fán?','hany-alma-van-a-fan','DRAFT'),
+                ('Számkártyák párosítása mennyiségekkel','szamkartyak-parositasa-mennyisegekkel','DRAFT'),
+                ('Pöttyök a katicabogáron','pottyok-a-katicabogaron','DRAFT'),
+                ('Ugráljunk és számoljunk!','ugraljunk-es-szamoljunk','DRAFT'),
+                ('Számos parkoló','szamos-parkolo','DRAFT'),
+                ('Hány gomb van a kabáton?','hany-gomb-van-a-kabaton','DRAFT'),
+                ('Számvonat','szamvonat','DRAFT'),
+                ('Dobókockás gyűjtögetés','dobokockas-gyujtogetes','DRAFT'),
+                ('Számvadászat a lakásban','szamvadaszat-a-lakasban','DRAFT'),
+                ('Formaillesztő játék','formailleszto-jatek','DRAFT'),
+                ('Formavadászat a lakásban','formavadaszat-a-lakasban','DRAFT'),
+                ('Formák válogatása kosarakba','formak-valogatasa-kosarakba','DRAFT'),
+                ('Építsünk formákból képet!','epitsunk-formakbol-kepet','DRAFT'),
+                ('Formás sütemények gyurmából','formas-sutemenyek-gyurmabol','DRAFT'),
+                ('Formák tapintás alapján','formak-tapintas-alapjan','DRAFT'),
+                ('Keresd a forma párját!','keresd-a-forma-parjat','DRAFT'),
+                ('Formákból épített házikó','formakbol-epitett-haziko','DRAFT'),
+                ('Séta a formákon','seta-a-formakon','DRAFT'),
+                ('Formakirakó pálcikákból','formakirako-palcikakbol','DRAFT'),
+                ('Kicsi és nagy állatok párosítása','kicsi-es-nagy-allatok-parositasa','DRAFT'),
+                ('Macik méret szerinti sorba rendezése','macik-meret-szerinti-sorba-rendezese','DRAFT'),
+                ('Melyik cipő kinek a lábára illik?','melyik-cipo-kinek-a-labara-illik','DRAFT'),
+                ('Magas és alacsony tornyok','magas-es-alacsony-tornyok','DRAFT'),
+                ('Hosszú és rövid szalagok','hosszu-es-rovid-szalagok','DRAFT'),
+                ('Egymásba rakható poharak','egymasba-rakhato-poharak','DRAFT'),
+                ('Melyik dobozba fér bele?','melyik-dobozba-fer-bele','DRAFT'),
+                ('Kicsi, közepes és nagy halacskák','kicsi-kozepes-es-nagy-halacskak','DRAFT'),
+                ('Széles és keskeny utak','szeles-es-keskeny-utak','DRAFT'),
+                ('Öltöztessük fel a megfelelő méretű babát!','oltoztessuk-fel-a-megfelelo-meretu-babat','DRAFT'),
+                ('Színes gyöngysor','szines-gyongysor','DRAFT'),
+                ('Mintás vonat','mintas-vonat','DRAFT'),
+                ('Folytasd a gyümölcssort!','folytasd-a-gyumolcssort','DRAFT'),
+                ('Építőkockák váltakozó színekben','epitokockak-valtakozo-szinekben','DRAFT'),
+                ('Ruhák a szárítókötélen','ruhak-a-szaritokotelen','DRAFT'),
+                ('Tapsolj és dobbants!','tapsolj-es-dobbants','DRAFT'),
+                ('Állatok ismétlődő sorrendben','allatok-ismetlodo-sorrendben','DRAFT'),
+                ('Mintás hernyó','mintas-hernyo','DRAFT'),
+                ('Mi hiányzik a sorból?','mi-hianyzik-a-sorbol','DRAFT'),
+                ('Találj ki saját mintát!','talalj-ki-sajat-mintat','DRAFT'),
+                ('Hol bújik a nyuszi?','hol-bujik-a-nyuszi','DRAFT'),
+                ('Tedd a macit a dobozba!','tedd-a-macit-a-dobozba','DRAFT'),
+                ('Állatok a polcon','allatok-a-polcon','DRAFT'),
+                ('Parkolj a megfelelő helyre!','parkolj-a-megfelelo-helyre','DRAFT'),
+                ('Mi van az asztal alatt?','mi-van-az-asztal-alatt','DRAFT'),
+                ('Helyezd el a bútorokat a szobában!','helyezd-el-a-butorokat-a-szobaban','DRAFT'),
+                ('Madarak a fa ágain','madarak-a-fa-again','DRAFT'),
+                ('Kincskeresés térbeli utasításokkal','kincskereses-terbeli-utasitasokkal','DRAFT'),
+                ('Építs a mintakártya alapján!','epits-a-mintakartya-alapjan','DRAFT'),
+                ('Hol van a kisautó?','hol-van-a-kisauto','DRAFT'),
+                ('Kövesd a nyilakat!','kovesd-a-nyilakat','DRAFT'),
+                ('Vezesd haza a nyuszit!','vezesd-haza-a-nyuszit','DRAFT'),
+                ('Autós útvonalak','autos-utvonalak','DRAFT'),
+                ('Merre repül a madár?','merre-repul-a-madar','DRAFT'),
+                ('Lépj a megfelelő irányba!','lepj-a-megfelelo-iranyba','DRAFT'),
+                ('Egyszerű labirintusok','egyszeru-labirintusok','DRAFT'),
+                ('Iránykártyás mozgásjáték','iranykartyas-mozgasjatek','DRAFT'),
+                ('Kincskeresés térképpel','kincskereses-terkeppel','DRAFT'),
+                ('Robotirányító játék','robotiranyito-jatek','DRAFT'),
+                ('Útvonalépítés nyílkártyákból','utvonalepites-nyilkartyakbol','DRAFT'),
+                ('Melyik tárgy nehezebb?','melyik-targy-nehezebb','DRAFT'),
+                ('Mérjük meg az asztalt építőkockákkal!','merjuk-meg-az-asztalt-epitokockakkal','DRAFT'),
+                ('Melyik pohárba fér több víz?','melyik-poharba-fer-tobb-viz','DRAFT'),
+                ('Mérleges játék','merleges-jatek','DRAFT'),
+                ('Melyik autó gurul messzebbre?','melyik-auto-gurul-messzebbre','DRAFT'),
+                ('Mérjük meg a plüssállatokat!','merjuk-meg-a-plussallatokat','DRAFT'),
+                ('Hány lépés az ajtóig?','hany-lepes-az-ajtoig','DRAFT'),
+                ('Melyik torony magasabb?','melyik-torony-magasabb','DRAFT'),
+                ('Méricskélés a játékkonyhában','mericskeles-a-jatekkonyhaban','DRAFT'),
+                ('Melyik szalag ér körbe?','melyik-szalag-er-korbe','DRAFT'),
+                ('Félbevágott gyümölcsök párosítása','felbevagott-gyumolcsok-parositasa','DRAFT'),
+                ('Kétrészes állatos puzzle','ketreszes-allatos-puzzle','DRAFT'),
+                ('Építsünk házat!','epitsunk-hazat','DRAFT'),
+                ('Egészítsd ki a pillangót!','egeszitsd-ki-a-pillangot','DRAFT'),
+                ('Képkirakó geometriai formákból','kepkirako-geometriai-formakbol','DRAFT'),
+                ('Rakjuk össze az állatokat!','rakjuk-ossze-az-allatokat','DRAFT'),
+                ('Építés mintakártyák alapján','epites-mintakartyak-alapjan','DRAFT'),
+                ('Pizzaszeletek összeillesztése','pizzaszeletek-osszeillesztese','DRAFT'),
+                ('Egyszerű tangram','egyszeru-tangram','DRAFT'),
+                ('Tükörképes építés','tukorkepes-epites','DRAFT'),
+                ('Színes pomponok válogatása','szines-pomponok-valogatasa','DRAFT'),
+                ('Formák szerinti csoportosítás','formak-szerinti-csoportositas','DRAFT'),
+                ('Méret szerinti válogatás','meret-szerinti-valogatas','DRAFT'),
+                ('Szín és forma szerinti válogatás','szin-es-forma-szerinti-valogatas','DRAFT'),
+                ('Melyik nem illik a csoportba?','melyik-nem-illik-a-csoportba','DRAFT'),
+                ('Gombok rendszerezése','gombok-rendszerezese','DRAFT'),
+                ('Kicsi piros és nagy kék tárgyak','kicsi-piros-es-nagy-kek-targyak','DRAFT'),
+                ('Válogatás változó szabályok szerint','valogatas-valtozo-szabalyok-szerint','DRAFT'),
+                ('Két tulajdonságú keresőjáték','ket-tulajdonsagu-keresojatek','DRAFT'),
+                ('Saját válogatási szabály kitalálása','sajat-valogatasi-szabaly-kitalalasa','DRAFT') on conflict (slug) do nothing;
+              insert into activity_term(activity_id,term_id)
+              select a.id,t.id from activity a join taxonomy_term t on t.term_type='ACTIVITY_TOPIC' and t.slug=case
+                when a.slug='etessuk-meg-az-allatokat' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='melyik-kosarban-van-tobb-gyumolcs' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='ures-vagy-tele' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='minden-babanak-jusson-egy-tanyer' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='osszuk-szet-az-almakat' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='toltsuk-meg-a-poharakat' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='keves-vagy-sok' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='legyen-ugyanannyi' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='epitsunk-tobb-kockabol' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='melyikbol-hianyzik' then 'mennyisegek-es-mennyisegi-viszonyok'
+                when a.slug='szamoljuk-meg-az-allatokat' then 'szamlalas-es-szamfogalom'
+                when a.slug='hany-alma-van-a-fan' then 'szamlalas-es-szamfogalom'
+                when a.slug='szamkartyak-parositasa-mennyisegekkel' then 'szamlalas-es-szamfogalom'
+                when a.slug='pottyok-a-katicabogaron' then 'szamlalas-es-szamfogalom'
+                when a.slug='ugraljunk-es-szamoljunk' then 'szamlalas-es-szamfogalom'
+                when a.slug='szamos-parkolo' then 'szamlalas-es-szamfogalom'
+                when a.slug='hany-gomb-van-a-kabaton' then 'szamlalas-es-szamfogalom'
+                when a.slug='szamvonat' then 'szamlalas-es-szamfogalom'
+                when a.slug='dobokockas-gyujtogetes' then 'szamlalas-es-szamfogalom'
+                when a.slug='szamvadaszat-a-lakasban' then 'szamlalas-es-szamfogalom'
+                when a.slug='formailleszto-jatek' then 'formak-es-geometriai-alakzatok'
+                when a.slug='formavadaszat-a-lakasban' then 'formak-es-geometriai-alakzatok'
+                when a.slug='formak-valogatasa-kosarakba' then 'formak-es-geometriai-alakzatok'
+                when a.slug='epitsunk-formakbol-kepet' then 'formak-es-geometriai-alakzatok'
+                when a.slug='formas-sutemenyek-gyurmabol' then 'formak-es-geometriai-alakzatok'
+                when a.slug='formak-tapintas-alapjan' then 'formak-es-geometriai-alakzatok'
+                when a.slug='keresd-a-forma-parjat' then 'formak-es-geometriai-alakzatok'
+                when a.slug='formakbol-epitett-haziko' then 'formak-es-geometriai-alakzatok'
+                when a.slug='seta-a-formakon' then 'formak-es-geometriai-alakzatok'
+                when a.slug='formakirako-palcikakbol' then 'formak-es-geometriai-alakzatok'
+                when a.slug='kicsi-es-nagy-allatok-parositasa' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='macik-meret-szerinti-sorba-rendezese' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='melyik-cipo-kinek-a-labara-illik' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='magas-es-alacsony-tornyok' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='hosszu-es-rovid-szalagok' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='egymasba-rakhato-poharak' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='melyik-dobozba-fer-bele' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='kicsi-kozepes-es-nagy-halacskak' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='szeles-es-keskeny-utak' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='oltoztessuk-fel-a-megfelelo-meretu-babat' then 'meretek-es-nagysagbeli-viszonyok'
+                when a.slug='szines-gyongysor' then 'soralkotas-es-mintazatok'
+                when a.slug='mintas-vonat' then 'soralkotas-es-mintazatok'
+                when a.slug='folytasd-a-gyumolcssort' then 'soralkotas-es-mintazatok'
+                when a.slug='epitokockak-valtakozo-szinekben' then 'soralkotas-es-mintazatok'
+                when a.slug='ruhak-a-szaritokotelen' then 'soralkotas-es-mintazatok'
+                when a.slug='tapsolj-es-dobbants' then 'soralkotas-es-mintazatok'
+                when a.slug='allatok-ismetlodo-sorrendben' then 'soralkotas-es-mintazatok'
+                when a.slug='mintas-hernyo' then 'soralkotas-es-mintazatok'
+                when a.slug='mi-hianyzik-a-sorbol' then 'soralkotas-es-mintazatok'
+                when a.slug='talalj-ki-sajat-mintat' then 'soralkotas-es-mintazatok'
+                when a.slug='hol-bujik-a-nyuszi' then 'terbeli-viszonyok'
+                when a.slug='tedd-a-macit-a-dobozba' then 'terbeli-viszonyok'
+                when a.slug='allatok-a-polcon' then 'terbeli-viszonyok'
+                when a.slug='parkolj-a-megfelelo-helyre' then 'terbeli-viszonyok'
+                when a.slug='mi-van-az-asztal-alatt' then 'terbeli-viszonyok'
+                when a.slug='helyezd-el-a-butorokat-a-szobaban' then 'terbeli-viszonyok'
+                when a.slug='madarak-a-fa-again' then 'terbeli-viszonyok'
+                when a.slug='kincskereses-terbeli-utasitasokkal' then 'terbeli-viszonyok'
+                when a.slug='epits-a-mintakartya-alapjan' then 'terbeli-viszonyok'
+                when a.slug='hol-van-a-kisauto' then 'terbeli-viszonyok'
+                when a.slug='kovesd-a-nyilakat' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='vezesd-haza-a-nyuszit' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='autos-utvonalak' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='merre-repul-a-madar' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='lepj-a-megfelelo-iranyba' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='egyszeru-labirintusok' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='iranykartyas-mozgasjatek' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='kincskereses-terkeppel' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='robotiranyito-jatek' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='utvonalepites-nyilkartyakbol' then 'iranyok-es-terbeli-tajekozodas'
+                when a.slug='melyik-targy-nehezebb' then 'meres-es-osszehasonlitas'
+                when a.slug='merjuk-meg-az-asztalt-epitokockakkal' then 'meres-es-osszehasonlitas'
+                when a.slug='melyik-poharba-fer-tobb-viz' then 'meres-es-osszehasonlitas'
+                when a.slug='merleges-jatek' then 'meres-es-osszehasonlitas'
+                when a.slug='melyik-auto-gurul-messzebbre' then 'meres-es-osszehasonlitas'
+                when a.slug='merjuk-meg-a-plussallatokat' then 'meres-es-osszehasonlitas'
+                when a.slug='hany-lepes-az-ajtoig' then 'meres-es-osszehasonlitas'
+                when a.slug='melyik-torony-magasabb' then 'meres-es-osszehasonlitas'
+                when a.slug='mericskeles-a-jatekkonyhaban' then 'meres-es-osszehasonlitas'
+                when a.slug='melyik-szalag-er-korbe' then 'meres-es-osszehasonlitas'
+                when a.slug='felbevagott-gyumolcsok-parositasa' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='ketreszes-allatos-puzzle' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='epitsunk-hazat' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='egeszitsd-ki-a-pillangot' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='kepkirako-geometriai-formakbol' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='rakjuk-ossze-az-allatokat' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='epites-mintakartyak-alapjan' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='pizzaszeletek-osszeillesztese' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='egyszeru-tangram' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='tukorkepes-epites' then 'resz-egesz-viszonyok-es-terbeli-konstrukcio'
+                when a.slug='szines-pomponok-valogatasa' then 'csoportositas-es-halmazalkotas'
+                when a.slug='formak-szerinti-csoportositas' then 'csoportositas-es-halmazalkotas'
+                when a.slug='meret-szerinti-valogatas' then 'csoportositas-es-halmazalkotas'
+                when a.slug='szin-es-forma-szerinti-valogatas' then 'csoportositas-es-halmazalkotas'
+                when a.slug='melyik-nem-illik-a-csoportba' then 'csoportositas-es-halmazalkotas'
+                when a.slug='gombok-rendszerezese' then 'csoportositas-es-halmazalkotas'
+                when a.slug='kicsi-piros-es-nagy-kek-targyak' then 'csoportositas-es-halmazalkotas'
+                when a.slug='valogatas-valtozo-szabalyok-szerint' then 'csoportositas-es-halmazalkotas'
+                when a.slug='ket-tulajdonsagu-keresojatek' then 'csoportositas-es-halmazalkotas'
+                when a.slug='sajat-valogatasi-szabaly-kitalalasa' then 'csoportositas-es-halmazalkotas' end where a.slug in ('etessuk-meg-az-allatokat','melyik-kosarban-van-tobb-gyumolcs','ures-vagy-tele','minden-babanak-jusson-egy-tanyer','osszuk-szet-az-almakat','toltsuk-meg-a-poharakat','keves-vagy-sok','legyen-ugyanannyi','epitsunk-tobb-kockabol','melyikbol-hianyzik','szamoljuk-meg-az-allatokat','hany-alma-van-a-fan','szamkartyak-parositasa-mennyisegekkel','pottyok-a-katicabogaron','ugraljunk-es-szamoljunk','szamos-parkolo','hany-gomb-van-a-kabaton','szamvonat','dobokockas-gyujtogetes','szamvadaszat-a-lakasban','formailleszto-jatek','formavadaszat-a-lakasban','formak-valogatasa-kosarakba','epitsunk-formakbol-kepet','formas-sutemenyek-gyurmabol','formak-tapintas-alapjan','keresd-a-forma-parjat','formakbol-epitett-haziko','seta-a-formakon','formakirako-palcikakbol','kicsi-es-nagy-allatok-parositasa','macik-meret-szerinti-sorba-rendezese','melyik-cipo-kinek-a-labara-illik','magas-es-alacsony-tornyok','hosszu-es-rovid-szalagok','egymasba-rakhato-poharak','melyik-dobozba-fer-bele','kicsi-kozepes-es-nagy-halacskak','szeles-es-keskeny-utak','oltoztessuk-fel-a-megfelelo-meretu-babat','szines-gyongysor','mintas-vonat','folytasd-a-gyumolcssort','epitokockak-valtakozo-szinekben','ruhak-a-szaritokotelen','tapsolj-es-dobbants','allatok-ismetlodo-sorrendben','mintas-hernyo','mi-hianyzik-a-sorbol','talalj-ki-sajat-mintat','hol-bujik-a-nyuszi','tedd-a-macit-a-dobozba','allatok-a-polcon','parkolj-a-megfelelo-helyre','mi-van-az-asztal-alatt','helyezd-el-a-butorokat-a-szobaban','madarak-a-fa-again','kincskereses-terbeli-utasitasokkal','epits-a-mintakartya-alapjan','hol-van-a-kisauto','kovesd-a-nyilakat','vezesd-haza-a-nyuszit','autos-utvonalak','merre-repul-a-madar','lepj-a-megfelelo-iranyba','egyszeru-labirintusok','iranykartyas-mozgasjatek','kincskereses-terkeppel','robotiranyito-jatek','utvonalepites-nyilkartyakbol','melyik-targy-nehezebb','merjuk-meg-az-asztalt-epitokockakkal','melyik-poharba-fer-tobb-viz','merleges-jatek','melyik-auto-gurul-messzebbre','merjuk-meg-a-plussallatokat','hany-lepes-az-ajtoig','melyik-torony-magasabb','mericskeles-a-jatekkonyhaban','melyik-szalag-er-korbe','felbevagott-gyumolcsok-parositasa','ketreszes-allatos-puzzle','epitsunk-hazat','egeszitsd-ki-a-pillangot','kepkirako-geometriai-formakbol','rakjuk-ossze-az-allatokat','epites-mintakartyak-alapjan','pizzaszeletek-osszeillesztese','egyszeru-tangram','tukorkepes-epites','szines-pomponok-valogatasa','formak-szerinti-csoportositas','meret-szerinti-valogatas','szin-es-forma-szerinti-valogatas','melyik-nem-illik-a-csoportba','gombok-rendszerezese','kicsi-piros-es-nagy-kek-targyak','valogatas-valtozo-szabalyok-szerint','ket-tulajdonsagu-keresojatek','sajat-valogatasi-szabaly-kitalalasa') on conflict (activity_id,term_id) do nothing;

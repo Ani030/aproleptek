@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 034-separate-activity-taxonomy
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description,default_instructions)
+              select 'ACTIVITY_TOPIC',t.name,t.slug,t.sort_order,t.active,null,t.default_description,t.default_instructions
+              from taxonomy_term t
+              where t.term_type='TOPIC' and t.parent_id is null
+                and (exists(select 1 from activity_term at where at.term_id=t.id)
+                  or exists(select 1 from activity_term at join taxonomy_term child on child.id=at.term_id where child.parent_id=t.id))
+              on conflict (term_type,slug) do nothing;
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description,default_instructions)
+              select 'ACTIVITY_TOPIC',child.name,child.slug,child.sort_order,child.active,parent.id,child.default_description,child.default_instructions
+              from taxonomy_term child join taxonomy_term old_parent on old_parent.id=child.parent_id
+              join taxonomy_term parent on parent.term_type='ACTIVITY_TOPIC' and parent.slug=old_parent.slug
+              where child.term_type='TOPIC'
+              on conflict (term_type,slug) do nothing;
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,default_description,default_instructions)
+              select 'ACTIVITY_SKILL',name,slug,sort_order,active,default_description,default_instructions
+              from taxonomy_term where term_type='SKILL'
+              on conflict (term_type,slug) do nothing;
+              update activity_skill_description d set term_id=new.id
+              from taxonomy_term old join taxonomy_term new on new.term_type='ACTIVITY_SKILL' and new.slug=old.slug
+              where old.id=d.term_id and old.term_type='SKILL';
+              update activity_term at set term_id=new.id
+              from taxonomy_term old join taxonomy_term new on new.slug=old.slug
+                and ((old.term_type='TOPIC' and new.term_type='ACTIVITY_TOPIC') or (old.term_type='SKILL' and new.term_type='ACTIVITY_SKILL'))
+              where at.term_id=old.id;

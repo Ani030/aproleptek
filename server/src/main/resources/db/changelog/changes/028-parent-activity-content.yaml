@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: 028-parent-activity-content
+      author: codex
+      changes:
+        - addColumn:
+            tableName: taxonomy_term
+            columns:
+              - column: { name: parent_id, type: UUID, constraints: { foreignKeyName: fk_taxonomy_parent, references: taxonomy_term(id) } }
+        - addColumn:
+            tableName: activity
+            columns:
+              - column: { name: cover_asset_id, type: UUID, constraints: { foreignKeyName: fk_activity_cover, references: media_asset(id) } }
+              - column: { name: age_recommendation, type: VARCHAR(80) }
+              - column: { name: duration_min_minutes, type: INT }
+              - column: { name: duration_max_minutes, type: INT }
+              - column: { name: equipment_level, type: VARCHAR(20), defaultValue: MINIMAL, constraints: { nullable: false } }
+              - column: { name: playful_variant, type: TEXT }
+              - column: { name: parent_tip, type: TEXT }
+        - createTable:
+            tableName: activity_worksheet
+            columns:
+              - column: { name: activity_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_aw_activity, references: activity(id), deleteCascade: true } }
+              - column: { name: worksheet_id, type: UUID, constraints: { nullable: false, foreignKeyName: fk_aw_worksheet, references: worksheet(id) } }
+              - column: { name: relation_type, type: VARCHAR(20), defaultValue: OPTIONAL, constraints: { nullable: false } }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addPrimaryKey:
+            tableName: activity_worksheet
+            columnNames: activity_id, worksheet_id
+            constraintName: pk_activity_worksheet
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order)
+              values ('TOPIC','Nagymozgás és testtudat','nagymozgas-es-testtudat',5)
+              on conflict (term_type,slug) do nothing;
+              insert into taxonomy_term(term_type,name,slug,sort_order,parent_id)
+              select 'TOPIC','Egyensúlyfejlesztő játékok','egyensulyfejleszto-jatekok',10,id from taxonomy_term
+              where term_type='TOPIC' and slug='nagymozgas-es-testtudat'
+              on conflict (term_type,slug) do nothing;
+              insert into taxonomy_term(term_type,name,slug,sort_order)
+              values ('SKILL','Egyensúly','egyensuly',5),('SKILL','Mozgáskoordináció','mozgas-koordinacio',15),
+                     ('SKILL','Testtudat','testtudat',25),('SKILL','Figyelem','figyelem',35),
+                     ('SKILL','Mozgásos önbizalom','mozgasos-onbizalom',45)
+              on conflict (term_type,slug) do nothing;
+              update taxonomy_term set default_description=case slug
+                when 'egyensuly' then 'A gyermek a testhelyzete és mozgása közben gyakorolja az egyensúlya megtartását.'
+                when 'mozgas-koordinacio' then 'A gyermek összehangolja a testrészei és a teste mozgását.'
+                when 'testtudat' then 'A gyermek tapasztalatot szerez arról, hogyan helyezkedik el és mozog a teste a térben.'
+                when 'figyelem' then 'A gyermek a játék menetére és a kijelölt útvonal vagy feladat követésére figyel.'
+                when 'mozgasos-onbizalom' then 'A gyermek saját tempójában próbálkozik, és biztonságos sikerélményt szerez a mozgásban.'
+                else default_description end
+              where term_type='SKILL' and slug in ('egyensuly','mozgas-koordinacio','testtudat','figyelem','mozgasos-onbizalom');

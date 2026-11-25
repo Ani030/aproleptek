@@ -1,0 +1,224 @@
+databaseChangeLog:
+  - changeSet:
+      id: 040-seed-social-skills-activity-drafts
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description) values ('ACTIVITY_TOPIC','Szociális készségek','szocialis-keszsegek',60,true,null,'A szociális készségek fejlődése segíti a gyermeket a másokkal való kapcsolódásban, a közös játékban, az együttműködésben, az érzések és szükségletek megértésében, valamint a társas helyzetekben való eligazodásban. Az ötletek a közös figyelemtől és utánzástól a szerepjátékon át a konfliktusok békés rendezéséig kínálnak játékos lehetőségeket.') on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=null,default_description=excluded.default_description;
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id)
+              select 'ACTIVITY_TOPIC',v.name,v.slug,v.sort_order,true,root.id from (values
+                ('Közös figyelem és kapcsolódás','kozos-figyelem-es-kapcsolodas',10),
+                ('Utánzás és társas tanulás','utanzas-es-tarsas-tanulas',20),
+                ('Együttműködés és közös célok','egyuttmukodes-es-kozos-celok',30),
+                ('Felváltva játszás és várakozás','felvaltva-jatszas-es-varakozas',40),
+                ('Kapcsolatteremtés és társas kommunikáció','kapcsolatteremtes-es-tarsas-kommunikacio',50),
+                ('Empátia, gondoskodás és segítőkészség','empatia-gondoskodas-es-segitokeszseg',60),
+                ('Társas szabályok és közösségi viselkedés','tarsas-szabalyok-es-kozossegi-viselkedes',70),
+                ('Szerepjátékok és társas helyzetek','szerepjatekok-es-tarsas-helyzetek',80),
+                ('Konfliktuskezelés és önérvényesítés','konfliktuskezeles-es-onervenyesites',90),
+                ('Barátkozás, elfogadás és közösséghez tartozás','baratkozas-elfogadas-es-kozosseghez-tartozas',100)) as v(name,slug,sort_order) cross join taxonomy_term root where root.term_type='ACTIVITY_TOPIC' and root.slug='szocialis-keszsegek' on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=excluded.parent_id;
+              insert into activity(title,slug,status)
+              values
+                ('Nézd, mit találtam!','nezd-mit-talaltam','DRAFT'),
+                ('Keressük meg együtt!','keressuk-meg-egyutt','DRAFT'),
+                ('Mutasd meg nekem!','mutasd-meg-nekem','DRAFT'),
+                ('Közös képeskönyv-nézegetés','kozos-kepeskonyv-nezegetes','DRAFT'),
+                ('Bábok beszélgetése','babok-beszelgetese','DRAFT'),
+                ('Kukucs-játék','kukucs-jatek','DRAFT'),
+                ('Figyelj, mit hallok!','figyelj-mit-hallok','DRAFT'),
+                ('Közös buborékkergetés','kozos-buborekkergetes','DRAFT'),
+                ('Meglepetésdoboz','meglepetesdoboz','DRAFT'),
+                ('Közös felfedező séta','kozos-felfedezo-seta','DRAFT'),
+                ('Csináld utánam!','csinald-utanam','DRAFT'),
+                ('Tükörjáték','tukorjatek','DRAFT'),
+                ('Vicces arckifejezések','vicces-arckifejezesek','DRAFT'),
+                ('Utánozzuk az állatokat!','utanozzuk-az-allatokat','DRAFT'),
+                ('Tapsolj úgy, mint én!','tapsolj-ugy-mint-en','DRAFT'),
+                ('Közös tánc','kozos-tanc','DRAFT'),
+                ('Utánozzuk a mindennapi tevékenységeket!','utanozzuk-a-mindennapi-tevekenysegeket','DRAFT'),
+                ('Mozdulatról mozdulatra','mozdulatrol-mozdulatra','DRAFT'),
+                ('Mit csinál a bábu?','mit-csinal-a-babu','DRAFT'),
+                ('Kövesd a vezetőt!','kovesd-a-vezetot','DRAFT'),
+                ('Közös toronyépítés','kozos-toronyepites','DRAFT'),
+                ('Építsünk együtt vasutat!','epitsunk-egyutt-vasutat','DRAFT'),
+                ('Vigyük együtt a labdát!','vigyuk-egyutt-a-labdat','DRAFT'),
+                ('Közös puzzle','kozos-puzzle','DRAFT'),
+                ('Készítsünk együtt képet!','keszitsunk-egyutt-kepet','DRAFT'),
+                ('Építsünk kuckót!','epitsunk-kuckot','DRAFT'),
+                ('Közös akadálypálya','kozos-akadalypalya','DRAFT'),
+                ('Mentsük meg a plüssállatokat!','mentsuk-meg-a-plussallatokat','DRAFT'),
+                ('Közös kincskeresés','kozos-kincskereses','DRAFT'),
+                ('Készítsünk együtt uzsonnát!','keszitsunk-egyutt-uzsonnat','DRAFT'),
+                ('Labdagurítás oda-vissza','labdaguritas-oda-vissza','DRAFT'),
+                ('Én jövök, te jössz!','en-jovok-te-jossz','DRAFT'),
+                ('Felváltva építünk','felvaltva-epitunk','DRAFT'),
+                ('Felváltva etetjük a babát','felvaltva-etetjuk-a-babat','DRAFT'),
+                ('Közös autópálya','kozos-autopalya','DRAFT'),
+                ('Felváltva zenélünk','felvaltva-zenelunk','DRAFT'),
+                ('Húzzunk egy kártyát!','huzzunk-egy-kartyat','DRAFT'),
+                ('Egyet én, egyet te!','egyet-en-egyet-te','DRAFT'),
+                ('Egyszerű dobókockás játék','egyszeru-dobokockas-jatek','DRAFT'),
+                ('Felváltva pecsételünk','felvaltva-pecsetelunk','DRAFT'),
+                ('Köszönjünk a báboknak!','koszonjunk-a-baboknak','DRAFT'),
+                ('Ismerkedős játék','ismerkedos-jatek','DRAFT'),
+                ('Hívj meg játszani!','hivj-meg-jatszani','DRAFT'),
+                ('Kérhetek belőle?','kerhetek-belole','DRAFT'),
+                ('Segítséget kérek','segitseget-kerek','DRAFT'),
+                ('Köszönöm és szívesen','koszonom-es-szivesen','DRAFT'),
+                ('Telefonálós játék','telefonalos-jatek','DRAFT'),
+                ('Vendégségbe megyünk','vendegsegbe-megyunk','DRAFT'),
+                ('Bemutatkoznak a plüssök','bemutatkoznak-a-plussok','DRAFT'),
+                ('Beszélgetőkör','beszelgetokor','DRAFT'),
+                ('Vigasztaljuk meg a macit!','vigasztaljuk-meg-a-macit','DRAFT'),
+                ('Beteg a kisnyuszi','beteg-a-kisnyuszi','DRAFT'),
+                ('Segítsünk a babának!','segitsunk-a-babanak','DRAFT'),
+                ('Mitől lett szomorú?','mitol-lett-szomoru','DRAFT'),
+                ('Készítsünk ajándékot!','keszitsunk-ajandekot','DRAFT'),
+                ('Gondoskodjunk az állatokról!','gondoskodjunk-az-allatokrol','DRAFT'),
+                ('Mire van szüksége a másiknak?','mire-van-szuksege-a-masiknak','DRAFT'),
+                ('Hogyan segíthetnénk?','hogyan-segithetnenk','DRAFT'),
+                ('Kedvességdoboz','kedvessegdoboz','DRAFT'),
+                ('Örömszerző küldetés','oromszerzo-kuldetes','DRAFT'),
+                ('Sorban állnak a plüssök','sorban-allnak-a-plussok','DRAFT'),
+                ('Játszótéri szabályok','jatszoteri-szabalyok','DRAFT'),
+                ('Kopogjunk, mielőtt bemegyünk!','kopogjunk-mielott-bemegyunk','DRAFT'),
+                ('Közös játékszabályok','kozos-jatekszabalyok','DRAFT'),
+                ('Hallgassuk meg egymást!','hallgassuk-meg-egymast','DRAFT'),
+                ('Szabad vagy nem szabad?','szabad-vagy-nem-szabad','DRAFT'),
+                ('Vigyázzunk mások játékaira!','vigyazzunk-masok-jatekaira','DRAFT'),
+                ('Hogyan viselkedünk vendégségben?','hogyan-viselkedunk-vendegsegben','DRAFT'),
+                ('Csendes és hangos helyek','csendes-es-hangos-helyek','DRAFT'),
+                ('Közösségi helyzeteket ábrázoló kártyák','kozossegi-helyzeteket-abrazolo-kartyak','DRAFT'),
+                ('Boltos játék','boltos-jatek','DRAFT'),
+                ('Orvosos játék','orvosos-jatek','DRAFT'),
+                ('Éttermes játék','ettermes-jatek','DRAFT'),
+                ('Buszozunk','buszozunk','DRAFT'),
+                ('Születésnapi zsúr','szuletesnapi-zsur','DRAFT'),
+                ('Könyvtáros játék','konyvtaros-jatek','DRAFT'),
+                ('Fodrászos játék','fodraszos-jatek','DRAFT'),
+                ('Bábszínház','babszinhaz','DRAFT'),
+                ('Bölcsődéset és óvodásat játszunk','bolcsodeset-es-ovodasat-jatszunk','DRAFT'),
+                ('Postás játék','postas-jatek','DRAFT'),
+                ('Mindketten ugyanazt szeretnénk','mindketten-ugyanazt-szeretnenk','DRAFT'),
+                ('Hogyan kérjem el?','hogyan-kerjem-el','DRAFT'),
+                ('Mondhatok nemet!','mondhatok-nemet','DRAFT'),
+                ('Keressünk másik megoldást!','keressunk-masik-megoldast','DRAFT'),
+                ('Két bábu összeveszett','ket-babu-osszeveszett','DRAFT'),
+                ('Cseréljünk játékot!','csereljunk-jatekot','DRAFT'),
+                ('Mit tehetünk, ha valaki meglök?','mit-tehetunk-ha-valaki-meglok','DRAFT'),
+                ('Állj, ezt nem szeretném!','allj-ezt-nem-szeretnem','DRAFT'),
+                ('Hogyan hozhatjuk helyre?','hogyan-hozhatjuk-helyre','DRAFT'),
+                ('Oldjuk meg együtt!','oldjuk-meg-egyutt','DRAFT'),
+                ('Keressünk közös kedvenceket!','keressunk-kozos-kedvenceket','DRAFT'),
+                ('Barátságkarkötő készítése','baratsagkarkoto-keszitese','DRAFT'),
+                ('Miben hasonlítunk?','miben-hasonlitunk','DRAFT'),
+                ('Miben különbözünk?','miben-kulonbozunk','DRAFT'),
+                ('Mindenki bekapcsolódhat','mindenki-bekapcsolodhat','DRAFT'),
+                ('Közös barátságfa','kozos-baratsagfa','DRAFT'),
+                ('Játsszunk valaki más ötlete szerint!','jatsszunk-valaki-mas-otlete-szerint','DRAFT'),
+                ('Ismerjük meg egymás kedvenceit!','ismerjuk-meg-egymas-kedvenceit','DRAFT'),
+                ('Közös csapatküldetés','kozos-csapatkuldetes','DRAFT'),
+                ('A mi kis közösségünk','a-mi-kis-kozossegunk','DRAFT') on conflict (slug) do nothing;
+              insert into activity_term(activity_id,term_id)
+              select a.id,t.id from activity a join taxonomy_term t on t.term_type='ACTIVITY_TOPIC' and t.slug=case
+                when a.slug='nezd-mit-talaltam' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='keressuk-meg-egyutt' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='mutasd-meg-nekem' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='kozos-kepeskonyv-nezegetes' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='babok-beszelgetese' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='kukucs-jatek' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='figyelj-mit-hallok' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='kozos-buborekkergetes' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='meglepetesdoboz' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='kozos-felfedezo-seta' then 'kozos-figyelem-es-kapcsolodas'
+                when a.slug='csinald-utanam' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='tukorjatek' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='vicces-arckifejezesek' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='utanozzuk-az-allatokat' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='tapsolj-ugy-mint-en' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='kozos-tanc' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='utanozzuk-a-mindennapi-tevekenysegeket' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='mozdulatrol-mozdulatra' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='mit-csinal-a-babu' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='kovesd-a-vezetot' then 'utanzas-es-tarsas-tanulas'
+                when a.slug='kozos-toronyepites' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='epitsunk-egyutt-vasutat' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='vigyuk-egyutt-a-labdat' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='kozos-puzzle' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='keszitsunk-egyutt-kepet' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='epitsunk-kuckot' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='kozos-akadalypalya' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='mentsuk-meg-a-plussallatokat' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='kozos-kincskereses' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='keszitsunk-egyutt-uzsonnat' then 'egyuttmukodes-es-kozos-celok'
+                when a.slug='labdaguritas-oda-vissza' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='en-jovok-te-jossz' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='felvaltva-epitunk' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='felvaltva-etetjuk-a-babat' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='kozos-autopalya' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='felvaltva-zenelunk' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='huzzunk-egy-kartyat' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='egyet-en-egyet-te' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='egyszeru-dobokockas-jatek' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='felvaltva-pecsetelunk' then 'felvaltva-jatszas-es-varakozas'
+                when a.slug='koszonjunk-a-baboknak' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='ismerkedos-jatek' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='hivj-meg-jatszani' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='kerhetek-belole' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='segitseget-kerek' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='koszonom-es-szivesen' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='telefonalos-jatek' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='vendegsegbe-megyunk' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='bemutatkoznak-a-plussok' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='beszelgetokor' then 'kapcsolatteremtes-es-tarsas-kommunikacio'
+                when a.slug='vigasztaljuk-meg-a-macit' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='beteg-a-kisnyuszi' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='segitsunk-a-babanak' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='mitol-lett-szomoru' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='keszitsunk-ajandekot' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='gondoskodjunk-az-allatokrol' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='mire-van-szuksege-a-masiknak' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='hogyan-segithetnenk' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='kedvessegdoboz' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='oromszerzo-kuldetes' then 'empatia-gondoskodas-es-segitokeszseg'
+                when a.slug='sorban-allnak-a-plussok' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='jatszoteri-szabalyok' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='kopogjunk-mielott-bemegyunk' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='kozos-jatekszabalyok' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='hallgassuk-meg-egymast' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='szabad-vagy-nem-szabad' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='vigyazzunk-masok-jatekaira' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='hogyan-viselkedunk-vendegsegben' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='csendes-es-hangos-helyek' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='kozossegi-helyzeteket-abrazolo-kartyak' then 'tarsas-szabalyok-es-kozossegi-viselkedes'
+                when a.slug='boltos-jatek' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='orvosos-jatek' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='ettermes-jatek' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='buszozunk' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='szuletesnapi-zsur' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='konyvtaros-jatek' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='fodraszos-jatek' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='babszinhaz' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='bolcsodeset-es-ovodasat-jatszunk' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='postas-jatek' then 'szerepjatekok-es-tarsas-helyzetek'
+                when a.slug='mindketten-ugyanazt-szeretnenk' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='hogyan-kerjem-el' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='mondhatok-nemet' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='keressunk-masik-megoldast' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='ket-babu-osszeveszett' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='csereljunk-jatekot' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='mit-tehetunk-ha-valaki-meglok' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='allj-ezt-nem-szeretnem' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='hogyan-hozhatjuk-helyre' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='oldjuk-meg-egyutt' then 'konfliktuskezeles-es-onervenyesites'
+                when a.slug='keressunk-kozos-kedvenceket' then 'baratkozas-elfogadas-es-kozosseghez-tartozas'
+                when a.slug='baratsagkarkoto-keszitese' then 'baratkozas-elfogadas-es-kozosseghez-tartozas'
+                when a.slug='miben-hasonlitunk' then 'baratkozas-elfogadas-es-kozosseghez-tartozas'
+                when a.slug='miben-kulonbozunk' then 'baratkozas-elfogadas-es-kozosseghez-tartozas'
+                when a.slug='mindenki-bekapcsolodhat' then 'baratkozas-elfogadas-es-kozosseghez-tartozas'
+                when a.slug='kozos-baratsagfa' then 'baratkozas-elfogadas-es-kozosseghez-tartozas'
+                when a.slug='jatsszunk-valaki-mas-otlete-szerint' then 'baratkozas-elfogadas-es-kozosseghez-tartozas'
+                when a.slug='ismerjuk-meg-egymas-kedvenceit' then 'baratkozas-elfogadas-es-kozosseghez-tartozas'
+                when a.slug='kozos-csapatkuldetes' then 'baratkozas-elfogadas-es-kozosseghez-tartozas'
+                when a.slug='a-mi-kis-kozossegunk' then 'baratkozas-elfogadas-es-kozosseghez-tartozas' end where a.slug in ('nezd-mit-talaltam','keressuk-meg-egyutt','mutasd-meg-nekem','kozos-kepeskonyv-nezegetes','babok-beszelgetese','kukucs-jatek','figyelj-mit-hallok','kozos-buborekkergetes','meglepetesdoboz','kozos-felfedezo-seta','csinald-utanam','tukorjatek','vicces-arckifejezesek','utanozzuk-az-allatokat','tapsolj-ugy-mint-en','kozos-tanc','utanozzuk-a-mindennapi-tevekenysegeket','mozdulatrol-mozdulatra','mit-csinal-a-babu','kovesd-a-vezetot','kozos-toronyepites','epitsunk-egyutt-vasutat','vigyuk-egyutt-a-labdat','kozos-puzzle','keszitsunk-egyutt-kepet','epitsunk-kuckot','kozos-akadalypalya','mentsuk-meg-a-plussallatokat','kozos-kincskereses','keszitsunk-egyutt-uzsonnat','labdaguritas-oda-vissza','en-jovok-te-jossz','felvaltva-epitunk','felvaltva-etetjuk-a-babat','kozos-autopalya','felvaltva-zenelunk','huzzunk-egy-kartyat','egyet-en-egyet-te','egyszeru-dobokockas-jatek','felvaltva-pecsetelunk','koszonjunk-a-baboknak','ismerkedos-jatek','hivj-meg-jatszani','kerhetek-belole','segitseget-kerek','koszonom-es-szivesen','telefonalos-jatek','vendegsegbe-megyunk','bemutatkoznak-a-plussok','beszelgetokor','vigasztaljuk-meg-a-macit','beteg-a-kisnyuszi','segitsunk-a-babanak','mitol-lett-szomoru','keszitsunk-ajandekot','gondoskodjunk-az-allatokrol','mire-van-szuksege-a-masiknak','hogyan-segithetnenk','kedvessegdoboz','oromszerzo-kuldetes','sorban-allnak-a-plussok','jatszoteri-szabalyok','kopogjunk-mielott-bemegyunk','kozos-jatekszabalyok','hallgassuk-meg-egymast','szabad-vagy-nem-szabad','vigyazzunk-masok-jatekaira','hogyan-viselkedunk-vendegsegben','csendes-es-hangos-helyek','kozossegi-helyzeteket-abrazolo-kartyak','boltos-jatek','orvosos-jatek','ettermes-jatek','buszozunk','szuletesnapi-zsur','konyvtaros-jatek','fodraszos-jatek','babszinhaz','bolcsodeset-es-ovodasat-jatszunk','postas-jatek','mindketten-ugyanazt-szeretnenk','hogyan-kerjem-el','mondhatok-nemet','keressunk-masik-megoldast','ket-babu-osszeveszett','csereljunk-jatekot','mit-tehetunk-ha-valaki-meglok','allj-ezt-nem-szeretnem','hogyan-hozhatjuk-helyre','oldjuk-meg-egyutt','keressunk-kozos-kedvenceket','baratsagkarkoto-keszitese','miben-hasonlitunk','miben-kulonbozunk','mindenki-bekapcsolodhat','kozos-baratsagfa','jatsszunk-valaki-mas-otlete-szerint','ismerjuk-meg-egymas-kedvenceit','kozos-csapatkuldetes','a-mi-kis-kozossegunk') on conflict (activity_id,term_id) do nothing;

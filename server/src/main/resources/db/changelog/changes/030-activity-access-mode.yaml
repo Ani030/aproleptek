@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 030-activity-access-mode
+      author: codex
+      changes:
+        - addColumn:
+            tableName: activity
+            columns:
+              - column: { name: access_mode, type: VARCHAR(20), defaultValue: SUBSCRIPTION, constraints: { nullable: false } }

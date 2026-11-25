@@ -2,7 +2,7 @@
 
 ## 1. Dokumentum célja
 
-Ez a dokumentum az ApróLéptek adminisztrációs és szülői felületének, tartalmainak, hozzáférési és értékesítési modelljének célját, fő folyamatait és technikai alapjait rögzíti. Az admin felület a tartalmak kezelésére szolgál; a szülői felület egységes arculatú, publikált játékokat és összeállított fejlesztő játékcsomagokat mutat be. A későbbi üzleti modell havi előfizetést és külön megvásárolható, teljes játékcsomagokat is támogat. A feladatlap önmagában nem lesz nyilvános vásárlási termék: ha egy játékhoz szükséges vagy ahhoz tervezett, a játékcsomag részeként kap hozzáférést a vásárló.
+Ez a dokumentum az ApróLéptek adminisztrációs és szülőknek/nevelőknek szóló ingyenes tartalmi felületének célját, folyamatait és technikai alapjait rögzíti. Az admin felület a tartalmak szerkesztésére szolgál; a szülői felület a publikált fejlesztő játékokat mutatja be. Az első változatban nincs előfizetés, fizetés, vásárlási folyamat vagy szülői fiók. A kapcsolódó feladatlap a játék részeként jelenik meg, nem önálló ajánlatként.
 
 ## 2. Termékcél és alapelvek
 
@@ -16,28 +16,27 @@ Az induló rendszer tegye lehetővé, hogy az adminisztrátor:
 - önálló, feladatlaphoz nem kötött játékötleteket rögzítsen;
 - később feladatlapokból digitális vagy fizikai csomagokat állítson össze.
 
-### Értékesítési és hozzáférési alapelv
+### Az első változat tartalmi alapelvei
 
-- A szülő nem különálló feladatlapot vásárol: a feladatlap a hozzá tervezett játék vagy játékcsomag része, és annak hozzáférési szabályát követi.
-- Két ajánlati forma készülhet: aktív időszak alatt elérhető havi előfizetés, illetve külön megvásárolható, teljes játékcsomag.
-- A játékcsomag a szülő számára kerek, önállóan használható élményt ad. Tartalmazhat leírt játékot, a végrehajtásához szükséges feladatlapokat, nyomtatható segédleteket és opcionális fizikai terméket.
-- A kapcsolódó feladatlap lehet kötelező vagy kiegészítő. A kötelező elem a csomag hozzáférésével együtt érhető el; nem jelenhet meg külön megvásárolható ajánlatként.
-- Az admin belső pénzügyi nyilvántartásában meglévő önálló feladatlap-termékek és múltbeli eladások megmaradhatnak. Ez nem teszi őket a jövőbeli nyilvános webshopban önállóan megvásárolhatóvá.
-- A havi előfizetés az előfizetési időszak alatt ad hozzáférést az előfizetésbe sorolt tartalmakhoz. Az egyszer megvásárolt játékcsomagnál tervezési javaslat a tartós hozzáférés; ezt az értékesítés indítása előtt véglegesíteni kell. A végleges árak, próbaidő, lemondás és visszatérítés külön üzleti döntési kör.
+- A publikált fejlesztő játékok bejelentkezés nélkül olvashatók.
+- A játékhoz kapcsolódó feladatlap nem önálló nyilvános termék; a játék részleteinél, a játék használatát segítő anyagként jelenhet meg.
+- A kapcsolódó feladatlap kötelező vagy kiegészítő lehet.
+- Az admin belső pénzügyi nyilvántartása és korábbi eladásai ettől függetlenül működnek, azok a szülői oldalon nem jelennek meg.
+- Előfizetés, szülői fiók, vásárlás, játékcsomag-ajánlat és fizetési folyamat nincs az első fejlesztési körben. Csak külön későbbi döntés után kerülhet vissza a tervbe.
 
 Alapelvek:
 
 - A feladatlap tartalmi objektum; az eladható termék vagy csomag külön objektum.
 - A szülői oldalon megjelenő fejlesztő játék önálló tartalmi oldal, amelyhez nulla vagy több feladatlap kapcsolódhat. Ha a feladatlap szükséges, az a játék hozzáférésének része.
 - A címkék és korosztályok egységes, kezelhető listákból származzanak.
-- Az admin és a szülői felület ugyanazokra a publikált tartalmakra épül, de külön nézetet és szerveroldalon ellenőrzött jogosultságokat használ.
+- Az admin és a szülői felület ugyanazokra a publikált tartalmakra épül; a szülői felület csak a publikált játékokat listázza.
 - A tartalom ne ígérjen garantált fejlődési eredményt, és ne jelenjen meg diagnosztikai eszközként.
 
 ## 3. Felhasználók és jogosultságok
 
 ### Adminisztrátor
 
-Teljes hozzáférése van az adminfelülethez. Kezelheti a fejlesztő játékokat, feladatlapokat, képeket és fájlokat, kategóriákat, játékcsomagokat, előfizetéseket, felhasználókat és üzleti beállításokat. A tartalmakat piszkozatból ellenőrzésre, majd publikálásra állíthatja.
+Teljes hozzáférése van az adminfelülethez. Kezelheti a fejlesztő játékokat, feladatlapokat, képeket és fájlokat, kategóriákat, belső termékeket, készletet és pénzügyi nyilvántartást. A tartalmakat piszkozatból ellenőrzésre, majd publikálásra állíthatja. Szülői fiókokat és előfizetéseket az első változatban nem kezel.
 
 ### Szerkesztő – későbbi szerepkör
 
@@ -45,11 +44,11 @@ Tartalmat hozhat létre és módosíthat, de nem kezelhet szerepköröket, rends
 
 ### Szülő / nevelő – ügyfélfelület
 
-Bejelentkezés nélkül böngészheti a publikus bemutató tartalmakat. Fiókkal megtekintheti az előfizetéseit, a megvásárolt játékcsomagjait és az ezekhez tartozó feladatlapokat. A szülő és a kisgyermeknevelő kezdetben ugyanazt az ügyfélszerepkört használja; a szakmai szűrés külön felhasználói mód lehet később, ha valós igény igazolja.
+Bejelentkezés nélkül böngészheti a publikált fejlesztő játékokat és a hozzájuk kapcsolt, szabadon elérhető segédanyagokat. Az első változat nem tartalmaz szülői fiókot.
 
 ### Szülői előnézet – admin funkció
 
-Az admin a publikálás előtt ugyanazt a tartalmat előnézheti, ahogyan az a szülői felületen megjelenik. Az előnézetben tesztállapot választható: látogató, fiókos jogosultság nélkül, aktív előfizető vagy az adott játékcsomag tulajdonosa. Ezek csak szimulált megjelenítési állapotok; nem hoznak létre valódi vásárlást/előfizetést, nem adnak tényleges fájlhozzáférést, és nem kerülik meg a backend jogosultság-ellenőrzését.
+Az admin a publikálás előtt a szülői oldalon megjelenő játékoldalt előnézheti. A piszkozat előnézete nem publikálja a tartalmat.
 
 Minden védett backend műveletnél a szerver ellenőrizze a jogosultságot. A frontend útvonalak elrejtése önmagában nem jogosultságvédelem.
 
@@ -75,7 +74,6 @@ Adminisztráció
 │   ├── Fizikai játékok és bővíthető játékelemek
 │   └── Játékcsomagok (játék + kapcsolódó anyagok)
 ├── Pénzügy és önköltség
-│   ├── Játékcsomag-ajánlatok és hozzáférési módjuk
 │   ├── Eladások (több termék egy megállapodott végösszeggel)
 │   └── Bevétel, kiadás és népszerűség áttekintő
 ├── Kategóriák és címkék
@@ -83,7 +81,7 @@ Adminisztráció
 │   ├── Feladattípusok
 │   ├── Témakörök (külön: Állatok, Természet, stb.)
 │   └── Készségterületek
-└── Fiók / kijelentkezés
+└── Admin fiók / kijelentkezés
 ```
 
 ### Szülői / ügyfélfelület
@@ -92,22 +90,18 @@ Adminisztráció
 Főoldal
 ├── Játékok böngészése
 │   ├── Nagymozgás és testtudat
-│   │   └── Egyensúlyfejlesztő játékok
+│   │   └── Egyensúly és stabil járás
 │   └── további fejlesztési témák
 ├── Játék részletes oldala
 │   ├── kor, játékidő, helyszín, eszközigény
 │   ├── játékmenet, változatok és biztonság
 │   └── a játékhoz tartozó feladatlapok
-├── Előfizetés / teljes játékcsomagok
-├── Fiókom
-│   ├── előfizetésem
-│   └── megvásárolt játékcsomagjaim
 └── Segítség / kapcsolat
 ```
 
-Feladatlapnak nincs külön nyilvános katalógus- vagy vásárlási oldala. A szülő egy játék részletei vagy a saját hozzáférése felől nyitja meg; a játékhoz tartozó hozzáférési feltétel vonatkozik rá.
+Feladatlapnak nincs külön nyilvános katalógusoldala. A kapcsolódó játék részletei között, annak használatát segítő anyagként jelenik meg.
 
-A játék nyilvános előnézete megmutathatja a címet, borítóképet, rövid leírást, korosztályt, időtartamot, helyszínt, eszközigényt, fejlesztési területeket és hozzáférési lehetőségeket. A teljes játékmenet és a hozzá tartozó nyomtatható fájlok lehetnek szabadon elérhetők, előfizetéshez kötöttek vagy játékcsomag részei; ezt tartalmonként kell beállítani. A kötelező feladatlap hozzáférése mindig az őt tartalmazó játék/ajánlat hozzáférését követi.
+A nyilvános játékoldal a címet, borítóképet, ajánlót, korosztályt, időtartamot, helyszínt, eszközigényt, fejlesztési területeket és teljes játékmenetet mutatja. Minden publikált játék és kapcsolódó segédanyaga szabadon elérhető.
 
 ## 5. Fő felhasználói folyamatok
 
@@ -123,22 +117,22 @@ A játék nyilvános előnézete megmutathatja a címet, borítóképet, rövid 
 
 ### Fejlesztő játékoldal létrehozása
 
-1. Az admin kiválasztja a témakört és alcsoportot, például „Nagymozgás és testtudat → Egyensúlyfejlesztő játékok”.
+1. Az admin kiválasztja a témakört és alcsoportot, például „Nagymozgás és testtudat → Egyensúly és stabil járás”.
 2. Megadja a címet, egységes borítóképet, rövid bevezetőt, ajánlott kort, játékidőt, helyszínt és eszközigényt.
 3. Kitölti a fejlesztési területeket, a szükséges eszközöket, a lépésenkénti játékmenetet, a könnyítéseket, nehezítéseket, játékos változatot, biztonsági részt és szülői/nevelői tippet.
 4. Opcionálisan kapcsol hozzá feladatlapokat, mindegyiknél jelezve, hogy szükséges vagy kiegészítő.
-5. A szülői előnézetben ellenőrzi a kártyát és a részletes oldalt látogatóként, előfizetőként és játékcsomag-tulajdonosként, majd publikálja.
+5. A szülői előnézetben ellenőrzi a kártyát és a részletes oldalt, majd publikálja.
 
-### Csomag összeállítása – kezdetben tervezési funkció
+### Játékcsomag összeállítása – későbbre halasztva
 
 1. Az admin teljes játékélményt tartalmazó játékcsomagot hoz létre, saját címmel, leírással és egységes borítóképpel.
 2. A csomaghoz fejlesztő játékokat és az azokhoz szükséges vagy kiegészítő feladatlapokat/segédanyagokat kapcsol.
 3. Ellenőrzi a szülői előnézetben, hogy a csomag önmagában érthető és használható-e.
-4. Az ajánlat hozzáférési módja lehet előfizetés vagy külön megvásárolható játékcsomag; a feladatlap nem kap önálló vásárlási ajánlatot.
+4. A kereskedelmi ajánlat és annak hozzáférése csak későbbi üzleti döntés után kerül tervezésbe.
 
 ### Eladható termék és eladás rögzítése – saját értékesítés MVP
 
-Ez a folyamat az admin belső, kézi értékesítési és önköltség-nyilvántartása. Nem jelenti azt, hogy a nyilvános boltban minden katalógustartalom külön megvásárolható. A nyilvános értékesítési szabályokat az előfizetéses/játékcsomagos modell határozza meg; feladatlap önmagában ott nem lehet termék.
+Ez a folyamat az admin belső, kézi értékesítési és önköltség-nyilvántartása. Elkülönül az ingyenes szülői katalógustól, és a korábbi admin eladásokat kezeli.
 
 1. Bármely katalógustartalomhoz eladható termékváltozat hozható létre, például digitális vagy fizikai kivitelben. A tartalom típusa nem változtatja meg az eladási folyamatot.
 2. A termékváltozathoz egyszer megadható a listaár és az egy példányra jutó anyagköltség. Fizikai változatnál a rendszer az adminban beállított nyomtatott oldalankénti tintaköltséget is hozzáadja; termékenként választható az egy- vagy kétoldalas nyomtatás, az oldalszámból pedig automatikusan számolódik a lapköltség.
@@ -162,7 +156,7 @@ A katalógustartalom, az eladható termék, a termékváltozat és az eladási s
 - **Termékváltozat:** az eladható kivitel, például digitális fájl, nyomtatott kártyacsomag vagy laminált feladatlap. Ehhez tartozik az ár, gyártási recept, nyomtatási beállítás és készlet.
 - **Eladás:** egy vagy több termékváltozatból álló tranzakció, amely a korábban rögzített ár- és költségpillanatképeket használja.
 
-Ez a belső admin pénzügyi és készletfogalma; a jövőbeli nyilvános bolt ajánlata ettől külön hozzáférési modellt használ. A nyilvános boltban fejlesztő játék vagy teljes játékcsomag értékesíthető. Feladatlap önálló nyilvános SKU-t és vásárlási gombot nem kap; a megvásárolt/előfizetett játék által igényelt lap az ajánlat része.
+Ez a belső admin pénzügyi és készletfogalma. Elkülönül a jelenlegi, ingyenesen böngészhető nyilvános tartalmi katalógustól. Feladatlap önálló nyilvános SKU-t és vásárlási gombot nem kap; a játékhoz kapcsolódó feladatlap a játék használatát segítő anyagként jelenik meg.
 
 Az adatmodell javasolt alapja egy közös `catalog_item` rekord stabil azonosítóval, címmel, státusszal, borító/előnézeti médiával és típusazonosítóval. A `catalog_type` bővíthető törzsadatként sorolja fel a típusokat; új tartalomtípushoz nem kell enumot vagy eladási táblát módosítani. A típus saját adatai külön, a `catalog_item.id`-hez kapcsolódó részlettáblákban legyenek. A közös médiakapcsolatok és tartalomkapcsolatok ne kerüljenek típusonként duplikálásra.
 
@@ -255,22 +249,21 @@ Mezők és a szülői oldalon megjelenő sorrendjük:
 8. Biztonsági tudnivalók és szülőknek/nevelőknek szóló tipp.
 9. Kapcsolódó feladatlapok, ha vannak; jelezni kell, hogy a játékhoz szükségesek-e vagy csak kiegészítők.
 
-Az áttekintő kártya és a részletes oldal ugyanazt a borítóképet és arculati elemeket használja. Az áttekintőn a cím, rövid leírás, életkor, időtartam, fejlesztési területek és hozzáférés (előfizetés része / külön játékcsomag) legyen gyorsan áttekinthető.
+Az áttekintő kártya és a részletes oldal ugyanazt a borítóképet és arculati elemeket használja. Az áttekintőn a cím, rövid leírás, életkor, időtartam és fejlesztési területek legyenek gyorsan áttekinthetők.
 
-### Csomag
+**Megvalósítási állapot (2026-11):** Az admin meglévő játékötlet-adatlapja a szülőknek szóló fejlesztő játékok adatlapjává bővült. A 028-as Liquibase-migráció hozzáadta a borítóképet, az ajánlott életkort, a játékidő alsó/felső határát, az eszközigény szintjét, a játékos történetet és a szülői/nevelői tippet; bevezette a témakörök szülő–alcsoport kapcsolatát és az első nagymozgásos kategóriákat; valamint kötelező/kiegészítő típussal összeköthetővé tette a játékokat a feladatlapokkal. Az öt induló fejlesztési területhez közérthető rövid leírás került. A 029-es migráció az admin adatlapban szerkeszthető „Sétálj a vonalon!” mintajátékot piszkozatként betölti. Elkészült a `/szulok` ingyenesen böngészhető katalógus és a reszponzív játékoldal. A publikus API kizárólag publikált játékokat ad vissza, teljes leírással. A borítókép még feltöltendő. Előfizetés, vásárlás, szülői fiók és jogosultságkezelés egyelőre nincs a fejlesztési körben. A korábban hozzáadott 030-as hozzáférési adatbázismező és szimulált hozzáférés-választó nem része az aktuális felhasználói folyamatnak.
 
-A nyilvánosan megvásárolható **játékcsomag** kerek, teljes élményt adó ajánlat, nem önálló feladatlap. Tartalmazhat egy vagy több fejlesztő játékot, a hozzájuk szükséges feladatlapokat, nyomtatható segédleteket, kártyákat és opcionálisan fizikai terméket. A csomag feladatlap-kapcsolata lehet kötelező vagy kiegészítő. A feladatlap a csomag részeként kap hozzáférést, nem külön termékként.
+### Későbbre halasztva: játékcsomag-ajánlat
 
-Mezők: cím, slug, leírás, egységes borítókép, csomagba rendezett játékok és erőforrások, kötelező/kiegészítő kapcsolatok, hozzáférés típusa, ár, státusz és teljesítési adatok. A jelenlegi admin „Csomagterv” feladatait úgy kell továbbfejleszteni, hogy ne csak feladatlapokból álló ajánlatot tudjon létrehozni, hanem teljes játékélményt összeállítani. A már rögzített csomagokat és belső pénzügyi adatokat migráció nélkül meg kell őrizni.
+**Későbbi lehetőség, most nem része a fejlesztésnek:** a játékcsomag kerek, teljes élményt adó összeállítás lehet, nem önálló feladatlap. Tartalmazhat fejlesztő játékokat, a hozzájuk szükséges feladatlapokat, nyomtatható segédleteket, kártyákat és opcionálisan fizikai terméket. Jelenleg nincs nyilvános csomagajánlat, ár vagy vásárlási folyamat.
 
-### Előfizetés és hozzáférési jogosultság
+Egy későbbi tervezési körben vizsgálható mezők: cím, leírás, borítókép, csomagba rendezett játékok és segédanyagok. Hozzáférési típus, ár, vásárlás és teljesítés most nincs tervezve. A belső admin „Csomagterv” és a történeti pénzügyi adatok ettől függetlenek.
 
-- Az előfizetés a meghatározott játékkönyvtárhoz ad hozzáférést az aktív időszakban.
-- Az egyszer megvásárolt játékcsomag hozzáférést ad az adott csomaghoz és annak kötelező feladatlapjaihoz; a tartós hozzáférés a javasolt, de még jóváhagyandó alapértelmezés.
-- Tartalmonként beállítható, hogy csak előnézet publikus, teljes leírás ingyenes, előfizetéses vagy egy külön játékcsomag része.
-- Az ügyfélfiókban külön jelenjen meg az előfizetés állapota és a külön megvásárolt játékcsomagok listája.
-- Az adatmodell különítse el a katalógustartalmat, a nyilvános ajánlatot/árat, a vásárlást, az előfizetést és a hozzáférési jogosultságot (entitlement). A jogosultságot mindig a szerver ellenőrizze a fájlok és tartalmak kiszolgálásakor.
-- A fizetési szolgáltató kiválasztása, számlázás, adózás, lemondás, visszatérítés, próbaidő és az előfizetésben szereplő tartalmak szabálya a fizetési integráció előtt külön döntési pont.
+### Kereskedelmi funkciók: határozatlan időre elhalasztva
+
+- A jelenlegi szülői oldal minden publikált játékot teljes tartalommal, ingyenesen mutat be.
+- Szülői fiók, előfizetés, egyszeri digitális vásárlás, fizetési szolgáltató, számlázás és hozzáférési jogosultság nincs a mostani hatókörben.
+- Ezeket csak külön termékdöntés után tervezzük újra; jelenleg sem admin-beállítás, sem szülői felületi ígéret nem épülhet rájuk.
 
 ### Kategóriák és címkék
 
@@ -284,13 +277,13 @@ Kezdeti taxonómiák:
 - készségterület: finommotorika, nagymozgás, kommunikáció, érzékelés, gondolkodás, kreativitás, társas-érzelmi kapcsolódás;
 - formátum és használat: A4, digitális, fizikai, beltéri/kültéri.
 
-A feladattípus azt írja le, mit csinál a gyermek a lapon; a témakör azt, miről szól; a készségterület pedig azt, milyen képesség gyakorlását támogathatja. Ezek ne helyettesítsék egymást. Az „Állatok és természet” összevont címkét ne használjuk új tartalmakhoz: a két nagy témakör külön-külön legyen kereshető és szűrhető, és egy lap mindkettőhöz hozzárendelhető legyen. A nyilvános játékböngészőben a témakörök legalább egy szülő–alcsoport szintig rendezhetők. Induló ág: **Nagymozgás és testtudat → Egyensúlyfejlesztő játékok**. Az admin később további alcsoportokat is felvehet.
+A feladattípus azt írja le, mit csinál a gyermek a lapon; a témakör azt, miről szól; a készségterület pedig azt, milyen képesség gyakorlását támogathatja. Ezek ne helyettesítsék egymást. Az „Állatok és természet” összevont címkét ne használjuk új tartalmakhoz: a két nagy témakör külön-külön legyen kereshető és szűrhető, és egy lap mindkettőhöz hozzárendelhető legyen. A nyilvános játékböngészőben a témakörök legalább egy szülő–alcsoport szintig rendezhetők. Induló ág: **Nagymozgás és testtudat → Egyensúly és stabil járás**. Az admin később további alcsoportokat is felvehet.
 
 A fejlesztő játékok ajánlott életkora lehet nyitott korhatárú, például „18 hónaptól”; ezért a kötött korosztály címkéken túl az oldalon pontos, közérthető ajánlásnak is meg kell jelennie. Az induló készségterületek között szerepeljen az egyensúly, mozgáskoordináció, testtudat, figyelem és mozgásos önbizalom. A készségcímkéhez rövid magyarázó szöveg kapcsolható, hogy a szülő ne csak szakkifejezést lásson.
 
-A kategóriákat adminból lehessen kezelni, de ne legyen szabadon gépelhető címkékből sok, egymással átfedő változat. A korábbi összevont címke kivezetésekor a meglévő kapcsolatok ne vesszenek el: az érintett tartalmakat külön állatok és/vagy természet címkékre kell átállítani, majd az összevont érték inaktiválható.
+A kategóriákat adminból lehessen kezelni, de ne legyen szabadon gépelhető címkékből sok, egymással átfedő változat. A feladatlapok témakörei és készségcímkéi külön taxonómiát alkotnak a fejlesztő játékok fő területeitől, altípusaitól és készségterületeitől. A játéktartalom admin gyűjteménye fő terület → altípus szerkezetben, lenyitható csoportokkal és keresővel jelenik meg. A nyilvános katalógus az aktív kategóriafát a tartalom feltöltöttségétől függetlenül mutatja; a játékok cím, ajánló és kategória alapján kereshetők.
 
-Technikai reprezentációként a közös `taxonomy_term` táblában külön `term_type` érték jelölje az `AGE`, `TASK_TYPE`, `TOPIC` és `SKILL` csoportokat. A feladatlapok és a játékötletek a megfelelő kapcsolótáblán keresztül több korosztályt, témát és készségterületet kaphatnak; a `TASK_TYPE` kizárólag feladatlaphoz rendelhető. Az API ezt szerveroldalon is validálja. Új `TASK_TYPE` csoportot Liquibase migrációval kell bevezetni; a felület ne mossa össze a külön csoportok értékeit.
+Technikai reprezentációként a közös `taxonomy_term` táblában a feladatlapok az `AGE`, `TASK_TYPE`, `TOPIC`, `SKILL`, a fejlesztő játékok pedig az `ACTIVITY_TOPIC` és `ACTIVITY_SKILL` típusokat használják. A játék témakörök ugyanúgy legfelső szintű fő területekből és közvetlen altípusokból állnak; a szülő és gyermek mindig azonos taxonómiatípusú. A 034-es migráció külön játék-kategóriákat készít a meglévő játékcímkékből, és az aktivitáskapcsolatokat átvezeti úgy, hogy a feladatlapokon használt régi címkék és kapcsolataik megmaradjanak. A 035-ös migráció a Finommotorika 10 alkategóriáját és 100 piszkozat játékötletét tölti fel, 18–36 hónapos célkorosztály-jelöléssel. A 036-os migráció az Érzékelés és észlelés 10 altípusát, további 100 piszkozat játékot és a 18 hónapos–6 éves korosztály-jelölést adja hozzá; a propriocepció és a vesztibuláris érzékelés kategórialeírása szerkeszthető és a szülői katalógusban megjeleníthető. A 038-as migráció a Gondolkodás és kognitív fejlődés 10 altípusát és 100 altípus-kapcsolatát, életkori ajánlással tölti fel; a 039-es a Figyelem, emlékezet és végrehajtó működések 10 altípusát és 100 játékötletét adja hozzá. A 040-es migráció a Szociális készségek 10 altípusát és 100 játékötletét veszi fel; ezek életkora nincs előre meghatározva. A 041-es migráció az Érzelmi fejlődés és önszabályozás 10 altípusát és 100 játékötletét hozza létre 18–36 hónapos korosztály-jelöléssel. A 043-as migráció az Önállóság és mindennapi életvezetés kezdeti 8 altípusát és 80 játékötletét, a 044-es pedig további 2 altípusát és 20 játékötletét rögzíti, életkori besorolás nélkül; a biztonsági ötletek leírása kizárja valódi veszélyes tárgyak használatát. A 045-ös migráció Matematikai és térbeli alapkészségek címmel 10 alkategóriát és 100 játékötletet, valamint szerkeszthető fő- és alkategória-leírásokat ad hozzá, életkori besorolás nélkül. A 046-os migráció a Kreativitás, képzelet és művészeti nevelés 8 alkategóriáját és 80 játékötletét rögzíti a megadott korosztályokkal. A 047-es migráció a Környezeti tapasztalatszerzés és felfedezés 10 alkategóriáját és 100 játékötletét tölti fel 18 hónapos–6 éves korosztály-jelöléssel, a veszélyfelismerési játékok biztonságos feldolgozására vonatkozó szerkeszthető leírással. A fő területek és – ahol rendelkezésre áll – az altípusok leírása a szülői nézetben külön lenyitható. A fejlesztőjáték-admin kezdetben csak azonosítókat, címeket, státuszokat és kategóriakapcsolatokat tölt le, a teljes játékadatokat pedig csak a lenyitott fő kategóriához kéri be. Az API szerveroldalon tiltja a két taxonómia összekeverését.
 
 ## 7. Keresés és szűrés
 
@@ -378,7 +371,7 @@ Munkára optimalizált, letisztult kezelőfelület: oldalsó navigáció, keresh
 
 ### Nyilvános márkafelület
 
-Természetközeli, meleg tónusok, visszafogott illusztrációk, olvasható magyar tipográfia, mobilközpontú kártyák. A szülői oldal a játékokat és teljes játékcsomagokat teszi felfedezhetővé. A feladatlapok csak az őket tartalmazó játék hozzáférésén keresztül nyithatók meg. Az admin és az ügyfélfelület külön alkalmazásnézet, közös publikált tartalommal és szerveroldali, szerepkör szerint védett API-val. Az adminnak külön „Megtekintés szülőként” előnézete van.
+Természetközeli, meleg tónusok, visszafogott illusztrációk, olvasható magyar tipográfia, mobilközpontú kártyák. A szülői oldal a szabadon elérhető fejlesztő játékokat teszi felfedezhetővé. A kapcsolódó feladatlap a játék használatát segítő anyag. Az admin és a nyilvános felület külön nézet, közös publikált tartalommal. Az adminnak külön „Megtekintés szülőként” előnézete van.
 
 ### SEO
 
@@ -416,20 +409,17 @@ Vite-os adminfelületnél a SPA megfelelő. A későbbi nyilvános, keresőforga
 - gyermekprofil, kedvencek és személyre szabott ajánló;
 - teljes nyilvános marketingoldal és vásárlói fiókrendszer.
 
-Az admin MVP változatlanul külön, fizetés nélküli belső kezelőfelület. A nyilvános előfizetéses és játékcsomag-értékesítési cél viszont már rögzített termékirány, és a következő tervezési/fejlesztési fázis tárgya.
+Az admin külön belső kezelőfelület. A jelenlegi nyilvános oldal ingyenes tartalmi katalógus. Bármilyen kereskedelmi modell külön későbbi döntést és újratervezést igényel.
 
 ## 12. Későbbi bővítési fázisok
 
 1. **Játékoldal tartalmi modellje:** borítókép, ajánlott életkor, játékidő, helyszín, eszközigény, fejlesztési területek, játékmenet, variációk, biztonság és szülői tippek.
-2. **Játék–feladatlap kapcsolat:** kötelező és kiegészítő lapok kapcsolása; nyilvános hozzáférés és letöltés mindig a játék/játékcsomag jogosultságát követi.
-3. **Kategóriák és induló tartalom:** Nagymozgás és testtudat → Egyensúlyfejlesztő játékok; „Sétálj a vonalon!” szülői oldali előnézetének elkészítése.
-4. **Szülői felület és szerepkörök:** publikus böngészés, ügyfélfiók, admin szerkesztő és „Megtekintés szülőként” előnézet, külön backend jogosultságokkal.
-5. **Játékcsomag-ajánlat:** egy vagy több játék teljes, megvásárolható összeállítása a hozzá szükséges feladatlapokkal és segédanyagokkal; feladatlap önmagában nem kerül a nyilvános boltba.
-6. **Hozzáférési jogosultságok:** előfizetéses tartalom és egyszer megvásárolt csomag, külön vásárlás/előfizetés/jogosultság adatmodellel.
-7. **Fizetési és előfizetési integráció:** szolgáltató, számlázás, adózás, lemondás, visszatérítés és hozzáférési időszakok döntése, majd megvalósítása.
-8. **Védett tartalomkiszolgálás:** a feladatlapok és digitális segédanyagok letöltésének entitlement-ellenőrzése.
-9. **SEO és kiadás:** publikus oldalak előrenderelése vagy SSR-je, mobilos, hozzáférhetőségi és keresőoptimalizálási ellenőrzéssel.
-10. **További személyes funkciók:** kedvencek, játéknaptár, ajánló, heti terv és szakember/óvoda funkciók valós felhasználói igény alapján.
+2. **Játék–feladatlap kapcsolat:** kötelező és kiegészítő lapok kapcsolása; a publikus játékoldalon a kapcsolódó segédanyagok jelennek meg.
+3. **Kategóriák és induló tartalom:** Nagymozgás és testtudat → Egyensúly és stabil járás; „Sétálj a vonalon!” szülői oldali előnézetének elkészítése.
+4. **Szülői felület:** ingyenes, bejelentkezés nélküli böngészés és admin „Megtekintés szülőként” előnézet.
+5. **Tartalmi minőség és kiadás:** mobilos, hozzáférhetőségi és keresőoptimalizálási ellenőrzés.
+
+Az ügyfélfiók, játékcsomag-ajánlat, vásárlás, előfizetés és fizetési integráció nincs ütemezve; ezekhez külön új termékdöntés és terv szükséges.
 
 ## 13. Biztonság, adatvédelem és minőség
 

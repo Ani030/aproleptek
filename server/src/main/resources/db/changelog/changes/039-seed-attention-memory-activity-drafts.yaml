@@ -1,0 +1,224 @@
+databaseChangeLog:
+  - changeSet:
+      id: 039-seed-attention-memory-activity-drafts
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description) values ('ACTIVITY_TOPIC','Figyelem, emlékezet és végrehajtó működések','figyelem-emlekezet-es-vegrehajto-mukodesek',50,true,null,'Ez a fejlesztési terület segíti a gyermekeket abban, hogy összpontosítsanak, megjegyezzék az információkat, kövessék az utasításokat, szabályozzák viselkedésüket, megtervezzék tevékenységeiket és alkalmazkodjanak a változásokhoz.') on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=null,default_description=excluded.default_description;
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id)
+              select 'ACTIVITY_TOPIC',v.name,v.slug,v.sort_order,true,root.id from (values
+                ('Tartós figyelem és koncentráció','tartos-figyelem-es-koncentracio',10),
+                ('Szelektív figyelem','szelektiv-figyelem',20),
+                ('Vizuális emlékezet','vizualis-emlekezet',30),
+                ('Hallási és verbális emlékezet','hallasi-es-verbalis-emlekezet',40),
+                ('Munkamemória','munkamemoria',50),
+                ('Gátlás és impulzuskontroll','gatlas-es-impulzuskontroll',60),
+                ('Kognitív rugalmasság és feladatváltás','kognitiv-rugalmassag-es-feladatvaltas',70),
+                ('Tervezés és szervezés','tervezes-es-szervezes',80),
+                ('Feladatkezdés, kitartás és feladatbefejezés','feladatkezdes-kitartas-es-feladatbefejezes',90),
+                ('Önellenőrzés és hibajavítás','onellenorzes-es-hibajavitas',100)) as v(name,slug,sort_order) cross join taxonomy_term root where root.term_type='ACTIVITY_TOPIC' and root.slug='figyelem-emlekezet-es-vegrehajto-mukodesek' on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=excluded.parent_id;
+              insert into activity(title,slug,status,age_recommendation)
+              values
+                ('Buborékok követése','buborekok-kovetese','DRAFT','18 hó+'),
+                ('Guruló labda követése','gurulo-labda-kovetese','DRAFT','18 hó+'),
+                ('Keresd meg a képen!','keresd-meg-a-kepen','DRAFT','18 hó+'),
+                ('Válogassuk szét a játékokat!','valogassuk-szet-a-jatekokat','DRAFT','18 hó+'),
+                ('Fejezd be a tornyot!','fejezd-be-a-tornyot','DRAFT','2 év+'),
+                ('Kövesd az ujjaddal!','kovesd-az-ujjaddal','DRAFT','2 év+'),
+                ('Képkirakó','kepkirako','DRAFT','2 év+'),
+                ('Keresd az egyforma állatokat!','keresd-az-egyforma-allatokat','DRAFT','3 év+'),
+                ('Figyelemkereső feladatlap','figyelemkereso-feladatlap','DRAFT','3 év+'),
+                ('Labirintus','labirintus','DRAFT','4 év+'),
+                ('Keresd a nyuszit!','keresd-a-nyuszit','DRAFT','18 hó+'),
+                ('Válogassuk ki a piros játékokat!','valogassuk-ki-a-piros-jatekokat','DRAFT','2 év+'),
+                ('Hol hallod a csengőt?','hol-hallod-a-csengot','DRAFT','2 év+'),
+                ('Mutass minden cicára!','mutass-minden-cicara','DRAFT','2 év+'),
+                ('Kincskeresés a játékok között','kincskereses-a-jatekok-kozott','DRAFT','2 év+'),
+                ('Csak a gyümölcsöket gyűjtsd össze!','csak-a-gyumolcsoket-gyujtsd-ossze','DRAFT','2,5 év+'),
+                ('Figyeld a kijelölt hangot!','figyeld-a-kijelolt-hangot','DRAFT','3 év+'),
+                ('Keresd a különbségeket!','keresd-a-kulonbsegeket','DRAFT','3 év+'),
+                ('Keresd a megadott alakzatot!','keresd-a-megadott-alakzatot','DRAFT','3 év+'),
+                ('Szimbólumvadászat','szimbolumvadaszat','DRAFT','4 év+'),
+                ('Hová bújt a maci?','hova-bujt-a-maci','DRAFT','18 hó+'),
+                ('Melyik játék tűnt el?','melyik-jatek-tunt-el','DRAFT','2 év+'),
+                ('Mi van a kendő alatt?','mi-van-a-kendo-alatt','DRAFT','2 év+'),
+                ('Emlékezz a képre!','emlekezz-a-kepre','DRAFT','2,5 év+'),
+                ('Egyszerű memóriajáték','egyszeru-memoriajatek','DRAFT','2,5 év+'),
+                ('Mi változott meg az asztalon?','mi-valtozott-meg-az-asztalon','DRAFT','3 év+'),
+                ('Építsd meg emlékezetből!','epitsd-meg-emlekezetbol','DRAFT','3 év+'),
+                ('Jegyezd meg a színeket!','jegyezd-meg-a-szineket','DRAFT','3 év+'),
+                ('Képek sorrendjének felidézése','kepek-sorrendjenek-felidezese','DRAFT','4 év+'),
+                ('Rajzold le, amit láttál!','rajzold-le-amit-lattal','DRAFT','4 év+'),
+                ('Állathangok utánzása','allathangok-utanzasa','DRAFT','18 hó+'),
+                ('Mondóka befejezése','mondoka-befejezese','DRAFT','18 hó+'),
+                ('Ismételd utánam!','ismeteld-utanam','DRAFT','18 hó+'),
+                ('Tapsolj úgy, mint én!','tapsolj-ugy-mint-en','DRAFT','2 év+'),
+                ('Keresd meg, amit mondtam!','keresd-meg-amit-mondtam','DRAFT','2 év+'),
+                ('Dalok hiányzó szavai','dalok-hianyzo-szavai','DRAFT','2,5 év+'),
+                ('Bevásárlólista megjegyzése','bevasarlolista-megjegyzese','DRAFT','3 év+'),
+                ('Hangok sorrendjének ismétlése','hangok-sorrendjenek-ismetlese','DRAFT','3 év+'),
+                ('Üzenet továbbadása','uzenet-tovabbadasa','DRAFT','4 év+'),
+                ('Rövid történet felidézése','rovid-tortenet-felidezese','DRAFT','4 év+'),
+                ('Hozd ide a macit!','hozd-ide-a-macit','DRAFT','18 hó+'),
+                ('Tedd a babát az ágyba!','tedd-a-babat-az-agyba','DRAFT','18 hó+'),
+                ('Hozd ide a labdát és a macit!','hozd-ide-a-labdat-es-a-macit','DRAFT','2 év+'),
+                ('Kétlépéses küldetések','ketlepeses-kuldetesek','DRAFT','2 év+'),
+                ('Utánozd a mozdulataimat!','utanozd-a-mozdulataimat','DRAFT','2 év+'),
+                ('Pakold meg a bevásárlókosarat!','pakold-meg-a-bevasarlokosarat','DRAFT','2,5 év+'),
+                ('Kövesd a mozgássorrendet!','kovesd-a-mozgassorrendet','DRAFT','3 év+'),
+                ('Építs szóbeli utasítás alapján!','epits-szobeli-utasitas-alapjan','DRAFT','3 év+'),
+                ('Háromlépéses küldetések','haromlepeses-kuldetesek','DRAFT','4 év+'),
+                ('Jegyezd meg és rakd sorba!','jegyezd-meg-es-rakd-sorba','DRAFT','4 év+'),
+                ('Indulj és állj meg!','indulj-es-allj-meg','DRAFT','18 hó+'),
+                ('Zenélő szobor','zenelo-szobor','DRAFT','2 év+'),
+                ('Piros lámpa, zöld lámpa','piros-lampa-zold-lampa','DRAFT','2 év+'),
+                ('Várd meg a jelzést!','vard-meg-a-jelzest','DRAFT','2 év+'),
+                ('Felváltva építünk','felvaltva-epitunk','DRAFT','2 év+'),
+                ('Alszik a medve','alszik-a-medve','DRAFT','2,5 év+'),
+                ('Csak akkor tapsolj, ha…','csak-akkor-tapsolj-ha','DRAFT','3 év+'),
+                ('Simon mondja','simon-mondja','DRAFT','3 év+'),
+                ('Lassú és gyors mozdulatok','lassu-es-gyors-mozdulatok','DRAFT','3 év+'),
+                ('Ne mondd ki a tiltott szót!','ne-mondd-ki-a-tiltott-szot','DRAFT','5 év+'),
+                ('Cseréljünk szerepet!','csereljunk-szerepet','DRAFT','2 év+'),
+                ('Most másképp építünk!','most-maskepp-epitunk','DRAFT','2 év+'),
+                ('Sétáljunk, majd ugráljunk!','setaljunk-majd-ugraljunk','DRAFT','2 év+'),
+                ('Keressünk másik utat!','keressunk-masik-utat','DRAFT','2,5 év+'),
+                ('Válogatás szín, majd forma szerint','valogatas-szin-majd-forma-szerint','DRAFT','3 év+'),
+                ('Változó mozgásos szabályok','valtozo-mozgasos-szabalyok','DRAFT','3 év+'),
+                ('Fordított utasítások','forditott-utasitasok','DRAFT','4 év+'),
+                ('Találj másik megoldást!','talalj-masik-megoldast','DRAFT','4 év+'),
+                ('Ellentétes mozdulatok','ellentetes-mozdulatok','DRAFT','4 év+'),
+                ('Szabályváltó kártyajáték','szabalyvalto-kartyajatek','DRAFT','4 év+'),
+                ('Építsünk házat a macinak!','epitsunk-hazat-a-macinak','DRAFT','2 év+'),
+                ('Készítsük elő a babafürdetést!','keszitsuk-elo-a-babafurdetest','DRAFT','2 év+'),
+                ('Terítsünk meg!','teritsunk-meg','DRAFT','2 év+'),
+                ('Pakoljunk a kiránduláshoz!','pakoljunk-a-kirandulashoz','DRAFT','2,5 év+'),
+                ('Készítsünk akadálypályát!','keszitsunk-akadalypalyat','DRAFT','3 év+'),
+                ('Főzzünk képes recept alapján!','fozzunk-kepes-recept-alapjan','DRAFT','3 év+'),
+                ('Mi kell a feladathoz?','mi-kell-a-feladathoz','DRAFT','3 év+'),
+                ('Tervezzünk pikniket!','tervezzunk-pikniket','DRAFT','3 év+'),
+                ('Építsünk képes terv alapján!','epitsunk-kepes-terv-alapjan','DRAFT','4 év+'),
+                ('Saját kincskereső pálya tervezése','sajat-kincskereso-palya-tervezese','DRAFT','5 év+'),
+                ('Etessük meg az összes állatot!','etessuk-meg-az-osszes-allatot','DRAFT','18 hó+'),
+                ('Gyűjtsük össze a labdákat!','gyujtsuk-ossze-a-labdakat','DRAFT','18 hó+'),
+                ('Építsük fel a tornyot!','epitsuk-fel-a-tornyot','DRAFT','18 hó+'),
+                ('Minden állat kerüljön haza!','minden-allat-keruljon-haza','DRAFT','2 év+'),
+                ('Készítsünk képet matricákból!','keszitsunk-kepet-matricakbol','DRAFT','2 év+'),
+                ('Fejezzük be a kirakót!','fejezzuk-be-a-kirakot','DRAFT','2 év+'),
+                ('Öltöztessük fel a babát!','oltoztessuk-fel-a-babat','DRAFT','2 év+'),
+                ('Képes feladatlista teljesítése','kepes-feladatlista-teljesitese','DRAFT','3 év+'),
+                ('Többlépéses alkotófeladat','tobblepeses-alkotofeladat','DRAFT','4 év+'),
+                ('Saját kis projekt megvalósítása','sajat-kis-projekt-megvalositasa','DRAFT','5 év+'),
+                ('Belefér vagy nem fér bele?','belefer-vagy-nem-fer-bele','DRAFT','18 hó+'),
+                ('Minden a helyére került?','minden-a-helyere-kerult','DRAFT','2 év+'),
+                ('Megtaláltad a párját?','megtalaltad-a-parjat','DRAFT','2 év+'),
+                ('Jól öltöztettük fel a babát?','jol-oltoztettuk-fel-a-babat','DRAFT','2,5 év+'),
+                ('Hasonlítsd össze a mintával!','hasonlitsd-ossze-a-mintaval','DRAFT','3 év+'),
+                ('Mi nincs a helyén?','mi-nincs-a-helyen','DRAFT','3 év+'),
+                ('Keresd meg a hibát!','keresd-meg-a-hibat','DRAFT','3 év+'),
+                ('Ellenőrizd a bevásárlókosarat!','ellenorizd-a-bevasarlokosarat','DRAFT','3 év+'),
+                ('Javítsd ki a hibás sorrendet!','javitsd-ki-a-hibas-sorrendet','DRAFT','4 év+'),
+                ('Ellenőrizd a saját alkotásodat!','ellenorizd-a-sajat-alkotasodat','DRAFT','4 év+') on conflict (slug) do nothing;
+              insert into activity_term(activity_id,term_id)
+              select a.id,t.id from activity a join taxonomy_term t on t.term_type='ACTIVITY_TOPIC' and t.slug=case
+                when a.slug='buborekok-kovetese' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='gurulo-labda-kovetese' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='keresd-meg-a-kepen' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='valogassuk-szet-a-jatekokat' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='fejezd-be-a-tornyot' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='kovesd-az-ujjaddal' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='kepkirako' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='keresd-az-egyforma-allatokat' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='figyelemkereso-feladatlap' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='labirintus' then 'tartos-figyelem-es-koncentracio'
+                when a.slug='keresd-a-nyuszit' then 'szelektiv-figyelem'
+                when a.slug='valogassuk-ki-a-piros-jatekokat' then 'szelektiv-figyelem'
+                when a.slug='hol-hallod-a-csengot' then 'szelektiv-figyelem'
+                when a.slug='mutass-minden-cicara' then 'szelektiv-figyelem'
+                when a.slug='kincskereses-a-jatekok-kozott' then 'szelektiv-figyelem'
+                when a.slug='csak-a-gyumolcsoket-gyujtsd-ossze' then 'szelektiv-figyelem'
+                when a.slug='figyeld-a-kijelolt-hangot' then 'szelektiv-figyelem'
+                when a.slug='keresd-a-kulonbsegeket' then 'szelektiv-figyelem'
+                when a.slug='keresd-a-megadott-alakzatot' then 'szelektiv-figyelem'
+                when a.slug='szimbolumvadaszat' then 'szelektiv-figyelem'
+                when a.slug='hova-bujt-a-maci' then 'vizualis-emlekezet'
+                when a.slug='melyik-jatek-tunt-el' then 'vizualis-emlekezet'
+                when a.slug='mi-van-a-kendo-alatt' then 'vizualis-emlekezet'
+                when a.slug='emlekezz-a-kepre' then 'vizualis-emlekezet'
+                when a.slug='egyszeru-memoriajatek' then 'vizualis-emlekezet'
+                when a.slug='mi-valtozott-meg-az-asztalon' then 'vizualis-emlekezet'
+                when a.slug='epitsd-meg-emlekezetbol' then 'vizualis-emlekezet'
+                when a.slug='jegyezd-meg-a-szineket' then 'vizualis-emlekezet'
+                when a.slug='kepek-sorrendjenek-felidezese' then 'vizualis-emlekezet'
+                when a.slug='rajzold-le-amit-lattal' then 'vizualis-emlekezet'
+                when a.slug='allathangok-utanzasa' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='mondoka-befejezese' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='ismeteld-utanam' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='tapsolj-ugy-mint-en' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='keresd-meg-amit-mondtam' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='dalok-hianyzo-szavai' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='bevasarlolista-megjegyzese' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='hangok-sorrendjenek-ismetlese' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='uzenet-tovabbadasa' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='rovid-tortenet-felidezese' then 'hallasi-es-verbalis-emlekezet'
+                when a.slug='hozd-ide-a-macit' then 'munkamemoria'
+                when a.slug='tedd-a-babat-az-agyba' then 'munkamemoria'
+                when a.slug='hozd-ide-a-labdat-es-a-macit' then 'munkamemoria'
+                when a.slug='ketlepeses-kuldetesek' then 'munkamemoria'
+                when a.slug='utanozd-a-mozdulataimat' then 'munkamemoria'
+                when a.slug='pakold-meg-a-bevasarlokosarat' then 'munkamemoria'
+                when a.slug='kovesd-a-mozgassorrendet' then 'munkamemoria'
+                when a.slug='epits-szobeli-utasitas-alapjan' then 'munkamemoria'
+                when a.slug='haromlepeses-kuldetesek' then 'munkamemoria'
+                when a.slug='jegyezd-meg-es-rakd-sorba' then 'munkamemoria'
+                when a.slug='indulj-es-allj-meg' then 'gatlas-es-impulzuskontroll'
+                when a.slug='zenelo-szobor' then 'gatlas-es-impulzuskontroll'
+                when a.slug='piros-lampa-zold-lampa' then 'gatlas-es-impulzuskontroll'
+                when a.slug='vard-meg-a-jelzest' then 'gatlas-es-impulzuskontroll'
+                when a.slug='felvaltva-epitunk' then 'gatlas-es-impulzuskontroll'
+                when a.slug='alszik-a-medve' then 'gatlas-es-impulzuskontroll'
+                when a.slug='csak-akkor-tapsolj-ha' then 'gatlas-es-impulzuskontroll'
+                when a.slug='simon-mondja' then 'gatlas-es-impulzuskontroll'
+                when a.slug='lassu-es-gyors-mozdulatok' then 'gatlas-es-impulzuskontroll'
+                when a.slug='ne-mondd-ki-a-tiltott-szot' then 'gatlas-es-impulzuskontroll'
+                when a.slug='csereljunk-szerepet' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='most-maskepp-epitunk' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='setaljunk-majd-ugraljunk' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='keressunk-masik-utat' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='valogatas-szin-majd-forma-szerint' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='valtozo-mozgasos-szabalyok' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='forditott-utasitasok' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='talalj-masik-megoldast' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='ellentetes-mozdulatok' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='szabalyvalto-kartyajatek' then 'kognitiv-rugalmassag-es-feladatvaltas'
+                when a.slug='epitsunk-hazat-a-macinak' then 'tervezes-es-szervezes'
+                when a.slug='keszitsuk-elo-a-babafurdetest' then 'tervezes-es-szervezes'
+                when a.slug='teritsunk-meg' then 'tervezes-es-szervezes'
+                when a.slug='pakoljunk-a-kirandulashoz' then 'tervezes-es-szervezes'
+                when a.slug='keszitsunk-akadalypalyat' then 'tervezes-es-szervezes'
+                when a.slug='fozzunk-kepes-recept-alapjan' then 'tervezes-es-szervezes'
+                when a.slug='mi-kell-a-feladathoz' then 'tervezes-es-szervezes'
+                when a.slug='tervezzunk-pikniket' then 'tervezes-es-szervezes'
+                when a.slug='epitsunk-kepes-terv-alapjan' then 'tervezes-es-szervezes'
+                when a.slug='sajat-kincskereso-palya-tervezese' then 'tervezes-es-szervezes'
+                when a.slug='etessuk-meg-az-osszes-allatot' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='gyujtsuk-ossze-a-labdakat' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='epitsuk-fel-a-tornyot' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='minden-allat-keruljon-haza' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='keszitsunk-kepet-matricakbol' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='fejezzuk-be-a-kirakot' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='oltoztessuk-fel-a-babat' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='kepes-feladatlista-teljesitese' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='tobblepeses-alkotofeladat' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='sajat-kis-projekt-megvalositasa' then 'feladatkezdes-kitartas-es-feladatbefejezes'
+                when a.slug='belefer-vagy-nem-fer-bele' then 'onellenorzes-es-hibajavitas'
+                when a.slug='minden-a-helyere-kerult' then 'onellenorzes-es-hibajavitas'
+                when a.slug='megtalaltad-a-parjat' then 'onellenorzes-es-hibajavitas'
+                when a.slug='jol-oltoztettuk-fel-a-babat' then 'onellenorzes-es-hibajavitas'
+                when a.slug='hasonlitsd-ossze-a-mintaval' then 'onellenorzes-es-hibajavitas'
+                when a.slug='mi-nincs-a-helyen' then 'onellenorzes-es-hibajavitas'
+                when a.slug='keresd-meg-a-hibat' then 'onellenorzes-es-hibajavitas'
+                when a.slug='ellenorizd-a-bevasarlokosarat' then 'onellenorzes-es-hibajavitas'
+                when a.slug='javitsd-ki-a-hibas-sorrendet' then 'onellenorzes-es-hibajavitas'
+                when a.slug='ellenorizd-a-sajat-alkotasodat' then 'onellenorzes-es-hibajavitas' end where a.slug in ('buborekok-kovetese','gurulo-labda-kovetese','keresd-meg-a-kepen','valogassuk-szet-a-jatekokat','fejezd-be-a-tornyot','kovesd-az-ujjaddal','kepkirako','keresd-az-egyforma-allatokat','figyelemkereso-feladatlap','labirintus','keresd-a-nyuszit','valogassuk-ki-a-piros-jatekokat','hol-hallod-a-csengot','mutass-minden-cicara','kincskereses-a-jatekok-kozott','csak-a-gyumolcsoket-gyujtsd-ossze','figyeld-a-kijelolt-hangot','keresd-a-kulonbsegeket','keresd-a-megadott-alakzatot','szimbolumvadaszat','hova-bujt-a-maci','melyik-jatek-tunt-el','mi-van-a-kendo-alatt','emlekezz-a-kepre','egyszeru-memoriajatek','mi-valtozott-meg-az-asztalon','epitsd-meg-emlekezetbol','jegyezd-meg-a-szineket','kepek-sorrendjenek-felidezese','rajzold-le-amit-lattal','allathangok-utanzasa','mondoka-befejezese','ismeteld-utanam','tapsolj-ugy-mint-en','keresd-meg-amit-mondtam','dalok-hianyzo-szavai','bevasarlolista-megjegyzese','hangok-sorrendjenek-ismetlese','uzenet-tovabbadasa','rovid-tortenet-felidezese','hozd-ide-a-macit','tedd-a-babat-az-agyba','hozd-ide-a-labdat-es-a-macit','ketlepeses-kuldetesek','utanozd-a-mozdulataimat','pakold-meg-a-bevasarlokosarat','kovesd-a-mozgassorrendet','epits-szobeli-utasitas-alapjan','haromlepeses-kuldetesek','jegyezd-meg-es-rakd-sorba','indulj-es-allj-meg','zenelo-szobor','piros-lampa-zold-lampa','vard-meg-a-jelzest','felvaltva-epitunk','alszik-a-medve','csak-akkor-tapsolj-ha','simon-mondja','lassu-es-gyors-mozdulatok','ne-mondd-ki-a-tiltott-szot','csereljunk-szerepet','most-maskepp-epitunk','setaljunk-majd-ugraljunk','keressunk-masik-utat','valogatas-szin-majd-forma-szerint','valtozo-mozgasos-szabalyok','forditott-utasitasok','talalj-masik-megoldast','ellentetes-mozdulatok','szabalyvalto-kartyajatek','epitsunk-hazat-a-macinak','keszitsuk-elo-a-babafurdetest','teritsunk-meg','pakoljunk-a-kirandulashoz','keszitsunk-akadalypalyat','fozzunk-kepes-recept-alapjan','mi-kell-a-feladathoz','tervezzunk-pikniket','epitsunk-kepes-terv-alapjan','sajat-kincskereso-palya-tervezese','etessuk-meg-az-osszes-allatot','gyujtsuk-ossze-a-labdakat','epitsuk-fel-a-tornyot','minden-allat-keruljon-haza','keszitsunk-kepet-matricakbol','fejezzuk-be-a-kirakot','oltoztessuk-fel-a-babat','kepes-feladatlista-teljesitese','tobblepeses-alkotofeladat','sajat-kis-projekt-megvalositasa','belefer-vagy-nem-fer-bele','minden-a-helyere-kerult','megtalaltad-a-parjat','jol-oltoztettuk-fel-a-babat','hasonlitsd-ossze-a-mintaval','mi-nincs-a-helyen','keresd-meg-a-hibat','ellenorizd-a-bevasarlokosarat','javitsd-ki-a-hibas-sorrendet','ellenorizd-a-sajat-alkotasodat') on conflict (activity_id,term_id) do nothing;

@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 031-activity-skill-descriptions
+      author: codex
+      changes:
+        - createTable:
+            tableName: activity_skill_description
+            columns:
+              - column: { name: activity_id, type: UUID, constraints: { nullable: false, primaryKey: true, primaryKeyName: pk_activity_skill_description, foreignKeyName: fk_activity_skill_description_activity, references: activity(id), deleteCascade: true } }
+              - column: { name: term_id, type: UUID, constraints: { nullable: false, primaryKey: true, primaryKeyName: pk_activity_skill_description, foreignKeyName: fk_activity_skill_description_term, references: taxonomy_term(id), deleteCascade: true } }
+              - column: { name: description, type: TEXT, constraints: { nullable: false } }

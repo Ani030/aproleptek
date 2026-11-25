@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 029-seed-balance-walk-activity
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into activity(id,title,slug,summary,description,duration_minutes,location_type,materials,preparation,instructions,easy_variant,challenge_variant,safety_notes,status,age_recommendation,duration_min_minutes,duration_max_minutes,equipment_level,playful_variant,parent_tip)
+              values (
+                'a0290000-0000-4000-8000-000000000001',
+                'Sétálj a vonalon! – Játékos egyensúlyfejlesztés',
+                'setalj-a-vonalon-jatekos-egyensulyfejlesztes',
+                'Egy kis séta, ami igazi kalanddá válhat! A gyermek egy földre helyezett vonalat követ, miközben játékosan gyakorolja az egyensúlyozást és a mozgás összehangolását.',
+                'A játék szinte semmilyen előkészületet nem igényel, és könnyen a gyermek életkorához, mozgásos képességeihez igazítható.',
+                10, 'ANY',
+                'Könnyen eltávolítható, a padlóhoz megfelelő, csúszásmentesen rögzített jelölőszalag vagy kültéren kréta. Opcionálisan egy kedvenc plüssállat.',
+                'Válasszunk sík, biztonságos mozgásteret. Ragasszunk le egy rövid, jól követhető útvonalat.',
+                E'1. Készítsük el az utat: ragasszunk a padlóra körülbelül 1–2 méter hosszú egyenes vonalat. Kezdetben legyen szélesebb a jelölés.\n2. Mutassuk meg a gyermeknek: sétáljunk végig a vonalon, és hívjuk őt is: „Nézd, milyen különleges út vezet a nyuszihoz! Sétáljunk végig rajta!”\n3. Indulhat a séta: engedjük, hogy a gyermek a saját tempójában haladjon. Nem szükséges minden lépésnek pontosan a vonalon lennie.\n4. Érkezzünk meg a célhoz: az út végén várhatja egy kedvenc játék, egy ölelés vagy egy újabb izgalmas feladat.',
+                'Rövidebb, szélesebb útvonal. A vonal mellett haladás is rendben van. Kézfogás vagy a felnőtt mozgásának utánzása.',
+                'Hosszabb, kanyargós vagy cikkcakkos útvonal. Megállás egy kijelölt ponton, lassú és gyors járás váltogatása, nagyobb gyermekeknél sarok-lábujj járás.',
+                'Sík, nem csúszós felületen, felnőtt felügyeletével játsszunk. A szalag ne pöndörödjön fel, ne jelentsen botlásveszélyt és ne sértse a padlót. A gyermeknek nem kell tökéletesen végigmennie a vonalon.',
+                'DRAFT', '18 hónaptól', 5, 10, 'MINIMAL',
+                'Mentsük meg a nyuszit! A kis nyuszi az út végén várakozik, de csak a különleges ösvényen lehet eljutni hozzá. A gyermek végigsétál az úton, felveszi a nyuszit, majd visszaviszi a házikójába.',
+                'Ha a gyermek bizonytalan, ne sürgessük. Kezdjük olyan egyszerű változattal, amelyben biztonságban érzi magát, és fokozatosan kínáljunk új kihívásokat.'
+              ) on conflict (slug) do nothing;
+              insert into activity_term(activity_id,term_id)
+              select 'a0290000-0000-4000-8000-000000000001',id from taxonomy_term
+              where term_type in ('TOPIC','SKILL') and slug in ('egyensulyfejleszto-jatekok','egyensuly','mozgas-koordinacio','testtudat','figyelem','mozgasos-onbizalom')
+              on conflict (activity_id,term_id) do nothing;

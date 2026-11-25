@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 048-fix-pillow-islands-activity-topic
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              delete from activity_term
+              where activity_id=(select id from activity where slug='3-jatek-parnaszigeteken-atlepes')
+                and term_id in (select id from taxonomy_term where term_type='ACTIVITY_TOPIC');
+              insert into activity_term(activity_id,term_id)
+              select a.id,t.id
+              from activity a
+              join taxonomy_term t on t.term_type='ACTIVITY_TOPIC' and t.slug='egyensuly-es-stabil-jaras'
+              where a.slug='3-jatek-parnaszigeteken-atlepes'
+              on conflict (activity_id,term_id) do nothing;

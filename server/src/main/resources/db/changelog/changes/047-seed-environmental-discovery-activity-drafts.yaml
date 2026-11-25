@@ -1,0 +1,225 @@
+databaseChangeLog:
+  - changeSet:
+      id: 047-seed-environmental-discovery-activity-drafts
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description) values ('ACTIVITY_TOPIC','Környezeti tapasztalatszerzés és felfedezés','kornyezeti-tapasztalatszerzes-es-felfedezes',120,true,null,'A gyermek közvetlen és tágabb környezetének megismerése, a természet iránti kíváncsiság felkeltése, a megfigyelőképesség fejlesztése, a környezettudatos magatartás és a biztonságos életvitel megalapozása.') on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=null,default_description=excluded.default_description;
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description)
+              select 'ACTIVITY_TOPIC',v.name,v.slug,v.sort_order,true,root.id,v.description from (values
+                ('Állatok és élővilág','allatok-es-elovilag',10,'Állatok, élőhelyek, testborítások és az állatokról való gondoskodás felfedezése.'),
+                ('Növények és kertészkedés','novenyek-es-kerteszkedes',20,'Növények, növekedésük, szükségleteik és a kertészkedés megismerése.'),
+                ('Évszakok és természeti változások','evszakok-es-termeszeti-valtozasok',30,'Az évszakokhoz kapcsolódó időjárási, növényi és állati változások megfigyelése.'),
+                ('Időjárás és természeti jelenségek','idojaras-es-termeszeti-jelensegek',40,'Az időjárás és a természetben megfigyelhető jelenségek játékos megismerése.'),
+                ('Természeti anyagok és érzékszervi felfedezés','termeszeti-anyagok-es-erzekszervi-felfedezes',50,'Természetes anyagok megfigyelése, tapintása, összehasonlítása és érzékszervi felfedezése.'),
+                ('Egyszerű kísérletek és felfedezések','egyszeru-kiserletek-es-felfedezesek',60,'Egyszerű, felnőtt által felügyelt megfigyelések és kísérletek a környezet jelenségeiről.'),
+                ('Közlekedés és közlekedésbiztonság','kozlekedes-es-kozlekedesbiztonsag',70,'Közlekedési eszközök és szabályok megismerése; közlekedési helyzeteket biztonságos játékban dolgozzunk fel.'),
+                ('Társadalmi környezet és foglalkozások','tarsadalmi-kornyezet-es-foglalkozasok',80,'Családtagok, foglalkozások, segítő szerepek és a gyermek közvetlen lakókörnyezetének megismerése.'),
+                ('Környezetvédelem és fenntarthatóság','kornyezetvedelem-es-fenntarthatosag',90,'A környezettudatos szokások, takarékosság, újrahasználat és a természetről való gondoskodás megalapozása.'),
+                ('Biztonság és veszélyfelismerés','biztonsag-es-veszelyfelismeres',100,'A biztonságot és veszélyfelismerést képkártyákkal, felnőtt által felügyelt beszélgetéssel és veszélyt nem utánzó szerepjátékkal gyakoroljuk; valódi veszélyes helyzeteket és tárgyakat nem használunk.')) as v(name,slug,sort_order,description) cross join taxonomy_term root where root.term_type='ACTIVITY_TOPIC' and root.slug='kornyezeti-tapasztalatszerzes-es-felfedezes' on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=excluded.parent_id,default_description=excluded.default_description;
+              insert into activity(title,slug,status,age_recommendation)
+              values
+                ('Állatok és hangjaik','allatok-es-hangjaik','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Ki mit eszik?','ki-mit-eszik','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Állatok és élőhelyeik','allatok-es-elohelyeik','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Állatmamák és kicsinyeik','allatmamak-es-kicsinyeik','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Háziállatok és vadállatok','haziallatok-es-vadallatok','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Erdei állatok felfedezése','erdei-allatok-felfedezese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Állatok lábnyomai','allatok-labnyomai','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Kinek milyen a testborítása?','kinek-milyen-a-testboritasa','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Állatok mozgásának utánzása','allatok-mozgasanak-utanzasa','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Gondoskodjunk az állatokról!','gondoskodjunk-az-allatokrol','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Ültessünk magokat!','ultessunk-magokat','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Locsoljuk meg a virágokat!','locsoljuk-meg-a-viragokat','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Figyeljük meg, hogyan növekszik a növény!','figyeljuk-meg-hogyan-novekszik-a-noveny','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Gyümölcsök és zöldségek felismerése','gyumolcsok-es-zoldsegek-felismerese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mi terem a fán, és mi a földben?','mi-terem-a-fan-es-mi-a-foldben','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('A növény részei','a-noveny-reszei','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Levélpárosító','levelparosito','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Virágok szín szerinti válogatása','viragok-szin-szerinti-valogatasa','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mire van szüksége a növénynek?','mire-van-szuksege-a-novenynek','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Készítsünk saját kiskertet!','keszitsunk-sajat-kiskertet','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Évszakok felismerése','evszakok-felismerese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Öltözzünk az évszaknak megfelelően!','oltozzunk-az-evszaknak-megfeleloen','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Tavaszi virágkereső','tavaszi-viragkereso','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Nyári élmények','nyari-elmenyek','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Őszi termésgyűjtés','oszi-termesgyujtes','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Téli természet megfigyelése','teli-termeszet-megfigyelese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Az évszakok fája','az-evszakok-faja','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Évszakos képek válogatása','evszakos-kepek-valogatasa','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mit csinálnak az állatok télen?','mit-csinalnak-az-allatok-telen','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Évszakos felfedeződoboz','evszakos-felfedezodoboz','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Milyen ma az idő?','milyen-ma-az-ido','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Készítsünk időjárásnaptárt!','keszitsunk-idojarasnaptart','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Napfény és árnyék megfigyelése','napfeny-es-arnyek-megfigyelese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Fúj a szél!','fuj-a-szel','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Esőcseppek megfigyelése','esocseppek-megfigyelese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Felhőfigyelő','felhofigyelo','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Jégolvasztás','jegolvasztas','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mihez kell az esernyő?','mihez-kell-az-esernyo','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Készítsünk szivárványt!','keszitsunk-szivarvanyt','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Időjárás és tevékenységek párosítása','idojaras-es-tevekenysegek-parositasa','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Kavicsok válogatása','kavicsok-valogatasa','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Természetes tapintódoboz','termeszetes-tapintodoboz','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Homok és víz felfedezése','homok-es-viz-felfedezese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Tobozok és termések gyűjtése','tobozok-es-termesek-gyujtese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Természeti kincsek keresése','termeszeti-kincsek-keresese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Száraz és nedves anyagok','szaraz-es-nedves-anyagok','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Könnyű és nehéz természeti tárgyak','konnyu-es-nehez-termeszeti-targyak','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Természetes illatok felismerése','termeszetes-illatok-felismerese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Kéreglenyomat készítése','kereglenyomat-keszitese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Természeti hangok megfigyelése','termeszeti-hangok-megfigyelese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Elmerül vagy lebeg?','elmerul-vagy-lebeg','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Színek keverése','szinek-keverese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mi olvad el?','mi-olvad-el','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mi oldódik fel a vízben?','mi-oldodik-fel-a-vizben','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Melyik anyag szívja fel a vizet?','melyik-anyag-szivja-fel-a-vizet','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mágneses felfedezés','magneses-felfedezes','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Fény és árnyék játék','feny-es-arnyek-jatek','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Gurul vagy csúszik?','gurul-vagy-csuszik','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Víz áramlásának megfigyelése','viz-aramlasanak-megfigyelese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Levegő és buborékok','levego-es-buborekok','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Közlekedési eszközök felismerése','kozlekedesi-eszkozok-felismerese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Piros, sárga, zöld','piros-sarga-zold','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Keljünk át a zebrán!','keljunk-at-a-zebran','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mi közlekedik a vízen, földön és levegőben?','mi-kozlekedik-a-vizen-foldon-es-levegoben','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Járművek hangjai','jarmuvek-hangjai','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Közlekedési táblák megismerése','kozlekedesi-tablak-megismerese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Építsünk saját várost!','epitsunk-sajat-varost','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Utazzunk busszal!','utazzunk-busszal','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Biztonságos kerékpározás','biztonsagos-kerekparozas','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Biztonságos és veszélyes közlekedési helyzetek','biztonsagos-es-veszelyes-kozlekedesi-helyzetek','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Ismerjük meg a családtagokat!','ismerjuk-meg-a-csaladtagokat','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Ki hol dolgozik?','ki-hol-dolgozik','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Kinek milyen eszközre van szüksége?','kinek-milyen-eszkozre-van-szuksege','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Játsszunk boltosat!','jatsszunk-boltosat','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Látogatás az orvosnál','latogatas-az-orvosnal','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Postás játék','postas-jatek','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Tűzoltós szerepjáték','tuzoltos-szerepjatek','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Építsünk egy települést!','epitsunk-egy-telepulest','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Ismerjük meg a környékünket!','ismerjuk-meg-a-kornyekunket','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Kihez fordulhatunk segítségért?','kihez-fordulhatunk-segitsegert','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Szelektív hulladékgyűjtés','szelektiv-hulladekgyujtes','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Takarítsuk ki a játékparkot!','takaritsuk-ki-a-jatekparkot','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Papír, műanyag vagy üveg?','papir-muanyag-vagy-uveg','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Készítsünk játékot újrahasznosított anyagokból!','keszitsunk-jatekot-ujrahasznositott-anyagokbol','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Vigyázzunk a vízre!','vigyazzunk-a-vizre','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Kapcsoljuk le a lámpát!','kapcsoljuk-le-a-lampat','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Gondoskodjunk a madarakról!','gondoskodjunk-a-madarakrol','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Ismerkedés a komposztálással','ismerkedes-a-komposztalassal','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Újrahasználható tárgyak felismerése','ujrahasznalhato-targyak-felismerese','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Környezetbarát és környezetkárosító szokások','kornyezetbarat-es-kornyezetkarosito-szokasok','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Forró vagy hideg?','forro-vagy-hideg','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mihez nem szabad hozzányúlni?','mihez-nem-szabad-hozzanyulni','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Biztonságos és veszélyes tárgyak','biztonsagos-es-veszelyes-targyak','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mit szabad a szánkba venni?','mit-szabad-a-szankba-venni','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Biztonságos játék a játszótéren','biztonsagos-jatek-a-jatszoteren','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mit tegyünk, ha elveszítjük a szüleinket?','mit-tegyunk-ha-elveszitjuk-a-szuleinket','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Ismerjük meg a segítő felnőtteket!','ismerjuk-meg-a-segito-felnotteket','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Biztonságos viselkedés állatok közelében','biztonsagos-viselkedes-allatok-kozeleben','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Biztonság a vízparton','biztonsag-a-vizparton','DRAFT','18 hónapos kortól – 6 éves korig'),
+                ('Mit tegyünk, ha baj történik?','mit-tegyunk-ha-baj-tortenik','DRAFT','18 hónapos kortól – 6 éves korig') on conflict (slug) do nothing;
+              insert into activity_term(activity_id,term_id)
+              select a.id,t.id from activity a join taxonomy_term t on t.term_type='ACTIVITY_TOPIC' and t.slug=case
+                when a.slug='allatok-es-hangjaik' then 'allatok-es-elovilag'
+                when a.slug='ki-mit-eszik' then 'allatok-es-elovilag'
+                when a.slug='allatok-es-elohelyeik' then 'allatok-es-elovilag'
+                when a.slug='allatmamak-es-kicsinyeik' then 'allatok-es-elovilag'
+                when a.slug='haziallatok-es-vadallatok' then 'allatok-es-elovilag'
+                when a.slug='erdei-allatok-felfedezese' then 'allatok-es-elovilag'
+                when a.slug='allatok-labnyomai' then 'allatok-es-elovilag'
+                when a.slug='kinek-milyen-a-testboritasa' then 'allatok-es-elovilag'
+                when a.slug='allatok-mozgasanak-utanzasa' then 'allatok-es-elovilag'
+                when a.slug='gondoskodjunk-az-allatokrol' then 'allatok-es-elovilag'
+                when a.slug='ultessunk-magokat' then 'novenyek-es-kerteszkedes'
+                when a.slug='locsoljuk-meg-a-viragokat' then 'novenyek-es-kerteszkedes'
+                when a.slug='figyeljuk-meg-hogyan-novekszik-a-noveny' then 'novenyek-es-kerteszkedes'
+                when a.slug='gyumolcsok-es-zoldsegek-felismerese' then 'novenyek-es-kerteszkedes'
+                when a.slug='mi-terem-a-fan-es-mi-a-foldben' then 'novenyek-es-kerteszkedes'
+                when a.slug='a-noveny-reszei' then 'novenyek-es-kerteszkedes'
+                when a.slug='levelparosito' then 'novenyek-es-kerteszkedes'
+                when a.slug='viragok-szin-szerinti-valogatasa' then 'novenyek-es-kerteszkedes'
+                when a.slug='mire-van-szuksege-a-novenynek' then 'novenyek-es-kerteszkedes'
+                when a.slug='keszitsunk-sajat-kiskertet' then 'novenyek-es-kerteszkedes'
+                when a.slug='evszakok-felismerese' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='oltozzunk-az-evszaknak-megfeleloen' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='tavaszi-viragkereso' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='nyari-elmenyek' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='oszi-termesgyujtes' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='teli-termeszet-megfigyelese' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='az-evszakok-faja' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='evszakos-kepek-valogatasa' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='mit-csinalnak-az-allatok-telen' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='evszakos-felfedezodoboz' then 'evszakok-es-termeszeti-valtozasok'
+                when a.slug='milyen-ma-az-ido' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='keszitsunk-idojarasnaptart' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='napfeny-es-arnyek-megfigyelese' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='fuj-a-szel' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='esocseppek-megfigyelese' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='felhofigyelo' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='jegolvasztas' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='mihez-kell-az-esernyo' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='keszitsunk-szivarvanyt' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='idojaras-es-tevekenysegek-parositasa' then 'idojaras-es-termeszeti-jelensegek'
+                when a.slug='kavicsok-valogatasa' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='termeszetes-tapintodoboz' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='homok-es-viz-felfedezese' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='tobozok-es-termesek-gyujtese' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='termeszeti-kincsek-keresese' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='szaraz-es-nedves-anyagok' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='konnyu-es-nehez-termeszeti-targyak' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='termeszetes-illatok-felismerese' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='kereglenyomat-keszitese' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='termeszeti-hangok-megfigyelese' then 'termeszeti-anyagok-es-erzekszervi-felfedezes'
+                when a.slug='elmerul-vagy-lebeg' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='szinek-keverese' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='mi-olvad-el' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='mi-oldodik-fel-a-vizben' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='melyik-anyag-szivja-fel-a-vizet' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='magneses-felfedezes' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='feny-es-arnyek-jatek' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='gurul-vagy-csuszik' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='viz-aramlasanak-megfigyelese' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='levego-es-buborekok' then 'egyszeru-kiserletek-es-felfedezesek'
+                when a.slug='kozlekedesi-eszkozok-felismerese' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='piros-sarga-zold' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='keljunk-at-a-zebran' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='mi-kozlekedik-a-vizen-foldon-es-levegoben' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='jarmuvek-hangjai' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='kozlekedesi-tablak-megismerese' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='epitsunk-sajat-varost' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='utazzunk-busszal' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='biztonsagos-kerekparozas' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='biztonsagos-es-veszelyes-kozlekedesi-helyzetek' then 'kozlekedes-es-kozlekedesbiztonsag'
+                when a.slug='ismerjuk-meg-a-csaladtagokat' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='ki-hol-dolgozik' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='kinek-milyen-eszkozre-van-szuksege' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='jatsszunk-boltosat' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='latogatas-az-orvosnal' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='postas-jatek' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='tuzoltos-szerepjatek' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='epitsunk-egy-telepulest' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='ismerjuk-meg-a-kornyekunket' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='kihez-fordulhatunk-segitsegert' then 'tarsadalmi-kornyezet-es-foglalkozasok'
+                when a.slug='szelektiv-hulladekgyujtes' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='takaritsuk-ki-a-jatekparkot' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='papir-muanyag-vagy-uveg' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='keszitsunk-jatekot-ujrahasznositott-anyagokbol' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='vigyazzunk-a-vizre' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='kapcsoljuk-le-a-lampat' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='gondoskodjunk-a-madarakrol' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='ismerkedes-a-komposztalassal' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='ujrahasznalhato-targyak-felismerese' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='kornyezetbarat-es-kornyezetkarosito-szokasok' then 'kornyezetvedelem-es-fenntarthatosag'
+                when a.slug='forro-vagy-hideg' then 'biztonsag-es-veszelyfelismeres'
+                when a.slug='mihez-nem-szabad-hozzanyulni' then 'biztonsag-es-veszelyfelismeres'
+                when a.slug='biztonsagos-es-veszelyes-targyak' then 'biztonsag-es-veszelyfelismeres'
+                when a.slug='mit-szabad-a-szankba-venni' then 'biztonsag-es-veszelyfelismeres'
+                when a.slug='biztonsagos-jatek-a-jatszoteren' then 'biztonsag-es-veszelyfelismeres'
+                when a.slug='mit-tegyunk-ha-elveszitjuk-a-szuleinket' then 'biztonsag-es-veszelyfelismeres'
+                when a.slug='ismerjuk-meg-a-segito-felnotteket' then 'biztonsag-es-veszelyfelismeres'
+                when a.slug='biztonsagos-viselkedes-allatok-kozeleben' then 'biztonsag-es-veszelyfelismeres'
+                when a.slug='biztonsag-a-vizparton' then 'biztonsag-es-veszelyfelismeres'
+                when a.slug='mit-tegyunk-ha-baj-tortenik' then 'biztonsag-es-veszelyfelismeres' end where a.slug in ('allatok-es-hangjaik','ki-mit-eszik','allatok-es-elohelyeik','allatmamak-es-kicsinyeik','haziallatok-es-vadallatok','erdei-allatok-felfedezese','allatok-labnyomai','kinek-milyen-a-testboritasa','allatok-mozgasanak-utanzasa','gondoskodjunk-az-allatokrol','ultessunk-magokat','locsoljuk-meg-a-viragokat','figyeljuk-meg-hogyan-novekszik-a-noveny','gyumolcsok-es-zoldsegek-felismerese','mi-terem-a-fan-es-mi-a-foldben','a-noveny-reszei','levelparosito','viragok-szin-szerinti-valogatasa','mire-van-szuksege-a-novenynek','keszitsunk-sajat-kiskertet','evszakok-felismerese','oltozzunk-az-evszaknak-megfeleloen','tavaszi-viragkereso','nyari-elmenyek','oszi-termesgyujtes','teli-termeszet-megfigyelese','az-evszakok-faja','evszakos-kepek-valogatasa','mit-csinalnak-az-allatok-telen','evszakos-felfedezodoboz','milyen-ma-az-ido','keszitsunk-idojarasnaptart','napfeny-es-arnyek-megfigyelese','fuj-a-szel','esocseppek-megfigyelese','felhofigyelo','jegolvasztas','mihez-kell-az-esernyo','keszitsunk-szivarvanyt','idojaras-es-tevekenysegek-parositasa','kavicsok-valogatasa','termeszetes-tapintodoboz','homok-es-viz-felfedezese','tobozok-es-termesek-gyujtese','termeszeti-kincsek-keresese','szaraz-es-nedves-anyagok','konnyu-es-nehez-termeszeti-targyak','termeszetes-illatok-felismerese','kereglenyomat-keszitese','termeszeti-hangok-megfigyelese','elmerul-vagy-lebeg','szinek-keverese','mi-olvad-el','mi-oldodik-fel-a-vizben','melyik-anyag-szivja-fel-a-vizet','magneses-felfedezes','feny-es-arnyek-jatek','gurul-vagy-csuszik','viz-aramlasanak-megfigyelese','levego-es-buborekok','kozlekedesi-eszkozok-felismerese','piros-sarga-zold','keljunk-at-a-zebran','mi-kozlekedik-a-vizen-foldon-es-levegoben','jarmuvek-hangjai','kozlekedesi-tablak-megismerese','epitsunk-sajat-varost','utazzunk-busszal','biztonsagos-kerekparozas','biztonsagos-es-veszelyes-kozlekedesi-helyzetek','ismerjuk-meg-a-csaladtagokat','ki-hol-dolgozik','kinek-milyen-eszkozre-van-szuksege','jatsszunk-boltosat','latogatas-az-orvosnal','postas-jatek','tuzoltos-szerepjatek','epitsunk-egy-telepulest','ismerjuk-meg-a-kornyekunket','kihez-fordulhatunk-segitsegert','szelektiv-hulladekgyujtes','takaritsuk-ki-a-jatekparkot','papir-muanyag-vagy-uveg','keszitsunk-jatekot-ujrahasznositott-anyagokbol','vigyazzunk-a-vizre','kapcsoljuk-le-a-lampat','gondoskodjunk-a-madarakrol','ismerkedes-a-komposztalassal','ujrahasznalhato-targyak-felismerese','kornyezetbarat-es-kornyezetkarosito-szokasok','forro-vagy-hideg','mihez-nem-szabad-hozzanyulni','biztonsagos-es-veszelyes-targyak','mit-szabad-a-szankba-venni','biztonsagos-jatek-a-jatszoteren','mit-tegyunk-ha-elveszitjuk-a-szuleinket','ismerjuk-meg-a-segito-felnotteket','biztonsagos-viselkedes-allatok-kozeleben','biztonsag-a-vizparton','mit-tegyunk-ha-baj-tortenik') on conflict (activity_id,term_id) do nothing;
+              update activity a set age_recommendation='18 hónapos kortól – 6 éves korig',updated_at=CURRENT_TIMESTAMP where exists (select 1 from activity_term at join taxonomy_term child on child.id=at.term_id join taxonomy_term root on root.id=child.parent_id where at.activity_id=a.id and root.slug='kornyezeti-tapasztalatszerzes-es-felfedezes');

@@ -1,0 +1,182 @@
+databaseChangeLog:
+  - changeSet:
+      id: 046-seed-creativity-activity-drafts
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description) values ('ACTIVITY_TOPIC','Kreativitás, képzelet és művészeti nevelés','kreativitas-kepzelet-es-muveszeti-neveles',110,true,null,'A kreativitás fejlesztése során a gyermek lehetőséget kap a szabad alkotásra, a képzelete használatára, az érzelmei kifejezésére, a kísérletezésre és az önálló ötletek megvalósítására. A hangsúly nem a kész alkotás szépségén, hanem az alkotás folyamatán és örömén van.') on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=null,default_description=excluded.default_description;
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description)
+              select 'ACTIVITY_TOPIC',v.name,v.slug,v.sort_order,true,root.id,v.description from (values
+                ('Rajzolás, festés és vizuális alkotás','rajzolas-festes-es-vizualis-alkotas',10,'A vizuális önkifejezés, a színérzékelés és az alkotókedv támogatása.'),
+                ('Kézműves alkotás és anyagformálás','kezmuves-alkotas-es-anyagformalas',20,'Különböző anyagok megismerése, alakítása és kreatív felhasználása.'),
+                ('Építés és konstruktív játék','epites-es-konstruktiv-jatek',30,'A térbeli képzelet, a tervezés, a kreatív problémamegoldás és az önálló ötletek megvalósítása.'),
+                ('Szimbolikus játék és szerepjáték','szimbolikus-jatek-es-szerepjatek',40,'A képzelet, a hétköznapi tapasztalatok feldolgozása és a tárgyak szimbolikus használata.'),
+                ('Bábozás és dramatikus játék','babozas-es-dramatikus-jatek',50,'Az önkifejezés, az érzelmek megjelenítése, a szerepek kipróbálása és történetek eljátszása.'),
+                ('Zenei nevelés és ritmusérzék','zenei-neveles-es-ritmuserzek',60,'A hallási tapasztalatok, a ritmusérzék, a zenei önkifejezés és a zenélés örömének támogatása.'),
+                ('Kreatív mozgás és tánc','kreativ-mozgas-es-tanc',70,'A mozgásos önkifejezés, a testtudat, a képzelet és a zene összekapcsolása.'),
+                ('Képzelet és kreatív történetalkotás','kepzelet-es-kreativ-tortenetalkotas',80,'A fantázia, az ötletgazdagság, a kreatív gondolkodás és a történetmesélési képesség fejlesztése.')) as v(name,slug,sort_order,description) cross join taxonomy_term root where root.term_type='ACTIVITY_TOPIC' and root.slug='kreativitas-kepzelet-es-muveszeti-neveles' on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=excluded.parent_id,default_description=excluded.default_description;
+              insert into activity(title,slug,status,age_recommendation)
+              values
+                ('Ujjfestés','ujjfestes','DRAFT','18 hó+'),
+                ('Festés szivaccsal','festes-szivaccsal','DRAFT','18 hó+'),
+                ('Szabad rajzolás zsírkrétával','szabad-rajzolas-zsirkretaval','DRAFT','18 hó+'),
+                ('Festés vízzel','festes-vizzel','DRAFT','18 hó+'),
+                ('Festés játékautókkal','festes-jatekautokkal','DRAFT','2 év+'),
+                ('Zöldségnyomdázás','zoldsegnyomdazas','DRAFT','2 év+'),
+                ('Festés természetes eszközökkel','festes-termeszetes-eszkozokkel','DRAFT','2 év+'),
+                ('Színkeverő varázslat','szinkevero-varazslat','DRAFT','2,5 év+'),
+                ('Fonalfestés','fonalfestes','DRAFT','3 év+'),
+                ('Fejezd be a rajzot!','fejezd-be-a-rajzot','DRAFT','4 év+'),
+                ('Szabad gyurmázás','szabad-gyurmazas','DRAFT','18 hó+'),
+                ('Papírtépős kollázs','papirtepos-kollazs','DRAFT','18 hó+'),
+                ('Matricás képalkotás','matricas-kepalkotas','DRAFT','18 hó+'),
+                ('Gyurmaállatok készítése','gyurmaallatok-keszitese','DRAFT','2 év+'),
+                ('Papírgombócokból képalkotás','papirgombocokbol-kepalkotas','DRAFT','2 év+'),
+                ('Termésekből alkotás','termesekbol-alkotas','DRAFT','3 év+'),
+                ('Papírtányérból állatfigura','papirtanyerbol-allatfigura','DRAFT','3 év+'),
+                ('Só-liszt gyurma formázása','so-liszt-gyurma-formazasa','DRAFT','3 év+'),
+                ('Újrahasznosított anyagokból alkotás','ujrahasznositott-anyagokbol-alkotas','DRAFT','3 év+'),
+                ('Saját báb készítése','sajat-bab-keszitese','DRAFT','4 év+'),
+                ('Szabad építés építőkockákból','szabad-epites-epitokockakbol','DRAFT','18 hó+'),
+                ('Építsünk tornyot!','epitsunk-tornyot','DRAFT','18 hó+'),
+                ('Házikó építése párnákból','haziko-epitese-parnakbol','DRAFT','18 hó+'),
+                ('Garázsépítés kisautóknak','garazsepites-kisautoknak','DRAFT','2 év+'),
+                ('Állatok otthonának megépítése','allatok-otthonanak-megepitese','DRAFT','2 év+'),
+                ('Hídépítés','hidepites','DRAFT','2,5 év+'),
+                ('Kartondobozból házikó','kartondobozbol-haziko','DRAFT','3 év+'),
+                ('Saját város építése','sajat-varos-epitese','DRAFT','3 év+'),
+                ('Képzeletbeli jármű készítése','kepzeletbeli-jarmu-keszitese','DRAFT','4 év+'),
+                ('Építsd meg, amit elképzeltél!','epitsd-meg-amit-elkepzeltel','DRAFT','4 év+'),
+                ('Etessük meg a babát!','etessuk-meg-a-babat','DRAFT','18 hó+'),
+                ('Főzőcskézés','fozocskezes','DRAFT','18 hó+'),
+                ('Képzeletbeli telefonálás','kepzeletbeli-telefonalas','DRAFT','18 hó+'),
+                ('Piknik a plüssállatokkal','piknik-a-plussallatokkal','DRAFT','2 év+'),
+                ('Orvosos játék','orvosos-jatek','DRAFT','2 év+'),
+                ('Boltos játék','boltos-jatek','DRAFT','2 év+'),
+                ('Állatorvosi rendelő','allatorvosi-rendelo','DRAFT','2,5 év+'),
+                ('Éttermes játék','ettermes-jatek','DRAFT','3 év+'),
+                ('Utazás a képzeletbeli vonaton','utazas-a-kepzeletbeli-vonaton','DRAFT','3 év+'),
+                ('Varázslatos tárgyak – mi lehet belőle?','varazslatos-targyak-mi-lehet-belole','DRAFT','3 év+'),
+                ('Beszélgetés egy bábbal','beszelgetes-egy-babbal','DRAFT','18 hó+'),
+                ('Kukucs a bábbal','kukucs-a-babbal','DRAFT','18 hó+'),
+                ('Állatbábok hangutánzása','allatbabok-hangutanzasa','DRAFT','18 hó+'),
+                ('Altassuk el a bábot!','altassuk-el-a-babot','DRAFT','2 év+'),
+                ('Ujjbábos játék','ujjbabos-jatek','DRAFT','2 év+'),
+                ('Érzelmek eljátszása bábokkal','erzelmek-eljatszasa-babokkal','DRAFT','2,5 év+'),
+                ('Kedvenc mese eljátszása','kedvenc-mese-eljatszasa','DRAFT','3 év+'),
+                ('Árnyékszínház','arnyekszinhaz','DRAFT','3 év+'),
+                ('Öltözzünk be mesefigurának!','oltozzunk-be-mesefiguranak','DRAFT','3 év+'),
+                ('Saját bábelőadás','sajat-babeloadas','DRAFT','4 év+'),
+                ('Tapsoljunk együtt!','tapsoljunk-egyutt','DRAFT','18 hó+'),
+                ('Csörgők és hangszerek felfedezése','csorgok-es-hangszerek-felfedezese','DRAFT','18 hó+'),
+                ('Mondókázás mozdulatokkal','mondokazas-mozdulatokkal','DRAFT','18 hó+'),
+                ('Halk és hangos zenélés','halk-es-hangos-zeneles','DRAFT','2 év+'),
+                ('Gyors és lassú ritmusok','gyors-es-lassu-ritmusok','DRAFT','2 év+'),
+                ('Ritmusvisszhang','ritmusvisszhang','DRAFT','2,5 év+'),
+                ('Zenélés hétköznapi tárgyakkal','zeneles-hetkoznapi-targyakkal','DRAFT','2,5 év+'),
+                ('Saját hangszer készítése','sajat-hangszer-keszitese','DRAFT','3 év+'),
+                ('Mesék hangokkal kísérve','mesek-hangokkal-kiserve','DRAFT','3 év+'),
+                ('Saját kis zenekar','sajat-kis-zenekar','DRAFT','3 év+'),
+                ('Szabad tánc zenére','szabad-tanc-zenere','DRAFT','18 hó+'),
+                ('Kendős tánc','kendos-tanc','DRAFT','18 hó+'),
+                ('Állatok mozgásának utánzása','allatok-mozgasanak-utanzasa','DRAFT','18 hó+'),
+                ('Táncoló testrészek','tancolo-testreszek','DRAFT','2 év+'),
+                ('Mozogj úgy, mint a szél!','mozogj-ugy-mint-a-szel','DRAFT','2 év+'),
+                ('Zenés szoborjáték','zenes-szoborjatek','DRAFT','2,5 év+'),
+                ('Érzelmek eltáncolása','erzelmek-eltancolasa','DRAFT','3 év+'),
+                ('Képzeletbeli erdei séta','kepzeletbeli-erdei-seta','DRAFT','3 év+'),
+                ('Mozgásos mesealkotás','mozgasos-mesealkotas','DRAFT','3 év+'),
+                ('Találd ki a saját táncodat!','talald-ki-a-sajat-tancodat','DRAFT','4 év+'),
+                ('Mi lakik a dobozban?','mi-lakik-a-dobozban','DRAFT','18 hó+'),
+                ('Meséljünk a plüssállatoknak!','meseljunk-a-plussallatoknak','DRAFT','2 év+'),
+                ('Képzeletbeli utazás','kepzeletbeli-utazas','DRAFT','2 év+'),
+                ('Mit látunk a felhőkben?','mit-latunk-a-felhokben','DRAFT','2,5 év+'),
+                ('Mesekosár','mesekosar','DRAFT','2,5 év+'),
+                ('Mi történhet ezután?','mi-tortenhet-ezutan','DRAFT','3 év+'),
+                ('Varázszsákból történet','varazszsakbol-tortenet','DRAFT','3 év+'),
+                ('Találj ki egy különleges állatot!','talalj-ki-egy-kulonleges-allatot','DRAFT','3 év+'),
+                ('Történetalkotás képkártyákkal','tortenetalkotas-kepkartyakkal','DRAFT','4 év+'),
+                ('Saját mesekönyv készítése','sajat-mesekonyv-keszitese','DRAFT','4 év+') on conflict (slug) do nothing;
+              insert into activity_term(activity_id,term_id)
+              select a.id,t.id from activity a join taxonomy_term t on t.term_type='ACTIVITY_TOPIC' and t.slug=case
+                when a.slug='ujjfestes' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='festes-szivaccsal' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='szabad-rajzolas-zsirkretaval' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='festes-vizzel' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='festes-jatekautokkal' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='zoldsegnyomdazas' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='festes-termeszetes-eszkozokkel' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='szinkevero-varazslat' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='fonalfestes' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='fejezd-be-a-rajzot' then 'rajzolas-festes-es-vizualis-alkotas'
+                when a.slug='szabad-gyurmazas' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='papirtepos-kollazs' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='matricas-kepalkotas' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='gyurmaallatok-keszitese' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='papirgombocokbol-kepalkotas' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='termesekbol-alkotas' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='papirtanyerbol-allatfigura' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='so-liszt-gyurma-formazasa' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='ujrahasznositott-anyagokbol-alkotas' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='sajat-bab-keszitese' then 'kezmuves-alkotas-es-anyagformalas'
+                when a.slug='szabad-epites-epitokockakbol' then 'epites-es-konstruktiv-jatek'
+                when a.slug='epitsunk-tornyot' then 'epites-es-konstruktiv-jatek'
+                when a.slug='haziko-epitese-parnakbol' then 'epites-es-konstruktiv-jatek'
+                when a.slug='garazsepites-kisautoknak' then 'epites-es-konstruktiv-jatek'
+                when a.slug='allatok-otthonanak-megepitese' then 'epites-es-konstruktiv-jatek'
+                when a.slug='hidepites' then 'epites-es-konstruktiv-jatek'
+                when a.slug='kartondobozbol-haziko' then 'epites-es-konstruktiv-jatek'
+                when a.slug='sajat-varos-epitese' then 'epites-es-konstruktiv-jatek'
+                when a.slug='kepzeletbeli-jarmu-keszitese' then 'epites-es-konstruktiv-jatek'
+                when a.slug='epitsd-meg-amit-elkepzeltel' then 'epites-es-konstruktiv-jatek'
+                when a.slug='etessuk-meg-a-babat' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='fozocskezes' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='kepzeletbeli-telefonalas' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='piknik-a-plussallatokkal' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='orvosos-jatek' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='boltos-jatek' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='allatorvosi-rendelo' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='ettermes-jatek' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='utazas-a-kepzeletbeli-vonaton' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='varazslatos-targyak-mi-lehet-belole' then 'szimbolikus-jatek-es-szerepjatek'
+                when a.slug='beszelgetes-egy-babbal' then 'babozas-es-dramatikus-jatek'
+                when a.slug='kukucs-a-babbal' then 'babozas-es-dramatikus-jatek'
+                when a.slug='allatbabok-hangutanzasa' then 'babozas-es-dramatikus-jatek'
+                when a.slug='altassuk-el-a-babot' then 'babozas-es-dramatikus-jatek'
+                when a.slug='ujjbabos-jatek' then 'babozas-es-dramatikus-jatek'
+                when a.slug='erzelmek-eljatszasa-babokkal' then 'babozas-es-dramatikus-jatek'
+                when a.slug='kedvenc-mese-eljatszasa' then 'babozas-es-dramatikus-jatek'
+                when a.slug='arnyekszinhaz' then 'babozas-es-dramatikus-jatek'
+                when a.slug='oltozzunk-be-mesefiguranak' then 'babozas-es-dramatikus-jatek'
+                when a.slug='sajat-babeloadas' then 'babozas-es-dramatikus-jatek'
+                when a.slug='tapsoljunk-egyutt' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='csorgok-es-hangszerek-felfedezese' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='mondokazas-mozdulatokkal' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='halk-es-hangos-zeneles' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='gyors-es-lassu-ritmusok' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='ritmusvisszhang' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='zeneles-hetkoznapi-targyakkal' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='sajat-hangszer-keszitese' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='mesek-hangokkal-kiserve' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='sajat-kis-zenekar' then 'zenei-neveles-es-ritmuserzek'
+                when a.slug='szabad-tanc-zenere' then 'kreativ-mozgas-es-tanc'
+                when a.slug='kendos-tanc' then 'kreativ-mozgas-es-tanc'
+                when a.slug='allatok-mozgasanak-utanzasa' then 'kreativ-mozgas-es-tanc'
+                when a.slug='tancolo-testreszek' then 'kreativ-mozgas-es-tanc'
+                when a.slug='mozogj-ugy-mint-a-szel' then 'kreativ-mozgas-es-tanc'
+                when a.slug='zenes-szoborjatek' then 'kreativ-mozgas-es-tanc'
+                when a.slug='erzelmek-eltancolasa' then 'kreativ-mozgas-es-tanc'
+                when a.slug='kepzeletbeli-erdei-seta' then 'kreativ-mozgas-es-tanc'
+                when a.slug='mozgasos-mesealkotas' then 'kreativ-mozgas-es-tanc'
+                when a.slug='talald-ki-a-sajat-tancodat' then 'kreativ-mozgas-es-tanc'
+                when a.slug='mi-lakik-a-dobozban' then 'kepzelet-es-kreativ-tortenetalkotas'
+                when a.slug='meseljunk-a-plussallatoknak' then 'kepzelet-es-kreativ-tortenetalkotas'
+                when a.slug='kepzeletbeli-utazas' then 'kepzelet-es-kreativ-tortenetalkotas'
+                when a.slug='mit-latunk-a-felhokben' then 'kepzelet-es-kreativ-tortenetalkotas'
+                when a.slug='mesekosar' then 'kepzelet-es-kreativ-tortenetalkotas'
+                when a.slug='mi-tortenhet-ezutan' then 'kepzelet-es-kreativ-tortenetalkotas'
+                when a.slug='varazszsakbol-tortenet' then 'kepzelet-es-kreativ-tortenetalkotas'
+                when a.slug='talalj-ki-egy-kulonleges-allatot' then 'kepzelet-es-kreativ-tortenetalkotas'
+                when a.slug='tortenetalkotas-kepkartyakkal' then 'kepzelet-es-kreativ-tortenetalkotas'
+                when a.slug='sajat-mesekonyv-keszitese' then 'kepzelet-es-kreativ-tortenetalkotas' end where a.slug in ('ujjfestes','festes-szivaccsal','szabad-rajzolas-zsirkretaval','festes-vizzel','festes-jatekautokkal','zoldsegnyomdazas','festes-termeszetes-eszkozokkel','szinkevero-varazslat','fonalfestes','fejezd-be-a-rajzot','szabad-gyurmazas','papirtepos-kollazs','matricas-kepalkotas','gyurmaallatok-keszitese','papirgombocokbol-kepalkotas','termesekbol-alkotas','papirtanyerbol-allatfigura','so-liszt-gyurma-formazasa','ujrahasznositott-anyagokbol-alkotas','sajat-bab-keszitese','szabad-epites-epitokockakbol','epitsunk-tornyot','haziko-epitese-parnakbol','garazsepites-kisautoknak','allatok-otthonanak-megepitese','hidepites','kartondobozbol-haziko','sajat-varos-epitese','kepzeletbeli-jarmu-keszitese','epitsd-meg-amit-elkepzeltel','etessuk-meg-a-babat','fozocskezes','kepzeletbeli-telefonalas','piknik-a-plussallatokkal','orvosos-jatek','boltos-jatek','allatorvosi-rendelo','ettermes-jatek','utazas-a-kepzeletbeli-vonaton','varazslatos-targyak-mi-lehet-belole','beszelgetes-egy-babbal','kukucs-a-babbal','allatbabok-hangutanzasa','altassuk-el-a-babot','ujjbabos-jatek','erzelmek-eljatszasa-babokkal','kedvenc-mese-eljatszasa','arnyekszinhaz','oltozzunk-be-mesefiguranak','sajat-babeloadas','tapsoljunk-egyutt','csorgok-es-hangszerek-felfedezese','mondokazas-mozdulatokkal','halk-es-hangos-zeneles','gyors-es-lassu-ritmusok','ritmusvisszhang','zeneles-hetkoznapi-targyakkal','sajat-hangszer-keszitese','mesek-hangokkal-kiserve','sajat-kis-zenekar','szabad-tanc-zenere','kendos-tanc','allatok-mozgasanak-utanzasa','tancolo-testreszek','mozogj-ugy-mint-a-szel','zenes-szoborjatek','erzelmek-eltancolasa','kepzeletbeli-erdei-seta','mozgasos-mesealkotas','talald-ki-a-sajat-tancodat','mi-lakik-a-dobozban','meseljunk-a-plussallatoknak','kepzeletbeli-utazas','mit-latunk-a-felhokben','mesekosar','mi-tortenhet-ezutan','varazszsakbol-tortenet','talalj-ki-egy-kulonleges-allatot','tortenetalkotas-kepkartyakkal','sajat-mesekonyv-keszitese') on conflict (activity_id,term_id) do nothing;

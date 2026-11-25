@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 032-trunk-stability-taxonomy
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order)
+              values ('SKILL','Törzsstabilitás','torzsstabilitas',55),
+                     ('SKILL','Vállövi stabilitás','vallovi-stabilitas',65)
+              on conflict (term_type,slug) do nothing;
+              insert into taxonomy_term(term_type,name,slug,sort_order,parent_id)
+              select 'TOPIC','Törzsstabilitás és támaszkodás','torzsstabilitas-es-tamaszkodas',20,id
+              from taxonomy_term where term_type='TOPIC' and slug='nagymozgas-es-testtudat'
+              on conflict (term_type,slug) do nothing;

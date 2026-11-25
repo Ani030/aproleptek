@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 044-extend-independence-activity-drafts
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description)
+              select 'ACTIVITY_TOPIC',v.name,v.slug,v.sort_order,true,root.id,v.description from (values
+                ('Saját szükségletek felismerése és önálló jelzése','sajat-szuksegletek-felismerese-es-onallo-jelzese',90,'A testi szükségletek felismerését és jelzését, az önmagunkról való gondoskodást és az önálló kezdeményezést támogató játékötletek.'),
+                ('Biztonságos eszközhasználat és mindennapi szabályok','biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok',100,'A hétköznapi veszélyhelyzetek felismerését, a biztonságos viselkedést, az eszközök rendeltetésszerű használatát és az alapvető életvezetési szabályok megismerését támogató játékok. A veszélyhelyzeteket képkártyákkal, szerepjátékokkal és biztonságos utánzatokkal dolgozzuk fel, valódi veszélyes tárgyak használata nélkül.')) as v(name,slug,sort_order,description) cross join taxonomy_term root where root.term_type='ACTIVITY_TOPIC' and root.slug='onallosag-es-mindennapi-eletvezetes' on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=excluded.parent_id,default_description=excluded.default_description;
+              insert into activity(title,slug,status)
+              values
+                ('Mire van szüksége a macinak?','mire-van-szuksege-a-macinak','DRAFT'),
+                ('Éhes vagy szomjas vagyok?','ehes-vagy-szomjas-vagyok','DRAFT'),
+                ('Melegem van vagy fázom?','melegem-van-vagy-fazom','DRAFT'),
+                ('Elfáradt a kisnyuszi','elfaradt-a-kisnyuszi','DRAFT'),
+                ('Mikor kell bilire menni?','mikor-kell-bilire-menni','DRAFT'),
+                ('Mit jelez a testem?','mit-jelez-a-testem','DRAFT'),
+                ('Készítsünk saját ivósarkot!','keszitsunk-sajat-ivosarkot','DRAFT'),
+                ('Szükségem van egy kis pihenésre','szuksegem-van-egy-kis-pihenesre','DRAFT'),
+                ('Mondd el, mire van szükséged!','mondd-el-mire-van-szukseged','DRAFT'),
+                ('Erről már magam is tudok gondoskodni!','errol-mar-magam-is-tudok-gondoskodni','DRAFT'),
+                ('Szabad vagy nem szabad?','szabad-vagy-nem-szabad','DRAFT'),
+                ('Biztonságos vagy veszélyes?','biztonsagos-vagy-veszelyes','DRAFT'),
+                ('Forró vagy hideg?','forro-vagy-hideg','DRAFT'),
+                ('Melyik eszközt mire használjuk?','melyik-eszkozt-mire-hasznaljuk','DRAFT'),
+                ('Gyerekek és felnőttek eszközei','gyerekek-es-felnottek-eszkozei','DRAFT'),
+                ('Hogyan használjuk biztonságosan az ollót?','hogyan-hasznaljuk-biztonsagosan-az-ollot','DRAFT'),
+                ('Mit szabad a szánkba venni?','mit-szabad-a-szankba-venni','DRAFT'),
+                ('Biztonságos közlekedés otthon','biztonsagos-kozlekedes-otthon','DRAFT'),
+                ('Mit tegyünk, ha eltört valami?','mit-tegyunk-ha-eltort-valami','DRAFT'),
+                ('Keressük meg a veszélyforrásokat!','keressuk-meg-a-veszelyforrasokat','DRAFT') on conflict (slug) do nothing;
+              insert into activity_term(activity_id,term_id)
+              select a.id,t.id from activity a join taxonomy_term t on t.term_type='ACTIVITY_TOPIC' and t.slug=case
+                when a.slug='mire-van-szuksege-a-macinak' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='ehes-vagy-szomjas-vagyok' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='melegem-van-vagy-fazom' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='elfaradt-a-kisnyuszi' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='mikor-kell-bilire-menni' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='mit-jelez-a-testem' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='keszitsunk-sajat-ivosarkot' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='szuksegem-van-egy-kis-pihenesre' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='mondd-el-mire-van-szukseged' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='errol-mar-magam-is-tudok-gondoskodni' then 'sajat-szuksegletek-felismerese-es-onallo-jelzese'
+                when a.slug='szabad-vagy-nem-szabad' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok'
+                when a.slug='biztonsagos-vagy-veszelyes' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok'
+                when a.slug='forro-vagy-hideg' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok'
+                when a.slug='melyik-eszkozt-mire-hasznaljuk' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok'
+                when a.slug='gyerekek-es-felnottek-eszkozei' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok'
+                when a.slug='hogyan-hasznaljuk-biztonsagosan-az-ollot' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok'
+                when a.slug='mit-szabad-a-szankba-venni' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok'
+                when a.slug='biztonsagos-kozlekedes-otthon' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok'
+                when a.slug='mit-tegyunk-ha-eltort-valami' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok'
+                when a.slug='keressuk-meg-a-veszelyforrasokat' then 'biztonsagos-eszkozhasznalat-es-mindennapi-szabalyok' end where a.slug in ('mire-van-szuksege-a-macinak','ehes-vagy-szomjas-vagyok','melegem-van-vagy-fazom','elfaradt-a-kisnyuszi','mikor-kell-bilire-menni','mit-jelez-a-testem','keszitsunk-sajat-ivosarkot','szuksegem-van-egy-kis-pihenesre','mondd-el-mire-van-szukseged','errol-mar-magam-is-tudok-gondoskodni','szabad-vagy-nem-szabad','biztonsagos-vagy-veszelyes','forro-vagy-hideg','melyik-eszkozt-mire-hasznaljuk','gyerekek-es-felnottek-eszkozei','hogyan-hasznaljuk-biztonsagosan-az-ollot','mit-szabad-a-szankba-venni','biztonsagos-kozlekedes-otthon','mit-tegyunk-ha-eltort-valami','keressuk-meg-a-veszelyforrasokat') on conflict (activity_id,term_id) do nothing;

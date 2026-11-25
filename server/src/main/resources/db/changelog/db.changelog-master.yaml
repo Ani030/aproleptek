@@ -53,4 +53,48 @@ databaseChangeLog:
       file: db/changelog/changes/026-order-line-readiness.yaml
   - include:
       file: db/changelog/changes/027-material-stock-movements.yaml
+  - include:
+      file: db/changelog/changes/028-parent-activity-content.yaml
+  - include:
+      file: db/changelog/changes/029-seed-balance-walk-activity.yaml
+  - include:
+      file: db/changelog/changes/030-activity-access-mode.yaml
+  - include:
+      file: db/changelog/changes/031-activity-skill-descriptions.yaml
+  - include:
+      file: db/changelog/changes/032-trunk-stability-taxonomy.yaml
+  - include:
+      file: db/changelog/changes/033-seed-gross-motor-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/034-separate-activity-taxonomy.yaml
+  - include:
+      file: db/changelog/changes/035-seed-fine-motor-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/036-seed-sensory-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/037-restore-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/038-seed-cognitive-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/039-seed-attention-memory-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/040-seed-social-skills-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/041-seed-emotional-development-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/042-align-emotional-activity-ages.yaml
+  - include:
+      file: db/changelog/changes/043-seed-independence-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/044-extend-independence-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/045-seed-mathematical-spatial-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/046-seed-creativity-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/047-seed-environmental-discovery-activity-drafts.yaml
+  - include:
+      file: db/changelog/changes/048-fix-pillow-islands-activity-topic.yaml
+  - include:
+      file: db/changelog/changes/049-fix-slow-fast-walking-activity-topic.yaml
 

@@ -233,7 +233,18 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [x] Feladatlap-minőségi ellenőrző lista összeállítása. *(A tartalmat, fájlokat, nyomtatást, hozzáférhetőséget és publikálást a `docs/feladatlap-minosegi-ellenorzo-lista.md` foglalja össze.)*
 - [ ] Első feladatlapok feltöltése és helyes A4-es nyomtatási ellenőrzése.
 - [ ] Kivágható lapos feladatlapok összes oldalának ellenőrzése.
-- [ ] Első önálló játékötletek rögzítése.
+- [x] Nagymozgás és testtudat alá 9 altípus és 90 játékötlet rögzítése piszkozatként; a képek és a teljes játékleírások később tölthetők fel. *(A 033-as migráció hozza létre őket.)*
+- [x] Egyensúly és stabil járás: a „Párnaszigeteken átlépés” és „Lassú és gyors járás váltogatása” játékok helyes alkategóriához rendelése, a régi téves témacímkék eltávolításával. *(A 048-as és 049-es migráció javítja.)*
+- [x] Finommotorika alá 10 altípus és 100 játékötlet rögzítése piszkozatként, az elsődleges 18–36 hónapos célkorosztály jelölésével. *(A 035-ös migráció hozza létre őket; a játékok leírása és képe később tölthető fel.)*
+- [x] Érzékelés és észlelés alá 10 altípus és 100 játékötlet rögzítése piszkozatként, a 18 hónapos–6 éves célkorosztály jelölésével. *(A 036-os migráció hozza létre; a propriocepció és a vesztibuláris érzékelés magyarázata is szerkeszthető kategórialeírásként.)*
+- [x] Gondolkodás és kognitív fejlődés alá 10 altípus és 100 játékötlet rögzítése piszkozatként; a fő terület leírása a szülői nézetben opcionálisan lenyitható. *(A 038-as migráció hozza létre; a két másik területen is szereplő, azonos című játékok közös játékrekordként több altípushoz kapcsolódnak.)*
+- [x] Figyelem, emlékezet és végrehajtó működések alá 10 altípus és 100 játékötlet rögzítése piszkozatként, a megadott életkori ajánlásokkal; a fő terület leírása a szülői oldalon opcionálisan lenyitható. *(A 039-es migráció hozza létre.)*
+- [x] Szociális készségek alá 10 altípus és 100 játékötlet rögzítése piszkozatként; a fő terület szerkeszthető leírása a szülői oldalon opcionálisan lenyitható. *(A 040-es migráció hozza létre; életkor nincs előre megadva.)*
+- [x] Érzelmi fejlődés és önszabályozás alá 10 altípus és 100 játékötlet rögzítése piszkozatként, 18–36 hónapos korosztály-jelöléssel; a fő terület leírása a szülői nézetben opcionálisan lenyitható. *(A 041-es migráció hozza létre.)*
+- [x] Önállóság és mindennapi életvezetés alá 10 altípus és 100 játékötlet rögzítése piszkozatként; a korosztály nincs előre rögzítve, a fő terület leírása szerkeszthető és a szülői nézetben opcionálisan lenyitható. A biztonságos eszközhasználat kategóriája képkártyás, szerepjátékos és biztonságos utánzatokra épít. *(A 043-as és 044-es migráció hozza létre.)*
+- [x] Matematikai és térbeli alapkészségek alá 10 altípus és 100 játékötlet rögzítése piszkozatként; a fő és alkategóriák leírása szerkeszthető, életkor nincs előre rögzítve. *(A 045-ös migráció hozza létre.)*
+- [x] Kreativitás, képzelet és művészeti nevelés alá 8 altípus és 80 játékötlet rögzítése piszkozatként, megadott életkori ajánlásokkal és szerkeszthető kategórialeírásokkal. *(A 046-os migráció hozza létre.)*
+- [x] Környezeti tapasztalatszerzés és felfedezés alá 10 altípus és 100 játékötlet rögzítése piszkozatként, 18 hónapos–6 éves korosztály-jelöléssel; a biztonsági ötletek felnőtt felügyeletével, veszélyes helyzetek utánzása nélkül dolgozhatók fel. *(A 047-es migráció hozza létre.)*
 - [ ] Kapcsolódó tartalmak megadása ott, ahol valóban hasznos.
 - [ ] Előnézeti képekhez alternatív szövegek megírása.
 
@@ -255,44 +266,47 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 - [ ] Fejlesztői indítás, migráció és admin első belépés dokumentálva.
 - [ ] MVP elfogadási kritériumok teljesülése rögzítve.
 
-## 10. Szülői termékoldal, előfizetés és játékcsomagok
+## 10. Szülői fejlesztő játékoldal (ingyenes első változat)
 
 ### Rögzített irány és oldal terve
 
-- [x] Külön admin szerkesztő és szülői/nevelői ügyfélfelület szerepkörének rögzítése; adminból szülői előnézet szükséges.
-- [x] Üzleti modell rögzítése: havi előfizetés és/vagy külön megvásárolható teljes játékcsomag; a feladatlap önmagában nem nyilvános vásárlási termék.
-- [x] A feladatlap hozzáférése az azt igénylő játék vagy játékcsomag hozzáférését követi; a szükséges lap a csomag része.
+- [x] Külön adminfelület és bejelentkezés nélküli, szülőknek/nevelőknek szóló nyilvános tartalmi felület.
+- [x] Első változat: a publikált fejlesztő játékok szabadon olvashatók; nincs előfizetés, vásárlás vagy felhasználói fiók.
+- [x] A feladatlap a kapcsolódó játék segédanyaga, nem önálló nyilvános termék.
 - [x] Szülői játékoldal és „Sétálj a vonalon!” példaoldal tartalmi felépítésének dokumentálása.
-- [x] Kategóriaág rögzítése: Nagymozgás és testtudat → Egyensúlyfejlesztő játékok.
+- [x] Kategóriaág rögzítése: Nagymozgás és testtudat → 9 mozgásos altípus; a teljes lista a 033-as migrációban.
 - [x] Pénzügyi admin belső értékesítési naplójának elkülönítése a jövőbeli nyilvános bolt ajánlataitól; korábbi rekordok és belső termékek megmaradnak.
 
 ### Tartalom és admin szerkesztő
 
-- [ ] Fejlesztő játék önálló tartalomtípusának mezői: borítókép, cím, rövid leírás, ajánlott életkor, játékidő-tartomány, helyszín, eszközigény.
-- [ ] Játékoldal tartalmi részei: fejlesztési területek magyarázattal, eszközök, számozott menet, könnyítés, nehezítés, játékos változat, biztonság és szülői/nevelői tipp.
-- [ ] Témakör–alcsoport kezelésének admin terve és adatmodellje; elsőként Nagymozgás és testtudat → Egyensúlyfejlesztő játékok.
-- [ ] Fejlesztési területek kezelése külön a témakörtől; induló értékek: egyensúly, mozgáskoordináció, testtudat, figyelem, mozgásos önbizalom.
-- [ ] Játékhoz kapcsolódó feladatlapok kezelése kötelező/kiegészítő jelöléssel.
-- [ ] Admin „Megtekintés szülőként” előnézet tesztállapotokkal: látogató, fiókos jogosultság nélkül, aktív előfizető, játékcsomag-tulajdonos; csak szimulálja a hozzáférési felületet, valódi jogosultságot nem ír.
-- [ ] „Sétálj a vonalon! – Játékos egyensúlyfejlesztés” mintaoldal feltöltése a tervben rögzített 18 hónapos kortól, 5–10 perces játékidővel és öt fejlesztési területtel.
+- [x] Fejlesztő játék önálló admin adatlapjának mezői: borítókép, cím, rövid és részletes leírás, ajánlott életkor, játékidő-tartomány, helyszín és eszközigény. *(A 028-as adatbázis-migráció és az admin űrlap már kezeli.)*
+- [x] Játékoldal admin tartalmi részei: fejlesztési területek, eszközök, előkészület, játékmenet, könnyítés, nehezítés, játékos változat, biztonság és szülői/nevelői tipp. *(A szerkeszthető mezők és publikus megjelenítés elkészült.)*
+- [x] Témakör–alcsoport adatmodell és mozgásos kategóriák: Nagymozgás és testtudat → 9 altípus. *(A TOPIC kategóriák `parent_id` kapcsolata a 028-as migrációban, az altípusok és 90 játékötlet a 033-asban.)*
+- [x] Feladatlap- és játék-taxonomia különválasztása; a korábbi játék-kapcsolatok átvezetése külön játék-kategóriákba, a feladatlap címkéinek megőrzésével. *(034-es migráció.)*
+- [x] Játékötletek admin gyűjteményének fő terület → altípus szerinti lenyitható csoportosítása és keresője.
+- [x] Szülői katalógus összes aktív játék-kategóriájának megjelenítése, altípus-chipek és cím/kategória szerinti keresés publikálás után.
+- [x] Több fő fejlesztési terület és tetszőleges számú közvetlen altípus kezelése; fő kategória és altípus adminból létrehozható, szerkeszthető és a szülői katalógusban külön szűrhető.
+- [x] Fejlesztési területek külön kezelése a témakörtől; induló értékek: egyensúly, mozgáskoordináció, testtudat, figyelem, mozgásos önbizalom. *(SKILL címkék, külön azonosítókkal.)*
+- [x] Játékhoz kapcsolódó feladatlapok kötelező/kiegészítő jelölése az admin adatlapján.
+- [x] A fejlesztési területekhez rövid, szülőknek szóló magyarázat szerkesztése az adminban és megjelenítése a játékoldalon.
+- [x] Admin „Megtekintés szülőként” előnézet a nyilvános játékoldal elrendezésével; a piszkozat ellenőrizhető publikálás nélkül.
+- [x] Teljes játékleírás beillesztése: a kategóriaútvonal, kor, időtartam, helyszín, bevezető, fejlesztési célok és magyarázataik, eszközök, játékmenet, játékos ötlet, könnyítés/nehezítés, biztonság és pedagógiai/szülői megjegyzések a megfelelő mezőbe kerülnek. A számozott lépések számozása pontosan megmarad; a számozatlan játékmenet felsorolásként jelenik meg. Az idézett szöveg az előnézetben kiemelést kap.
+- [x] „Sétálj a vonalon! – Játékos egyensúlyfejlesztés” mintaoldal adatainak felvétele piszkozatként: 18 hónaptól, 5–10 perc, minimális eszközigény és öt fejlesztési terület. *(A tartalom adatbázisba került a 029-es migrációval. Borítókép még feltöltendő; a szülői oldalra publikálás az adminból végezhető.)*
 
-### Szülői oldal és hozzáférés
+### Szülői oldal
 
-- [ ] Egységes főoldal és fejlesztési témák szerint böngészhető játékáttekintő.
-- [ ] Játékkártya egységes borítóképpel, címmel, életkorral, idővel, fejlesztési területekkel és hozzáférési jelzéssel.
-- [ ] Reszponzív részletes játékoldal a rögzített tartalmi sorrenddel.
-- [ ] Tartalmonkénti hozzáférés beállítása: teljesen nyilvános, előfizetéses vagy egyedi játékcsomag része; publikus előnézeti kártya mindhárom esethez.
-- [ ] Feladatlap ne kapjon önálló nyilvános termékoldalt, árat vagy vásárlási gombot; a hozzá tartozó játékból legyen elérhető.
-- [ ] Szülői/nevelői fiók regisztrációval, bejelentkezéssel és szerepkör-alapú hozzáféréssel.
-- [ ] Fiókban előfizetés állapota és külön megvett játékcsomagok listája.
-- [ ] Jogosultsági modell: aktív előfizetéshez rendelt tartalmak és egyedi játékcsomag-vásárlások elkülönítése.
-- [ ] Játékleírás, feladatlap és nyomtatási fájl letöltésének szerveroldali jogosultság-ellenőrzése.
+- [x] Egységes főoldal és fejlesztési témák szerint szűrhető játékáttekintő az első szülői oldalon. *(A publikus lista kizárólag publikált fejlesztő játékokat kér le.)*
+- [x] Játékkártya címmel, ajánlóval, életkorral, játékidővel és témakörrel; a borítókép opcionális.
+- [x] Reszponzív részletes játékoldal. A publikus API minden publikált játék teljes leírását visszaadja.
+- [x] Piszkozat és nem publikált tartalom nem jelenik meg a nyilvános katalógusban.
+- [x] Feladatlap nem kap önálló nyilvános termékoldalt, árat vagy vásárlási gombot; a kapcsolódó játék segédanyagaként jelenik meg.
+- [x] Játékoldalon megjelenik a kapcsolódó, publikált feladatlap és oldalanként a nyomtatási fájl; a fájl csak publikált játékhoz és publikált feladatlaphoz kapcsolt állapotban érhető el.
 
-### Játékcsomagok és kereskedelmi működés
+### Későbbre halasztott kereskedelmi bővítések – most nem fejlesztjük
 
 - [ ] Játékcsomag-összeállító fejlesztő játékot, kötelező feladatlapot és kiegészítő anyagot is tudjon tartalmazni.
 - [ ] Teljes, önállóan elvégezhető játékcsomag megjelenítése külön ajánlatként; benne a feladatlapok nem külön termékek.
-- [ ] Havi előfizetési csomag és az abba bevont játékok adminisztrációja.
+- [ ] Szülői fiók, előfizetési csomagok és hozzáférés-kezelés.
 - [ ] Egyszeri játékcsomag-vásárlás hozzáférési időtartamának üzleti döntése. *(Javaslat: tartós hozzáférés, de árusítás előtt jóváhagyandó.)*
 - [ ] Előfizetési ár, számlázás, próbaidő, lemondás, visszatérítés és jogosultság-megszűnés szabályainak rögzítése.
 - [ ] Fizetési szolgáltató kiválasztása és kosár/fizetési folyamat kialakítása.
@@ -310,9 +324,10 @@ Ez a terv az adminisztrációs és feladatlap-katalógus MVP-jét bontja ellenő
 7. API-szűrők és feladatlapkapcsolatok bővítése korosztály, feladattípus, témakör és készségterület szerint.
 8. React admin kategóriakezelő, feladatlap-szerkesztő és külön feladattípus/témakör szűrők.
 9. Fejlesztő játékok admin adatlapja, borítóképe, részletes tartalmi mezői és opcionális feladatlap-kapcsolatai.
-10. Nagymozgás és testtudat → Egyensúlyfejlesztő játékok kategóriaág és a „Sétálj a vonalon!” mintaoldal.
-11. Szülői ügyfélfelület, reszponzív játékáttekintő, részletes játékoldal és hozzáférési jelzések.
-12. Admin „Megtekintés szülőként” szimulált látogatói, előfizetői és játékcsomag-tulajdonosi nézetekkel.
-13. Teljes játékcsomag összeállítása fejlesztő játékokból és az azokhoz tartozó kötelező/kiegészítő feladatlapokból; feladatlap önálló nyilvános értékesítése nélkül.
-14. Szülői fiókok, előfizetések, vásárlások és szerveroldali hozzáférési jogosultságok.
-15. Fizetési szolgáltató, védett fájlkiszolgálás, számlázás, lemondás, visszatérítés és kiadásra kész ellenőrzés.
+10. Nagymozgás és testtudat → Egyensúly és stabil járás kategóriaág és a „Sétálj a vonalon!” mintaoldal.
+11. Szülői ügyfélfelület: ingyenes, bejelentkezés nélküli játékáttekintő és részletes játékoldal.
+12. Admin „Megtekintés szülőként” előnézet publikált és piszkozat tartalommal.
+13. További játék- és feladatlap-tartalmak feltöltése, összekapcsolása és szerkesztése.
+14. Mobilos, hozzáférhetőségi és kiadás előtti ellenőrzés.
+
+Az előfizetés, szülői fiók, digitális vásárlás, játékcsomag-ajánlat és fizetési integráció későbbi, külön döntési kör; nincs része ennek a megvalósítási sorrendnek.

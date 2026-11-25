@@ -1,0 +1,182 @@
+databaseChangeLog:
+  - changeSet:
+      id: 043-seed-independence-activity-drafts
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id,default_description) values ('ACTIVITY_TOPIC','Önállóság és mindennapi életvezetés','onallosag-es-mindennapi-eletvezetes',80,true,null,'Az önállóság fejlesztésének célja, hogy a gyermek fokozatosan képessé váljon a mindennapi tevékenységek elvégzésére, saját szükségleteinek felismerésére, környezetének rendezésére és az életkorának megfelelő feladatok vállalására. A fejlesztés során fontos a sikerélmény, az önbizalom erősítése, a türelmes segítségnyújtás és az önálló próbálkozások támogatása.') on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=null,default_description=excluded.default_description;
+              insert into taxonomy_term(term_type,name,slug,sort_order,active,parent_id)
+              select 'ACTIVITY_TOPIC',v.name,v.slug,v.sort_order,true,root.id from (values
+                ('Rendrakás és rendszerezés','rendrakas-es-rendszerezes',10),
+                ('Öltözködés és önkiszolgálás','oltozkodes-es-onkiszolgalas',20),
+                ('Étkezés és konyhai tevékenységek','etkezes-es-konyhai-tevekenysegek',30),
+                ('Tisztálkodás és higiénia','tisztalkodas-es-higienia',40),
+                ('Mindennapi háztartási feladatok','mindennapi-haztartasi-feladatok',50),
+                ('Napirend és időbeli tájékozódás','napirend-es-idobeli-tajekozodas',60),
+                ('Feladattudat és felelősségvállalás','feladattudat-es-felelossegvallalas',70),
+                ('Önálló döntéshozatal és problémamegoldás','onallo-donteshozatal-es-problemamegoldas',80)) as v(name,slug,sort_order) cross join taxonomy_term root where root.term_type='ACTIVITY_TOPIC' and root.slug='onallosag-es-mindennapi-eletvezetes' on conflict (term_type,slug) do update set name=excluded.name,sort_order=excluded.sort_order,active=true,parent_id=excluded.parent_id;
+              insert into activity(title,slug,status)
+              values
+                ('Játékok válogatása kosarakba','jatekok-valogatasa-kosarakba','DRAFT'),
+                ('Minden játék a helyére kerül','minden-jatek-a-helyere-kerul','DRAFT'),
+                ('Könyvek visszapakolása a polcra','konyvek-visszapakolasa-a-polcra','DRAFT'),
+                ('Építőkockák összegyűjtése','epitokockak-osszegyujtese','DRAFT'),
+                ('Zoknipárosítás','zokniparositas','DRAFT'),
+                ('Ruhák válogatása színek szerint','ruhak-valogatasa-szinek-szerint','DRAFT'),
+                ('Kinek a tárgya?','kinek-a-targya','DRAFT'),
+                ('Mi nem illik a helyére?','mi-nem-illik-a-helyere','DRAFT'),
+                ('Rendrakás zenére','rendrakas-zenere','DRAFT'),
+                ('Rendetlen és rendezett szoba','rendetlen-es-rendezett-szoba','DRAFT'),
+                ('Babák öltöztetése','babak-oltoztetese','DRAFT'),
+                ('Zokni fel- és levétele','zokni-fel-es-levetele','DRAFT'),
+                ('Cipők párosítása','cipok-parositasa','DRAFT'),
+                ('Öltözködési sorrend','oltozkodesi-sorrend','DRAFT'),
+                ('Öltözzünk az időjárásnak megfelelően!','oltozzunk-az-idojarasnak-megfeleloen','DRAFT'),
+                ('Sapka és sál felvétele','sapka-es-sal-felvetele','DRAFT'),
+                ('Tépőzárak nyitása és zárása','tepozarak-nyitasa-es-zarasa','DRAFT'),
+                ('Cipzárhúzós játék','cipzarhuzos-jatek','DRAFT'),
+                ('Gombolós gyakorlótábla','gombolos-gyakorlotabla','DRAFT'),
+                ('Önálló ruhaválasztás','onallo-ruhavalasztas','DRAFT'),
+                ('Terítsünk meg!','teritsunk-meg','DRAFT'),
+                ('Etessük meg a babát!','etessuk-meg-a-babat','DRAFT'),
+                ('Víz öntése pohárba','viz-ontese-poharba','DRAFT'),
+                ('Kanalazás egyik tálból a másikba','kanalazas-egyik-talbol-a-masikba','DRAFT'),
+                ('Gyümölcsök megmosása','gyumolcsok-megmosasa','DRAFT'),
+                ('Banán meghámozása','banan-meghamozasa','DRAFT'),
+                ('Készítsünk szendvicset!','keszitsunk-szendvicset','DRAFT'),
+                ('Keverjünk össze hozzávalókat!','keverjunk-ossze-hozzavalokat','DRAFT'),
+                ('Pakoljuk el az evőeszközöket!','pakoljuk-el-az-evoeszkozoket','DRAFT'),
+                ('Szedjük le az asztalt!','szedjuk-le-az-asztalt','DRAFT'),
+                ('Mossuk meg a baba kezét!','mossuk-meg-a-baba-kezet','DRAFT'),
+                ('Kézmosás lépései','kezmosas-lepesei','DRAFT'),
+                ('Fürdessük meg a babát!','furdessuk-meg-a-babat','DRAFT'),
+                ('Fogmosás a plüssállattal','fogmosas-a-plussallattal','DRAFT'),
+                ('Töröljük meg a kezünket!','toroljuk-meg-a-kezunket','DRAFT'),
+                ('Fésülködős játék','fesulkodos-jatek','DRAFT'),
+                ('Zsebkendő használata','zsebkendo-hasznalata','DRAFT'),
+                ('Bilizős szerepjáték','bilizos-szerepjatek','DRAFT'),
+                ('Tiszta vagy piszkos?','tiszta-vagy-piszkos','DRAFT'),
+                ('Reggeli és esti tisztálkodási sorrend','reggeli-es-esti-tisztalkodasi-sorrend','DRAFT'),
+                ('Ruhák berakása a szennyeskosárba','ruhak-berakasa-a-szennyeskosarba','DRAFT'),
+                ('Ruhák teregetése','ruhak-teregetese','DRAFT'),
+                ('Ruhák összehajtogatása','ruhak-osszehajtogatasa','DRAFT'),
+                ('Asztal letörlése','asztal-letorlese','DRAFT'),
+                ('Seprés kis seprűvel','sepres-kis-sepruvel','DRAFT'),
+                ('Porszívózós játék','porszivozos-jatek','DRAFT'),
+                ('Növények meglocsolása','novenyek-meglocsolasa','DRAFT'),
+                ('Bevásárlás kipakolása','bevasarlas-kipakolasa','DRAFT'),
+                ('Szemét szelektív válogatása','szemet-szelektiv-valogatasa','DRAFT'),
+                ('Ágyazás a babával','agyazas-a-babaval','DRAFT'),
+                ('Az én napom – napirendkártyák','az-en-napom-napirendkartyak','DRAFT'),
+                ('Mit csinálunk reggel?','mit-csinalunk-reggel','DRAFT'),
+                ('Mit csinálunk lefekvés előtt?','mit-csinalunk-lefekves-elott','DRAFT'),
+                ('Mi történik előbb és mi utána?','mi-tortenik-elobb-es-mi-utana','DRAFT'),
+                ('Nappal vagy éjszaka?','nappal-vagy-ejszaka','DRAFT'),
+                ('Készülődés az induláshoz','keszulodes-az-indulashoz','DRAFT'),
+                ('Készülődés az alváshoz','keszulodes-az-alvashoz','DRAFT'),
+                ('Étkezések sorrendje','etkezesek-sorrendje','DRAFT'),
+                ('Mi következik most?','mi-kovetkezik-most','DRAFT'),
+                ('Saját képes napirend összeállítása','sajat-kepes-napirend-osszeallitasa','DRAFT'),
+                ('Vidd a helyére!','vidd-a-helyere','DRAFT'),
+                ('Hozd ide, amire szükségünk van!','hozd-ide-amire-szuksegunk-van','DRAFT'),
+                ('A mai kis segítő','a-mai-kis-segito','DRAFT'),
+                ('Képes feladatlista','kepes-feladatlista','DRAFT'),
+                ('Kétlépéses küldetések','ketlepeses-kuldetesek','DRAFT'),
+                ('Gondoskodjunk a plüssállatról!','gondoskodjunk-a-plussallatrol','DRAFT'),
+                ('A növényem gondozása','a-novenyem-gondozasa','DRAFT'),
+                ('Pakoljuk be a saját táskánkat!','pakoljuk-be-a-sajat-taskankat','DRAFT'),
+                ('Kezdjük el és fejezzük be!','kezdjuk-el-es-fejezzuk-be','DRAFT'),
+                ('Heti kis segítő tábla','heti-kis-segito-tabla','DRAFT'),
+                ('Válassz két lehetőség közül!','valassz-ket-lehetoseg-kozul','DRAFT'),
+                ('Mire van szükségem?','mire-van-szuksegem','DRAFT'),
+                ('Mit tegyek, ha kiömlött a víz?','mit-tegyek-ha-kiomlott-a-viz','DRAFT'),
+                ('Mit tegyek, ha vizes lett a ruhám?','mit-tegyek-ha-vizes-lett-a-ruham','DRAFT'),
+                ('Hogyan érjem el biztonságosan?','hogyan-erjem-el-biztonsagosan','DRAFT'),
+                ('Mikor kérjek segítséget?','mikor-kerjek-segitseget','DRAFT'),
+                ('Mit vigyünk magunkkal a játszótérre?','mit-vigyunk-magunkkal-a-jatszoterre','DRAFT'),
+                ('Mit csomagoljunk az utazáshoz?','mit-csomagoljunk-az-utazashoz','DRAFT'),
+                ('Melyik eszközzel oldhatom meg?','melyik-eszkozzel-oldhatom-meg','DRAFT'),
+                ('Próbáljuk meg másképp!','probaljuk-meg-maskepp','DRAFT') on conflict (slug) do nothing;
+              insert into activity_term(activity_id,term_id)
+              select a.id,t.id from activity a join taxonomy_term t on t.term_type='ACTIVITY_TOPIC' and t.slug=case
+                when a.slug='jatekok-valogatasa-kosarakba' then 'rendrakas-es-rendszerezes'
+                when a.slug='minden-jatek-a-helyere-kerul' then 'rendrakas-es-rendszerezes'
+                when a.slug='konyvek-visszapakolasa-a-polcra' then 'rendrakas-es-rendszerezes'
+                when a.slug='epitokockak-osszegyujtese' then 'rendrakas-es-rendszerezes'
+                when a.slug='zokniparositas' then 'rendrakas-es-rendszerezes'
+                when a.slug='ruhak-valogatasa-szinek-szerint' then 'rendrakas-es-rendszerezes'
+                when a.slug='kinek-a-targya' then 'rendrakas-es-rendszerezes'
+                when a.slug='mi-nem-illik-a-helyere' then 'rendrakas-es-rendszerezes'
+                when a.slug='rendrakas-zenere' then 'rendrakas-es-rendszerezes'
+                when a.slug='rendetlen-es-rendezett-szoba' then 'rendrakas-es-rendszerezes'
+                when a.slug='babak-oltoztetese' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='zokni-fel-es-levetele' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='cipok-parositasa' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='oltozkodesi-sorrend' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='oltozzunk-az-idojarasnak-megfeleloen' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='sapka-es-sal-felvetele' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='tepozarak-nyitasa-es-zarasa' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='cipzarhuzos-jatek' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='gombolos-gyakorlotabla' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='onallo-ruhavalasztas' then 'oltozkodes-es-onkiszolgalas'
+                when a.slug='teritsunk-meg' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='etessuk-meg-a-babat' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='viz-ontese-poharba' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='kanalazas-egyik-talbol-a-masikba' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='gyumolcsok-megmosasa' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='banan-meghamozasa' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='keszitsunk-szendvicset' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='keverjunk-ossze-hozzavalokat' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='pakoljuk-el-az-evoeszkozoket' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='szedjuk-le-az-asztalt' then 'etkezes-es-konyhai-tevekenysegek'
+                when a.slug='mossuk-meg-a-baba-kezet' then 'tisztalkodas-es-higienia'
+                when a.slug='kezmosas-lepesei' then 'tisztalkodas-es-higienia'
+                when a.slug='furdessuk-meg-a-babat' then 'tisztalkodas-es-higienia'
+                when a.slug='fogmosas-a-plussallattal' then 'tisztalkodas-es-higienia'
+                when a.slug='toroljuk-meg-a-kezunket' then 'tisztalkodas-es-higienia'
+                when a.slug='fesulkodos-jatek' then 'tisztalkodas-es-higienia'
+                when a.slug='zsebkendo-hasznalata' then 'tisztalkodas-es-higienia'
+                when a.slug='bilizos-szerepjatek' then 'tisztalkodas-es-higienia'
+                when a.slug='tiszta-vagy-piszkos' then 'tisztalkodas-es-higienia'
+                when a.slug='reggeli-es-esti-tisztalkodasi-sorrend' then 'tisztalkodas-es-higienia'
+                when a.slug='ruhak-berakasa-a-szennyeskosarba' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='ruhak-teregetese' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='ruhak-osszehajtogatasa' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='asztal-letorlese' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='sepres-kis-sepruvel' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='porszivozos-jatek' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='novenyek-meglocsolasa' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='bevasarlas-kipakolasa' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='szemet-szelektiv-valogatasa' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='agyazas-a-babaval' then 'mindennapi-haztartasi-feladatok'
+                when a.slug='az-en-napom-napirendkartyak' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='mit-csinalunk-reggel' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='mit-csinalunk-lefekves-elott' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='mi-tortenik-elobb-es-mi-utana' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='nappal-vagy-ejszaka' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='keszulodes-az-indulashoz' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='keszulodes-az-alvashoz' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='etkezesek-sorrendje' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='mi-kovetkezik-most' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='sajat-kepes-napirend-osszeallitasa' then 'napirend-es-idobeli-tajekozodas'
+                when a.slug='vidd-a-helyere' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='hozd-ide-amire-szuksegunk-van' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='a-mai-kis-segito' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='kepes-feladatlista' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='ketlepeses-kuldetesek' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='gondoskodjunk-a-plussallatrol' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='a-novenyem-gondozasa' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='pakoljuk-be-a-sajat-taskankat' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='kezdjuk-el-es-fejezzuk-be' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='heti-kis-segito-tabla' then 'feladattudat-es-felelossegvallalas'
+                when a.slug='valassz-ket-lehetoseg-kozul' then 'onallo-donteshozatal-es-problemamegoldas'
+                when a.slug='mire-van-szuksegem' then 'onallo-donteshozatal-es-problemamegoldas'
+                when a.slug='mit-tegyek-ha-kiomlott-a-viz' then 'onallo-donteshozatal-es-problemamegoldas'
+                when a.slug='mit-tegyek-ha-vizes-lett-a-ruham' then 'onallo-donteshozatal-es-problemamegoldas'
+                when a.slug='hogyan-erjem-el-biztonsagosan' then 'onallo-donteshozatal-es-problemamegoldas'
+                when a.slug='mikor-kerjek-segitseget' then 'onallo-donteshozatal-es-problemamegoldas'
+                when a.slug='mit-vigyunk-magunkkal-a-jatszoterre' then 'onallo-donteshozatal-es-problemamegoldas'
+                when a.slug='mit-csomagoljunk-az-utazashoz' then 'onallo-donteshozatal-es-problemamegoldas'
+                when a.slug='melyik-eszkozzel-oldhatom-meg' then 'onallo-donteshozatal-es-problemamegoldas'
+                when a.slug='probaljuk-meg-maskepp' then 'onallo-donteshozatal-es-problemamegoldas' end where a.slug in ('jatekok-valogatasa-kosarakba','minden-jatek-a-helyere-kerul','konyvek-visszapakolasa-a-polcra','epitokockak-osszegyujtese','zokniparositas','ruhak-valogatasa-szinek-szerint','kinek-a-targya','mi-nem-illik-a-helyere','rendrakas-zenere','rendetlen-es-rendezett-szoba','babak-oltoztetese','zokni-fel-es-levetele','cipok-parositasa','oltozkodesi-sorrend','oltozzunk-az-idojarasnak-megfeleloen','sapka-es-sal-felvetele','tepozarak-nyitasa-es-zarasa','cipzarhuzos-jatek','gombolos-gyakorlotabla','onallo-ruhavalasztas','teritsunk-meg','etessuk-meg-a-babat','viz-ontese-poharba','kanalazas-egyik-talbol-a-masikba','gyumolcsok-megmosasa','banan-meghamozasa','keszitsunk-szendvicset','keverjunk-ossze-hozzavalokat','pakoljuk-el-az-evoeszkozoket','szedjuk-le-az-asztalt','mossuk-meg-a-baba-kezet','kezmosas-lepesei','furdessuk-meg-a-babat','fogmosas-a-plussallattal','toroljuk-meg-a-kezunket','fesulkodos-jatek','zsebkendo-hasznalata','bilizos-szerepjatek','tiszta-vagy-piszkos','reggeli-es-esti-tisztalkodasi-sorrend','ruhak-berakasa-a-szennyeskosarba','ruhak-teregetese','ruhak-osszehajtogatasa','asztal-letorlese','sepres-kis-sepruvel','porszivozos-jatek','novenyek-meglocsolasa','bevasarlas-kipakolasa','szemet-szelektiv-valogatasa','agyazas-a-babaval','az-en-napom-napirendkartyak','mit-csinalunk-reggel','mit-csinalunk-lefekves-elott','mi-tortenik-elobb-es-mi-utana','nappal-vagy-ejszaka','keszulodes-az-indulashoz','keszulodes-az-alvashoz','etkezesek-sorrendje','mi-kovetkezik-most','sajat-kepes-napirend-osszeallitasa','vidd-a-helyere','hozd-ide-amire-szuksegunk-van','a-mai-kis-segito','kepes-feladatlista','ketlepeses-kuldetesek','gondoskodjunk-a-plussallatrol','a-novenyem-gondozasa','pakoljuk-be-a-sajat-taskankat','kezdjuk-el-es-fejezzuk-be','heti-kis-segito-tabla','valassz-ket-lehetoseg-kozul','mire-van-szuksegem','mit-tegyek-ha-kiomlott-a-viz','mit-tegyek-ha-vizes-lett-a-ruham','hogyan-erjem-el-biztonsagosan','mikor-kerjek-segitseget','mit-vigyunk-magunkkal-a-jatszoterre','mit-csomagoljunk-az-utazashoz','melyik-eszkozzel-oldhatom-meg','probaljuk-meg-maskepp') on conflict (activity_id,term_id) do nothing;
